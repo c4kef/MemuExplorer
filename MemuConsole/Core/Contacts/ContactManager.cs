@@ -2,6 +2,11 @@
 {
     public class ContactManager
     {
+        /// <summary>
+        /// Экспорт контактов из образов
+        /// </summary>
+        /// <param name="contacts">список образов</param>
+        /// <returns>строчку готовую к сохранению</returns>
         public string Export(List<CObj> contacts)
         {
             StringBuilder sbContacts = new StringBuilder();
@@ -10,6 +15,11 @@
 
             return sbContacts.ToString();
         }
+        /// <summary>
+        /// Импорт контаков в приложение
+        /// </summary>
+        /// <param name="index">индекс машины</param>
+        /// <param name="pathToContacts">путь до файла с контактами</param>
         public async Task Import(int index, string pathToContacts)
         {
             await MemuCmd.ExecMemuc($@"-i {index} adb push {pathToContacts} /storage/emulated/0/contact.vcf");

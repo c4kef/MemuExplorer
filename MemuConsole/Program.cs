@@ -1,16 +1,14 @@
 ﻿
-return;
 List<Task> tasks = new List<Task>();
-for (int i = 1; i < 3; i++)
+for (int i = 1; i < 2; i++)
 {
     tasks.Add(Task.Run(async () =>
     {
         Client memu = new Client(await Memu.Create());
+        await memu.Spoof();
         await memu.Start();
         foreach (string file in Directory.GetFiles(Settings.AppsDir))
             await memu.InstallApk(file);
-
-
 
         await memu.RunApk("com.whatsapp");
     }));

@@ -8,14 +8,21 @@ namespace MemuConsole.Core
 {
     public class Client
     {
+        /// <summary>
+        /// Индекс машины
+        /// </summary>
         private int _index;
-        private Thread? _frida;
-
+        /// <summary>
+        /// Объявление образа машины
+        /// </summary>
+        /// <param name="index">индекс машины</param>
         public Client(int index)
         {
             _index = index;
         }
-
+        /// <summary>
+        /// Запуск машины
+        /// </summary>
         public async Task Start()
         {
             if (!await Memu.Exists(_index))
@@ -27,7 +34,9 @@ namespace MemuConsole.Core
             await Memu.Start(_index);
             Console.WriteLine($"[{_index}] -> VM started");
         }
-
+        /// <summary>
+        /// Остановка машины
+        /// </summary>
         public async Task Stop()
         {
             if (!await Memu.Exists(_index))
@@ -37,10 +46,12 @@ namespace MemuConsole.Core
             }
 
             await Memu.Stop(_index);
-            _frida?.Abort();//TO-DO
             Console.WriteLine($"[{_index}] -> VM stoped");
         }
-
+        /// <summary>
+        /// Установка приложения на машину
+        /// </summary>
+        /// <param name="path">путь до приложения на локальном компе</param>
         public async Task InstallApk(string path)
         {
             if (!await Memu.Exists(_index))
@@ -58,7 +69,10 @@ namespace MemuConsole.Core
             await Memu.InstallApk(_index, path);
             Console.WriteLine($"[{_index}] -> installed apk");
         }
-
+        /// <summary>
+        /// Запуск приложения на машине
+        /// </summary>
+        /// <param name="comPath">com-путь до установленного приложения на машине</param>
         public async Task RunApk(string comPath)
         {
             if (!await Memu.Exists(_index))
@@ -70,8 +84,10 @@ namespace MemuConsole.Core
             await Memu.StartApk(_index, comPath);
             Console.WriteLine($"[{_index}] -> apk runned");
         }
-
-        public async Task ExecMemucuteAdb(string comPath)
+        /// <summary>
+        /// Спуфинг машины
+        /// </summary>
+        public async Task Spoof()
         {
             if (!await Memu.Exists(_index))
             {
@@ -79,36 +95,8 @@ namespace MemuConsole.Core
                 return;
             }
 
-            await Memu.StartApk(_index, comPath);
-            Console.WriteLine($"[{_index}] -> apk runned");
-        }
-
-        public async Task SetupFrida()
-        {
-            if (!await Memu.Exists(_index))
-            {
-                Console.WriteLine($"[{_index}] -> VM not found");
-                return;
-            }
-
-            await Memu.InstallFrida(_index);
-            _frida = await Memu.StartFrida(_index);
-
-            Console.WriteLine($"[{_index}] -> frida runned");
-        }
-
-        public async Task SetupContacts()
-        {
-            if (!await Memu.Exists(_index))
-            {
-                Console.WriteLine($"[{_index}] -> VM not found");
-                return;
-            }
-
-            await Memu.InstallFrida(_index);
-            _frida = await Memu.StartFrida(_index);
-
-            Console.WriteLine($"[{_index}] -> frida runned");
+            await Memu.Spoof(_index);
+            Console.WriteLine($"[{_index}] -> vm spoofed");
         }
     }
 }

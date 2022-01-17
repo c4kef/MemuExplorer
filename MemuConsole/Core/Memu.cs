@@ -71,33 +71,65 @@
         /// </summary>
         /// <param name="index">индекс машины</param>
         /// <param name="path">путь до apk файла на удаленной машине</param>
+        /// <exception cref="Exception">в случае тотального п***а просто вылезет ошибка</exception>
         public static async Task StartApk(int index, string path)
         {
-            await Task.Run(async () =>
-            {
-                await MemuCmd.ExecFrida($"-U -f com.evozi.deviceid -l D:\frida-spoof.js --no-pause");
-            });
+            string answer = await MemuCmd.ExecMemuc($"startapp -i {index} {path}");
+            if (!answer.Contains("SUCCESS"))
+                throw new Exception($"Error: {answer}");
         }
         /// <summary>
-        /// Запуск фредирики
+        /// Спуф устройства
         /// </summary>
         /// <param name="index">индекс машины</param>
-        /// <returns>ссылка на таск</returns>
-        public static async Task<Thread?> StartFrida(int index)
+        public static async Task Spoof(int index)
         {
-            Thread? tmpCurrent = null;
-            await Task.Run(async () =>
+            string imei = RandomNumbers(15);
+            string imsi = RandomNumbers(15);
+            string number = $"+7{RandomNumbers(10)}";
+            string simserial = RandomNumbers(20);
+            string brand = RandomAlphabet(8);
+            string manufacturer = RandomAlphabet(8);
+            string model = RandomAlphabet(8);
+            string mac = RandomMacAddress();
+
+            Handler(await MemuCmd.ExecMemuc($"setconfigex -i {index} imei {imei}"));
+            Handler(await MemuCmd.ExecMemuc($"setconfigex -i {index} imsi {imsi}"));
+            Handler(await MemuCmd.ExecMemuc($"setconfigex -i {index} linenum {number}"));
+            Handler(await MemuCmd.ExecMemuc($"setconfigex -i {index} simserial {simserial}"));
+            Handler(await MemuCmd.ExecMemuc($"setconfigex -i {index} microvirt_vm_brand {brand}"));
+            Handler(await MemuCmd.ExecMemuc($"setconfigex -i {index} microvirt_vm_manufacturer {manufacturer}"));
+            Handler(await MemuCmd.ExecMemuc($"setconfigex -i {index} microvirt_vm_model {model}"));
+            Handler(await MemuCmd.ExecMemuc($"setconfigex -i {index} macaddress {mac}"));
+
+            string RandomNumbers(int length)
             {
-                tmpCurrent = Thread.CurrentThread;
-                await MemuCmd.ExecMemuc($"-i {index} adb shell chmod +x ./data/local/tmp/frida-server");
-                await MemuCmd.ExecMemuc($"-i {index} adb shell ./data/local/tmp/frida-server");
-            });
-            return tmpCurrent;
+                const string chars = "0123456789";
+                return new string(Enumerable.Repeat(chars, length)
+                    .Select(s => s[new Random().Next(s.Length)]).ToArray());
+            }
+
+            string RandomAlphabet(int length)
+            {
+                const string chars = "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm";
+                return new string(Enumerable.Repeat(chars, length)
+                    .Select(s => s[new Random().Next(s.Length)]).ToArray());
+            }
+
+            string RandomMacAddress()
+            {
+                var random = new Random();
+                var buffer = new byte[6];
+                random.NextBytes(buffer);
+                var result = String.Concat(buffer.Select(x => string.Format("{0}-", x.ToString("X2"))).ToArray());
+                return result.TrimEnd('-');
+            }
+
+            void Handler(string answer)
+            {
+                if (!answer.Contains("SUCCESS"))
+                    throw new Exception($"Error: {answer}");
+            }
         }
-        /// <summary>
-        /// Установка фредирики
-        /// </summary>
-        /// <param name="index">индекс машины</param>
-        public static async Task InstallFrida(int index) => await MemuCmd.ExecMemuc($@"-i {index} adb push {Settings.FridaServerPath} /data/local/tmp/frida-server");
     }
 }

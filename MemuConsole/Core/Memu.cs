@@ -22,6 +22,20 @@
             return int.Parse(answer.Split('\n')[1].Split(':')[1]);
         }
         /// <summary>
+        /// Клонирование машины
+        /// </summary>
+        /// <param name="index">индекс машины</param>
+        /// <returns>вернет индекс клонированной машины</returns>
+        /// <exception cref="Exception">в случае тотального п***а просто вылезет ошибка</exception>
+        public static async Task<int> Clone(int index)
+        {
+            string answer = await MemuCmd.ExecMemuc($"clone -i {index}");
+            if (!answer.Contains("SUCCESS"))
+                throw new Exception($"Error: {answer}");
+
+            return int.Parse(answer.Split('\n')[1].Split(':')[1]);
+        }
+        /// <summary>
         /// Удаление машины
         /// </summary>
         /// <param name="index">индекс машины</param>
@@ -78,10 +92,11 @@
             if (!answer.Contains("SUCCESS"))
                 throw new Exception($"Error: {answer}");
         }
-        /// <summary>
+        /*/// <summary>
         /// Спуф устройства
         /// </summary>
         /// <param name="index">индекс машины</param>
+        /// <exception cref="Exception">в случае тотального п***а просто вылезет ошибка</exception>
         public static async Task Spoof(int index)
         {
             string imei = RandomNumbers(15);
@@ -130,6 +145,6 @@
                 if (!answer.Contains("SUCCESS"))
                     throw new Exception($"Error: {answer}");
             }
-        }
+        }*/
     }
 }

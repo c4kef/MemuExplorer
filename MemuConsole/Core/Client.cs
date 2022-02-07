@@ -85,6 +85,22 @@ namespace MemuConsole.Core
             Console.WriteLine($"[{_index}] -> apk runned");
         }
         /// <summary>
+        /// Симуляция кликов по экрану
+        /// </summary>
+        /// <param name="x">по горизонтали</param>
+        /// <param name="y">по вертикали</param>
+        public async Task Click(int x, int y)
+        {
+            if (!await Memu.Exists(_index))
+            {
+                Console.WriteLine($"[{_index}] -> VM not found");
+                return;
+            }
+
+            await MemuCmd.ExecMemuc($"-i {_index} adb shell input tap {x} {y}");
+            Console.WriteLine($"[{_index}] -> input tap {x} {y}");
+        }
+        /*/// <summary>
         /// Спуфинг машины
         /// </summary>
         public async Task Spoof()
@@ -97,6 +113,6 @@ namespace MemuConsole.Core
 
             await Memu.Spoof(_index);
             Console.WriteLine($"[{_index}] -> vm spoofed");
-        }
+        }*/
     }
 }

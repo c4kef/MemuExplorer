@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
-<map>
-    <int name="first_token_stage" value="1" />
-    <int name="token_not_ready_reason" value="9" />
-    <long name="first_token_request_timestamp" value="1643618570" />
-    <long name="first_token_delay_time" value="2065" />
-</map>

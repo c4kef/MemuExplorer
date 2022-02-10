@@ -1,5 +1,0 @@
-<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
-<map>
-    <int name="build_version" value="220270000" />
-    <string name="critical_event_client_config">xpm-integration-failed:1:1645956696400;Mp4Ops/uploadMp4FailureLogs:10:1645956696400;AppMessagingXmppHandler/onLogNotification:1:1645956696400;ForcedDatabaseMigrationManager/failedToMigrate:10:1645956696400;AbstractAppShell/maybeReportDecompressionFailure:1:1645956696400;wamsysJniBridge:1:1645956696400;WhatsAppLibLoader/loadStartupLibs:1:1645956696400;</string>
-</map>

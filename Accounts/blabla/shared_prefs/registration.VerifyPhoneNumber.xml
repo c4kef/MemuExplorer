@@ -1,6 +1,0 @@
-<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
-<map>
-    <long name="com.whatsapp.registration.VerifyPhoneNumber.call_countdown_end_time" value="1643618628016" />
-    <long name="com.whatsapp.registration.VerifyPhoneNumber.sms_request_failed_retry_time" value="1643618628014" />
-    <int name="com.whatsapp.registration.VerifyPhoneNumber.verification_state" value="0" />
-</map>

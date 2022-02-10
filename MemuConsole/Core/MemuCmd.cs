@@ -9,7 +9,7 @@
         /// <returns>ответ от мема</returns>
         public static async Task<string> ExecMemuc(string arg)
         {
-            Process cmd = new Process();
+            var cmd = new Process();
             cmd.StartInfo.FileName = @$"{Settings.BaseDir}\memuc.exe";
             cmd.StartInfo.RedirectStandardOutput = true;
             cmd.StartInfo.CreateNoWindow = true;

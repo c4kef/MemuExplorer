@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MemuConsole.Core
+﻿namespace MemuConsole.Core
 {
     public class Client
     {
         /// <summary>
         /// Индекс машины
         /// </summary>
-        private int _index;
+        private readonly int _index;
         /// <summary>
         /// Объявление образа машины
         /// </summary>
@@ -100,19 +94,5 @@ namespace MemuConsole.Core
             await MemuCmd.ExecMemuc($"-i {_index} adb shell input tap {x} {y}");
             Console.WriteLine($"[{_index}] -> input tap {x} {y}");
         }
-        /*/// <summary>
-        /// Спуфинг машины
-        /// </summary>
-        public async Task Spoof()
-        {
-            if (!await Memu.Exists(_index))
-            {
-                Console.WriteLine($"[{_index}] -> VM not found");
-                return;
-            }
-
-            await Memu.Spoof(_index);
-            Console.WriteLine($"[{_index}] -> vm spoofed");
-        }*/
     }
 }

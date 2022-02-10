@@ -3,6 +3,22 @@
     public static class Memu
     {
         /// <summary>
+        /// Запуск ADB сервера
+        /// </summary>
+        /// <exception cref="Exception">ошибка при запуске, допустим зависло или х** его знает что еще</exception>
+        public static void RunAdbServer()
+        {
+            if (AdbServer.Instance.GetStatus().IsRunning)
+                return;
+
+            var server = new AdbServer();
+            var result = server.StartServer($@"{Settings.BaseDir}\adb.exe", false);
+
+            if (result != StartServerResult.Started)
+                throw new Exception("Can't start adb server");
+        }
+
+        /// <summary>
         /// Проверка на существование машины
         /// </summary>
         /// <param name="index">индекс машины</param>
@@ -92,5 +108,31 @@
             if (!answer.Contains("SUCCESS"))
                 throw new Exception($"Error: {answer}");
         }
+        /// <summary>
+        /// Завершение apk на машине
+        /// </summary>
+        /// <param name="index">индекс машины</param>
+        /// <param name="path">путь до apk файла на удаленной машине</param>
+        /// <exception cref="Exception">в случае тотального п***а просто вылезет ошибка</exception>
+        public static async Task StopApk(int index, string path)
+        {
+            var answer = await MemuCmd.ExecMemuc($"stopapp -i {index} {path}");
+            if (!answer.Contains("SUCCESS"))
+                throw new Exception($"Error: {answer}");
+        }
+        /// <summary>
+        /// Отправка на удаленку
+        /// </summary>
+        /// <param name="index">индекс машины</param>
+        /// <param name="local">путь на локальной машине</param>
+        /// <param name="remote">путь на удаленной машине</param>
+        public static async Task Push(int index, string local, string remote) => await MemuCmd.ExecMemuc($"-i {index} adb push {local} {remote}");
+        /// <summary>
+        /// Загрузка с удаленки
+        /// </summary>
+        /// <param name="index">индекс машины</param>
+        /// <param name="local">путь на локальной машине</param>
+        /// <param name="remote">путь на удаленной машине</param>
+        public static async Task Pull(int index, string local, string remote) => await MemuCmd.ExecMemuc($"-i {index} adb pull {remote} {local}");
     }
 }

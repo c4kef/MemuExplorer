@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="bg_cold_start_count_pref" value="1" />
+    <int name="last_cold_start_time_min" value="27393640" />
+    <int name="warm_start_count_pref" value="0" />
+    <int name="total_cold_start_count_pref" value="1" />
+    <int name="fg_cold_start_count_pref" value="0" />
+    <int name="lukewarm_start_count_pref" value="0" />
+    <int name="last_lukewarm_start_time_min" value="27393630" />
+    <int name="last_health_event_time_min" value="27393640" />
+</map>

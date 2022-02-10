@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <long name="disappearing_mode_timestamp" value="0" />
+    <int name="disappearing_mode_duration_int" value="0" />
+</map>

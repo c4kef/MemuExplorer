@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="video_max_bitrate" value="5000" />
+    <int name="frequently_forwarded_max_chats" value="1" />
+    <string name="interface_font_size">0</string>
+    <boolean name="abprops_rollback_enabled" value="true" />
+    <int name="document_limit_mb" value="100" />
+    <int name="template_doc_mime_types_int" value="1" />
+    <int name="md_mhfs_days" value="365" />
+    <boolean name="notif_ch_override_off" value="true" />
+    <boolean name="ptt_playback_speed_enabled" value="true" />
+    <int name="payments_upi_intent_transaction_limit" value="2000" />
+    <boolean name="ephemeral_messages_setting" value="true" />
+    <boolean name="sticker_notification_preview" value="true" />
+    <int name="abprops_revert_fg_crash_count" value="5" />
+    <int name="image_max_kbytes" value="1024" />
+    <boolean name="inline_joinable_education_enabled" value="true" />
+    <int name="ephemeral_drop_column_stage" value="2" />
+    <int name="shops_required_tos_version" value="1" />
+    <boolean name="frequently_forwarded_messages" value="true" />
+    <boolean name="bloks_cache_enabled" value="true" />
+    <boolean name="view_once_write" value="true" />
+    <int name="sync_wifi_threshold_kb" value="0" />
+    <boolean name="md_pin_chat_enabled" value="true" />
+    <int name="status_image_quality" value="55" />
+    <boolean name="view_once_read" value="true" />
+    <int name="abprops_revert_bg_crash_count" value="10" />
+    <boolean name="input_enter_send" value="true" />
+    <boolean name="mms4_media_conn_persist_enabled" value="true" />
+    <boolean name="group_call_video_maximization_enabled" value="true" />
+    <int name="vcard_as_document_size_kb" value="64" />
+    <int name="biz_block_reasons_version" value="6" />
+    <boolean name="md_voip_enabled" value="true" />
+    <int name="one_tap_calling_in_group_chat_size" value="8" />
+    <int name="vcard_max_size_kb" value="5000" />
+    <boolean name="storage_migration_enabled" value="true" />
+    <int name="file_index" value="0" />
+    <int name="hq_image_bw_threshold" value="75" />
+    <int name="year_class_cached_value_2016_pref" value="2014" />
+    <boolean name="fbns_disabled_for_secondary" value="true" />
+    <int name="hq_image_max_edge" value="1600" />
+    <int name="remove_old_chat_notifications" value="1" />
+    <int name="status_video_max_duration" value="30" />
+    <boolean name="profilo_enabled" value="true" />
+    <boolean name="catalog_message" value="true" />
+    <long name="groups_server_props_last_refresh_time" value="1643618586262" />
+    <string name="payments_cs_faq_url">https://faq.whatsapp.com/payments</string>
+    <string name="ephemeral_messages_allowed_values">86400,604800,7776000</string>
+    <int name="status_image_max_edge" value="1080" />
+    <string name="ab_props:hash">a0fbeefdb5aa8de1d3b80667cfa3889d6d65778db82ab93a2bc47cc543353feb</string>
+    <int name="mms_hot_content_time_span" value="86400" />
+    <int name="md_opt_in_experience" value="1" />
+    <int name="media_limit_auto_download_mb" value="32" />
+    <int name="partial_pjpeg_bw_threshold" value="125" />
+    <long name="server_props:refresh" value="86400000" />
+    <boolean name="linked_devices_ui_enabled" value="true" />
+    <int name="mms_vcard_autodownload_size_kb" value="64" />
+    <boolean name="hfm_string_changes" value="true" />
+    <boolean name="voip_low_data_usage" value="false" />
+    <boolean name="grp_uii_cleanup" value="true" />
+    <boolean name="ephemeral_messages_enabled" value="true" />
+    <int name="max_keys" value="812" />
+    <boolean name="mms_vcache_aggregation_enabled" value="true" />
+    <int name="gif_provider" value="1" />
+    <string name="settings_language">0</string>
+    <boolean name="bloks_shops_enabled" value="true" />
+    <int name="biz_profile_options" value="116" />
+    <int name="payments_upi_generate_qr_amount_limit" value="2000" />
+    <boolean name="instrument_spam_report_enabled" value="false" />
+    <int name="image_quality" value="80" />
+    <int name="joinable_group_call_client_version" value="2" />
+    <int name="anr_fast_logs_upload_rollout" value="100" />
+    <boolean name="ctwa_context_enterprise_enabled" value="true" />
+    <boolean name="linked_devices_title_enabled" value="true" />
+    <boolean name="enhanced_block_enabled" value="true" />
+    <int name="joinable_group_call_version" value="2" />
+    <string name="server_props:hash">7beac183113c44b39b5f4434562c9a30f9161b855068f2a747aa28e8c8fcecbd</string>
+    <int name="year_class_cached_value_pref" value="2014" />
+    <int name="media_limit_mb" value="16" />
+    <int name="subject_length_limit" value="25" />
+    <string name="server_props:config_hash">q0Vph</string>
+    <int name="participants_size_limit" value="257" />
+    <boolean name="qr_scanning" value="true" />
+    <int name="ephemeral_group_query_ts" value="1603392402" />
+    <int name="group_description_length" value="512" />
+    <boolean name="mms_download_nc_cat" value="true" />
+    <boolean name="smb_upsell_chat_banner_enabled" value="true" />
+    <int name="server_props:last_version" value="26" />
+    <int name="multicast_limit_global" value="5" />
+    <boolean name="server_props:one_time_unlocked" value="false" />
+    <boolean name="bloks_http_enabled" value="false" />
+    <boolean name="mute_always" value="true" />
+    <int name="group_call_max_participants" value="32" />
+    <boolean name="new_animation_behavior" value="true" />
+    <int name="storage_mgmt_banner_threshold_mb" value="500" />
+    <int name="hq_image_quality" value="80" />
+    <int name="image_max_edge" value="1280" />
+    <boolean name="bsp_system_message_enabled" value="true" />
+    <boolean name="payments_request_messages" value="true" />
+    <boolean name="enhanced_archive" value="true" />
+    <string name="file_date">20220131</string>
+    <boolean name="attachment_picker_refresh" value="true" />
+    <boolean name="linked_devices_re_auth_enabled" value="true" />
+    <int name="md_mhfs_limit" value="50" />
+    <set name="ab_offline_props:offline_exposure_strings" />
+    <int name="sigquit_anr_detector_release_updated_rollout" value="100" />
+</map>

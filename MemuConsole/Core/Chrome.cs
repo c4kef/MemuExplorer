@@ -37,4 +37,10 @@ public class Chrome
     /// </summary>
     /// <param name="pos">передаем позицию</param>
     public void SetPosition(Point pos) => _webDriver.Manage().Window.Position = pos;
+
+    /// <summary>
+    /// Получить линк на объект
+    /// </summary>
+    /// <returns>уже созданный объект для текущего устройства</returns>
+    public ChromeDriver Instance() => _webDriver;
 }

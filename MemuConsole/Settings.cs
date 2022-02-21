@@ -16,6 +16,11 @@ public static class Settings
     /// Путь до папки с аккаунтами для WhatsApp
     /// </summary>
     public const string AccsDir = @"C:\Users\artem\source\repos\MVP\MemuExplorer\Accounts";
+    
+    /// <summary>
+    /// Путь до папки с данными
+    /// </summary>
+    public const string DatasDir = @"C:\Users\artem\source\repos\MVP\MemuExplorer\Data";
 
     /// <summary>
     /// Таймер операций (в секундах)

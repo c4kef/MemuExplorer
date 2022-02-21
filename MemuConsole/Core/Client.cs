@@ -17,6 +17,8 @@ public class Client
     /// </summary>
     private DeviceData? _device;
 
+    private DeviceInfoGenerated? _deviceInfo;
+    
     /// <summary>
     /// Объявление образа машины
     /// </summary>
@@ -233,5 +235,42 @@ public class Client
         Console.WriteLine($"[{_index}] -> requested resolution VM");
 
         return new Point(x, y);
+    }
+
+    
+    public async Task Spoof(int countryCode, bool genNewHardware = false)
+    {
+        var random = new Random();
+        var microvirt = await Globals.MicrovirtInfoGet();
+        var mcc = await Globals.MccMncGet(countryCode.ToString());
+
+        if (_deviceInfo is null || genNewHardware)
+            _deviceInfo = new DeviceInfoGenerated()
+            {
+                Latitude = random.Next(0,100).ToString(),
+                Longitude = random.Next(0,100).ToString(),
+                Mac = Globals.GetRandomMacAddress(),
+                Ssid = Globals.GetRandomMacAddress(),
+                Imei = Globals.GeneratorImei(microvirt.Tac),
+                Imsi = Globals.GeneratoImsi(mcc.Mnc, mcc.Mcc),
+                MccMnc = mcc,
+                ManualDiskSize = random.Next(16, 56).ToString(),
+                MicrovirtInfo = microvirt,
+                Simserial = Globals.GetIccid(mcc.Mnc),
+                Resolution = await Globals.GetResolution(),
+                TimeZone = await Globals.GetTimeZone(),
+                AndroidRelease = await Globals.GetAndroidRelease(),
+                SerialNo = random.Next(10_000_000, 100_000_000).ToString(),
+                BoardPlatform = Globals.RandomString(random.Next(5,10)),
+                GoogleFrameworkId = Globals.RandomHexString(16),
+                Language = await Globals.GetLanguage(),
+                AndroidId = Globals.RandomHexString(16),
+                ZenModeConfigEtag = random.Next(-100_000, 1_000_000).ToString(),
+                BootCount = random.Next(0, 1_000).ToString(),
+                PBootCount = random.Next(0, 50).ToString()
+            };
+
+        await Memu.Spoof(_index, _deviceInfo ?? new DeviceInfoGenerated());
+        Console.WriteLine($"[{_index}] -> VM spoofed, do not forget reload machine");
     }
 }

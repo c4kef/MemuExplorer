@@ -1,4 +1,5 @@
-﻿var tasks = new List<Task>();
+﻿Console.Write(new Random().Next(0,100));
+return;var tasks = new List<Task>();
 Memu.RunAdbServer();
 for (var hui = 0; hui < 2; hui++)
 {

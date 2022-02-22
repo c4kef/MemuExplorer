@@ -1,4 +1,4 @@
-﻿namespace MemuConsole.Core.Contacts;
+﻿namespace MemuLib.Core.Contacts;
 
 public class CObj
 {

@@ -1,4 +1,4 @@
-﻿namespace MemuConsole.Core;
+﻿namespace MemuLib.Core;
 
 public static class MemuCmd
 {

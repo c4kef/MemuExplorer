@@ -1,5 +1,8 @@
-﻿namespace MemuConsole;
+﻿namespace MemuLib;
 
+/// <summary>
+/// Информация о релизе андроида
+/// </summary>
 public struct AndroidRelease
 {
     public string Version;
@@ -7,6 +10,9 @@ public struct AndroidRelease
     public string ApiVersion;
 }
 
+/// <summary>
+/// Информация о разрешение экрана
+/// </summary>
 public struct Resolution
 {
     public string Height;
@@ -14,6 +20,9 @@ public struct Resolution
     public string Dpi;
 }
 
+/// <summary>
+/// Информация о сотовом операторе
+/// </summary>
 public struct MccMnc
 {
     public string Mcc;
@@ -23,6 +32,9 @@ public struct MccMnc
     public string MobileOperator;
 }
 
+/// <summary>
+/// Информация о железе устройства
+/// </summary>
 public struct MicrovirtInfo
 {
     public string MicrovirtVmBoard;
@@ -35,6 +47,9 @@ public struct MicrovirtInfo
     public string Tac;
 }
 
+/// <summary>
+/// Общая инфорация об устройстве
+/// </summary>
 public struct DeviceInfoGenerated
 {
     public string Latitude;

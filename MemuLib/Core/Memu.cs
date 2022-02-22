@@ -1,4 +1,4 @@
-﻿namespace MemuConsole.Core;
+﻿namespace MemuLib.Core;
 
 public static class Memu
 {
@@ -16,6 +16,8 @@ public static class Memu
 
         if (result != StartServerResult.Started)
             throw new Exception("Can't start adb server");
+        
+        Log.Write("ADB server is started!");
     }
 
     /// <summary>
@@ -63,6 +65,18 @@ public static class Memu
     public static async Task Remove(int index)
     {
         var answer = await MemuCmd.ExecMemuc($"remove -i {index}");
+        if (!answer.Contains("SUCCESS"))
+            throw new Exception($"Error: {answer}");
+    }
+    
+    /// <summary>
+    /// Перезагрузка машины
+    /// </summary>
+    /// <param name="index">индекс машины</param>
+    /// <exception cref="Exception">в случае тотального п***а просто вылезет ошибка</exception>
+    public static async Task Reboot(int index)
+    {
+        var answer = await MemuCmd.ExecMemuc($"reboot -i {index}");
         if (!answer.Contains("SUCCESS"))
             throw new Exception($"Error: {answer}");
     }
@@ -154,6 +168,11 @@ public static class Memu
     public static async Task Pull(int index, string local, string remote) =>
         await MemuCmd.ExecMemuc($"-i {index} adb pull {remote} {local}");
     
+    /// <summary>
+    /// Изменить информацию об устройстве (устройство должно быть активно и после применения перезагруженно)
+    /// </summary>
+    /// <param name="index">индекс устройства</param>
+    /// <param name="deviceInfoGenerated">новая информация об оборудование</param>
     public static async Task Spoof(int index, DeviceInfoGenerated deviceInfoGenerated)
     {
         //setconfigex

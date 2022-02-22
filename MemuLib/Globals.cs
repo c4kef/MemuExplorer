@@ -5,13 +5,19 @@ global using System.Text.RegularExpressions;
 global using OpenQA.Selenium.Chrome;
 global using AdvancedSharpAdbClient;
 global using Newtonsoft.Json;
-global using MemuConsole;
-global using MemuConsole.Core;
-global using MemuConsole.Core.Contacts;
-namespace MemuConsole;
+namespace MemuLib;
 
-internal static class Globals
+public static class Globals
 {
+    /// <summary>
+    /// Включить логирование?
+    /// </summary>
+    public static bool IsLog;
+    
+    /// <summary>
+    /// Сгенирировать случайны MAC адрес
+    /// </summary>
+    /// <returns>строка с новым MAC адресом</returns>
     public static string GetRandomMacAddress()
     {
         var buffer = new byte[6];
@@ -20,15 +26,36 @@ internal static class Globals
         return result.TrimEnd(':');
     }
 
+    /// <summary>
+    /// Сгенирировать случайную HEX строку
+    /// </summary>
+    /// <param name="length">длина строки</param>
+    /// <returns>новая строка</returns>
     public static string RandomHexString(int length) => new string(Enumerable.Repeat("ABCDEF0123456789", length)
         .Select(s => s[new Random().Next(s.Length)]).ToArray());
     
+    /// <summary>
+    /// Сгенирировать строку только с числами
+    /// </summary>
+    /// <param name="length">длина строки</param>
+    /// <returns>новая строка</returns>
     private static string RandomNumberString(int length) => new string(Enumerable.Repeat("0123456789", length)
         .Select(s => s[new Random().Next(s.Length)]).ToArray());
     
+    /// <summary>
+    /// Сгенирировать случайную строчку
+    /// </summary>
+    /// <param name="length">длина строки</param>
+    /// <returns>новая строка</returns>
     public static string RandomString(int length) => new string(Enumerable.Repeat("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", length)
         .Select(s => s[new Random().Next(s.Length)]).ToArray());
 
+    /// <summary>
+    /// Чтение и получение случайеного сотового оператора
+    /// </summary>
+    /// <param name="cc">код страны</param>
+    /// <returns>информацию о случайном операторе</returns>
+    /// <exception cref="Exception">файл для выбора не найден</exception>
     public static async Task<MccMnc> MccMncGet(string cc)
     {
         var rnd = new Random();
@@ -42,6 +69,11 @@ internal static class Globals
         return (vrem.Length > 0) ? vrem[rnd.Next(0, vrem.Length)] : array[rnd.Next(0, array.Length)];
     }
     
+    /// <summary>
+    /// Генерация случайного Imei
+    /// </summary>
+    /// <param name="tac">восьмизначная часть информации устройства</param>
+    /// <returns>новый Imei</returns>
     public static string GeneratorImei(string tac)
     {
         var rnd = new Random();
@@ -57,6 +89,11 @@ internal static class Globals
         return imei;
     }
     
+    /// <summary>
+    /// Проверка Imei на валидность
+    /// </summary>
+    /// <param name="imei">Imei для проверки</param>
+    /// <returns>true - проверка прошла успешно/false - проверка не прошла</returns>
     private static bool ValidateImei(string imei)
     {
         if (imei.Length != 15)
@@ -77,8 +114,19 @@ internal static class Globals
         }
     }
     
+    /// <summary>
+    /// Генератор случайного Imsi
+    /// </summary>
+    /// <param name="mnc">код мобильной сети</param>
+    /// <param name="mcc">мобильный код страны</param>
+    /// <returns>новый Imsi</returns>
     public static string GeneratoImsi(string mnc, string mcc) => mcc + mnc + RandomNumberString(10);
 
+    /// <summary>
+    /// Генерация случайной информации оборудования
+    /// </summary>
+    /// <returns>новая информация оборудования</returns>
+    /// <exception cref="Exception">файл с устройствами не был найден</exception>
     public static async Task<MicrovirtInfo> MicrovirtInfoGet()
     {
         var rnd = new Random();
@@ -107,6 +155,11 @@ internal static class Globals
         throw new Exception("Error: The creator of this library is an asshole");
     }
     
+    /// <summary>
+    /// Генерация уникального номера сим-карты
+    /// </summary>
+    /// <param name="mnc">код мобильной сети</param>
+    /// <returns>новый уникальный номер</returns>
     public static string GetIccid(string mnc)
     {
         var rnd = new Random();
@@ -123,14 +176,14 @@ internal static class Globals
             pr = CalculateLuhnAlgorithm(iccid);
         }
         
-        var pr2 = mnc;
-        
-        if (mnc.Length == 2)
-            pr2 = $"0{pr2}"; 
-        
         return iccid;
     }
     
+    /// <summary>
+    /// Калькулятор контрольных сум
+    /// </summary>
+    /// <param name="snumber">значение для подсчета</param>
+    /// <returns>является ли сумма положительной</returns>
     private static bool CalculateLuhnAlgorithm(string snumber)
     {
         var newListOfNumbers = snumber;
@@ -154,6 +207,11 @@ internal static class Globals
         return (sumOfAllValues % 10) == 0;
     }
 
+    /// <summary>
+    /// Генерация случайного разрешения экрана
+    /// </summary>
+    /// <returns>новое разрешение экрана</returns>
+    /// <exception cref="Exception">файл с разрешениями не был найден</exception>
     public static async Task<Resolution> GetResolution()
     {
         if (!File.Exists($@"{Settings.DatasDir}\resolutions.txt"))
@@ -172,6 +230,11 @@ internal static class Globals
         };
     }
 
+    /// <summary>
+    /// Генерация случайной временой зоны
+    /// </summary>
+    /// <returns>новая временая зона</returns>
+    /// <exception cref="Exception">файл с зонами не был найден</exception>
     public static async Task<string> GetTimeZone()
     {
         if (!File.Exists($@"{Settings.DatasDir}\timezones.txt"))
@@ -183,6 +246,11 @@ internal static class Globals
         return timezones[rnd.Next(0, timezones.Length)];
     }
     
+    /// <summary>
+    /// Генерация случайных андроид релизов
+    /// </summary>
+    /// <returns>новая версия ведра</returns>
+    /// <exception cref="Exception">файл с релизами не был найден</exception>
     public static async Task<AndroidRelease> GetAndroidRelease()
     {
         if (!File.Exists($@"{Settings.DatasDir}\androidreleases.txt"))
@@ -200,6 +268,11 @@ internal static class Globals
         };
     }
     
+    /// <summary>
+    /// Генерация случайного языка
+    /// </summary>
+    /// <returns>новый язык</returns>
+    /// <exception cref="Exception">файл с языками не был найден</exception>
     public static async Task<string> GetLanguage()
     {
         if (!File.Exists($@"{Settings.DatasDir}\languages.csv"))

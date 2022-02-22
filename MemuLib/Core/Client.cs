@@ -1,4 +1,4 @@
-﻿namespace MemuConsole.Core;
+﻿namespace MemuLib.Core;
 
 public class Client
 {
@@ -17,6 +17,9 @@ public class Client
     /// </summary>
     private DeviceData? _device;
 
+    /// <summary>
+    /// Локальное объявление информации о железе
+    /// </summary>
     private DeviceInfoGenerated? _deviceInfo;
     
     /// <summary>
@@ -36,7 +39,7 @@ public class Client
     {
         if (!await Memu.Exists(_index))
         {
-            Console.WriteLine($"[{_index}] -> VM not found");
+            Log.Write($"[{_index}] -> VM not found");
             return;
         }
 
@@ -62,7 +65,7 @@ public class Client
         if (_device is null)
             throw new Exception($"[{_index}] Can't connect to device");
         
-        Console.WriteLine($"[{_index}] -> VM started");
+        Log.Write($"[{_index}] -> VM started");
     }
 
     /// <summary>
@@ -72,13 +75,13 @@ public class Client
     {
         if (!await Memu.Exists(_index))
         {
-            Console.WriteLine($"[{_index}] -> VM not found");
+            Log.Write($"[{_index}] -> VM not found");
             return;
         }
 
         await Memu.Stop(_index);
 
-        Console.WriteLine($"[{_index}] -> VM stoped");
+        Log.Write($"[{_index}] -> VM stoped");
     }
 
     /// <summary>
@@ -89,19 +92,19 @@ public class Client
     {
         if (!await Memu.Exists(_index))
         {
-            Console.WriteLine($"[{_index}] -> VM not found");
+            Log.Write($"[{_index}] -> VM not found");
             return;
         }
 
         if (!File.Exists(path))
         {
-            Console.WriteLine($"[{_index}] -> apk file not found");
+            Log.Write($"[{_index}] -> apk file not found");
             return;
         }
 
         await Memu.InstallApk(_index, path);
 
-        Console.WriteLine($"[{_index}] -> installed apk");
+        Log.Write($"[{_index}] -> installed apk");
     }
 
     /// <summary>
@@ -112,14 +115,14 @@ public class Client
     {
         if (!await Memu.Exists(_index))
         {
-            Console.WriteLine($"[{_index}] -> VM not found");
+            Log.Write($"[{_index}] -> VM not found");
             return;
         }
 
         await Task.Delay(Settings.WaitingSecs);
         await Memu.StartApk(_index, comPath);
 
-        Console.WriteLine($"[{_index}] -> apk runned");
+        Log.Write($"[{_index}] -> apk runned");
     }
 
     /// <summary>
@@ -130,14 +133,14 @@ public class Client
     {
         if (!await Memu.Exists(_index))
         {
-            Console.WriteLine($"[{_index}] -> VM not found");
+            Log.Write($"[{_index}] -> VM not found");
             return;
         }
 
         await Task.Delay(Settings.WaitingSecs);
         await Memu.StopApk(_index, comPath);
 
-        Console.WriteLine($"[{_index}] -> apk stopped");
+        Log.Write($"[{_index}] -> apk stopped");
     }
 
     /// <summary>
@@ -149,14 +152,14 @@ public class Client
     {
         if (!await Memu.Exists(_index))
         {
-            Console.WriteLine($"[{_index}] -> VM not found");
+            Log.Write($"[{_index}] -> VM not found");
             return;
         }
 
         await Task.Delay(500);
         await MemuCmd.ExecMemuc($"-i {_index} adb shell input tap {x} {y}");
 
-        Console.WriteLine($"[{_index}] -> input tap {x} {y}");
+        Log.Write($"[{_index}] -> input tap {x} {y}");
     }
 
     /// <summary>
@@ -167,7 +170,7 @@ public class Client
     {
         if (!await Memu.Exists(_index))
         {
-            Console.WriteLine($"[{_index}] -> VM not found");
+            Log.Write($"[{_index}] -> VM not found");
             return;
         }
 
@@ -178,7 +181,7 @@ public class Client
 
         element.Click();
 
-        Console.WriteLine($"[{_index}] -> input tap uiElement");
+        Log.Write($"[{_index}] -> input tap uiElement");
     }
 
     /// <summary>
@@ -190,13 +193,13 @@ public class Client
     {
         if (!await Memu.Exists(_index))
         {
-            Console.WriteLine($"[{_index}] -> VM not found");
+            Log.Write($"[{_index}] -> VM not found");
             return;
         }
 
         await Memu.Push(_index, local, remote);
 
-        Console.WriteLine($"[{_index}] -> files pushed");
+        Log.Write($"[{_index}] -> files pushed");
     }
 
     /// <summary>
@@ -208,13 +211,13 @@ public class Client
     {
         if (!await Memu.Exists(_index))
         {
-            Console.WriteLine($"[{_index}] -> VM not found");
+            Log.Write($"[{_index}] -> VM not found");
             return;
         }
 
         await Memu.Pull(_index, local, remote);
 
-        Console.WriteLine($"[{_index}] -> files pushed");
+        Log.Write($"[{_index}] -> files pushed");
     }
 
     /// <summary>
@@ -225,19 +228,23 @@ public class Client
     {
         if (!await Memu.Exists(_index))
         {
-            Console.WriteLine($"[{_index}] -> VM not found");
+            Log.Write($"[{_index}] -> VM not found");
             return Point.Empty;
         }
 
         var x = int.Parse((await MemuCmd.ExecMemuc($"-i {_index} getconfigex resolution_width")).Split(' ')[1]);
         var y = int.Parse((await MemuCmd.ExecMemuc($"-i {_index} getconfigex resolution_height")).Split(' ')[1]);
 
-        Console.WriteLine($"[{_index}] -> requested resolution VM");
+        Log.Write($"[{_index}] -> requested resolution VM");
 
         return new Point(x, y);
     }
 
-    
+    /// <summary>
+    /// Изменить информацию об устройстве (устройство должно быть активно и после применения перезагруженно)
+    /// </summary>
+    /// <param name="countryCode">код страны (допустим Россия +7)</param>
+    /// <param name="genNewHardware">сгенирировать новое оборудование или воспользоваться ранее сгенерированным?</param>
     public async Task Spoof(int countryCode, bool genNewHardware = false)
     {
         var random = new Random();
@@ -271,6 +278,6 @@ public class Client
             };
 
         await Memu.Spoof(_index, _deviceInfo ?? new DeviceInfoGenerated());
-        Console.WriteLine($"[{_index}] -> VM spoofed, do not forget reload machine");
+        Log.Write($"[{_index}] -> VM spoofed, do not forget reload machine");
     }
 }

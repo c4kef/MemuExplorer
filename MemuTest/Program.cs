@@ -1,7 +1,11 @@
-﻿Console.Write(new Random().Next(0,100));
-return;var tasks = new List<Task>();
+﻿using System.Drawing;
+using MemuLib;
+using MemuLib.Core;
+
+Globals.IsLog = true;
+var tasks = new List<Task>();
 Memu.RunAdbServer();
-for (var hui = 0; hui < 2; hui++)
+for (var hui = 0; hui < 1; hui++)
 {
     tasks.Add(Task.Run(async () =>
     {

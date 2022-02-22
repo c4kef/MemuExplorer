@@ -1,4 +1,4 @@
-﻿namespace MemuConsole;
+﻿namespace MemuLib;
 
 public static class Settings
 {

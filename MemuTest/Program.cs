@@ -3,12 +3,16 @@ using MemuLib;
 using MemuLib.Core;
 
 Globals.IsLog = true;
-var tasks = new List<Task>();
+
+var test = await WebReq.HttpGet("https://5sim.net/v1/user/profile");
+Console.WriteLine(test);
+return;
 Memu.RunAdbServer();
-for (var hui = 0; hui < 1; hui++)
-{
-    tasks.Add(Task.Run(async () =>
-    {
+var mem = new Client(0);
+await mem.Start();
+await mem.Click("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']");
+
+/*//Auth
         var chrome = new Chrome();
         chrome.SetSize(new Point(200, 1080));
         chrome.SetPosition(new Point(0, 0));
@@ -33,7 +37,4 @@ for (var hui = 0; hui < 1; hui++)
         await mem.Click("//node[@text='ОК']");
         await mem.Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
         await mem.Click("//node[@text='OK']");
-    }));
-}
-
-Task.WaitAll(tasks.ToArray(), -1);
+*/

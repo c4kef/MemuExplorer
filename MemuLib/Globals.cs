@@ -1,6 +1,7 @@
 ﻿global using System.Diagnostics;
 global using System.Text;
 global using System.Drawing;
+global using System.Net;
 global using System.Text.RegularExpressions;
 global using OpenQA.Selenium.Chrome;
 global using AdvancedSharpAdbClient;

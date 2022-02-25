@@ -161,6 +161,23 @@ public class Client
 
         Log.Write($"[{_index}] -> input tap {x} {y}");
     }
+    
+    /// <summary>
+    /// Проверка элемента на существование
+    /// </summary>
+    /// <param name="uiElement">название элемента в интерфейсе</param>
+    public async Task<bool> ExistsElement(string uiElement)
+    {
+        if (!await Memu.Exists(_index))
+        {
+            Log.Write($"[{_index}] -> VM not found");
+            return false;
+        }
+
+        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(1.5f));
+
+        return element is not null;
+    }
 
     /// <summary>
     /// Симуляция кликов по экрану
@@ -182,6 +199,29 @@ public class Client
         element.Click();
 
         Log.Write($"[{_index}] -> input tap uiElement");
+    }
+    
+    /// <summary>
+    /// Симуляция ввода текста
+    /// </summary>
+    /// <param name="uiElement">название элемента в интерфейсе</param>
+    /// <param name="text">текст передаваемый на интерфейс</param>
+    public async Task Input(string uiElement, string text)
+    {
+        if (!await Memu.Exists(_index))
+        {
+            Log.Write($"[{_index}] -> VM not found");
+            return;
+        }
+
+        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(1.5f));
+       
+        if (element is null)
+            throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
+
+        element.SendText(text);
+
+        Log.Write($"[{_index}] -> input text uiElement");
     }
 
     /// <summary>
@@ -217,7 +257,26 @@ public class Client
 
         await Memu.Pull(_index, local, remote);
 
-        Log.Write($"[{_index}] -> files pushed");
+        Log.Write($"[{_index}] -> files pulled");
+    }
+    
+    /// <summary>
+    /// Выполнение команды в консоли андроида
+    /// </summary>
+    /// <param name="cmd">команда (без adb shell)</param>
+    public async Task<string> Shell(string cmd)
+    {
+        if (!await Memu.Exists(_index))
+        {
+            Log.Write($"[{_index}] -> VM not found");
+            return string.Empty;
+        }
+
+        var result = await MemuCmd.ExecMemuc($"-i {_index} adb shell {cmd}");
+
+        Log.Write($"[{_index}] -> shell be called");
+
+        return result;
     }
 
     /// <summary>

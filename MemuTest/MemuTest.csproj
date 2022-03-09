@@ -11,4 +11,19 @@
       <ProjectReference Include="..\MemuLib\MemuLib.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Edge.js" Version="8.2.1" />
+      <PackageReference Include="SocketIoClientDotNet" Version="0.9.13" />
+      <PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="SocketIO.Client, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>..\Libs\SocketIO.Client.dll</HintPath>
+      </Reference>
+      <Reference Include="WebSocket4Net, Version=0.8.0.0, Culture=neutral, PublicKeyToken=eb4e154b696bf72a">
+        <HintPath>..\Libs\WebSocket4Net.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>

@@ -14,3 +14,5 @@
 Apps/
 Accounts/
 Data/
+JServer/node_modules/
+JServer/tokens/

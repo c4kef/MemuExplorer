@@ -9,27 +9,16 @@ using SocketIO.Client;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using MemuTest.WhatsApp;
+using Newtonsoft.Json;
+using Client = MemuTest.WhatsApp.Client;
 
-var io = new SocketIOClient();
-         
-var socket = io.Connect("http://localhost:3000/");
-socket.On("data", (args, callback) =>
-{
-    Console.WriteLine("Server sent:");
-
-    for (int i = 0; i < args.Length; i++)
-    {
-        Console.WriteLine("[" + i + "] => " + args[i]);
-    }
-});
-         
-string line;
-         
-while ((line = Console.ReadLine()) != "q")
-{
-    socket.Emit("data", line);
-}
+var client = new Client("c4ke");
+await client.Init();
+await client.SendText("380992893157", "Hello world!");
+Console.WriteLine("END");
 return;
+/*
 Globals.IsLog = true;
 
 Memu.RunAdbServer();
@@ -98,7 +87,7 @@ while (await mem.ExistsElement("//node[@text='Инициализация…']"))
 await mem.Pull(@"D:\test", "/data/data/com.whatsapp/");
 
 
-/*//Auth
+//Auth
         var chrome = new Chrome();
         chrome.SetSize(new Point(200, 1080));
         chrome.SetPosition(new Point(0, 0));

@@ -6,6 +6,7 @@
       "start": "node index.js"
    },
    "dependencies": {
+      "@wppconnect-team/wppconnect": "^1.12.7",
       "socket.io": "~0.9.10",
       "venom-bot": "^4.0.7"
    }

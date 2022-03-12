@@ -75,12 +75,6 @@ io.sockets.on("connection", function (socket)
                    });
                break;
 
-           case "getAllChats":
-               backdata.status = 200
-               backdata.value.push(await getSession(data["Values"][0].split('@')[0]).getAllChats());
-               socket.emit("data", JSON.stringify(backdata));
-               break;
-
            case "startEvents":
                backdata.status = 200
 

@@ -7,6 +7,7 @@ global using OpenQA.Selenium.Chrome;
 global using AdvancedSharpAdbClient;
 global using Newtonsoft.Json;
 global using System.Runtime.InteropServices;
+global using MemuLib.Core.Contacts;
 global using Newtonsoft.Json.Linq;
 namespace MemuLib;
 

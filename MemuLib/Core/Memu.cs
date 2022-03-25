@@ -167,7 +167,7 @@ public static class Memu
     /// <param name="remote">путь на удаленной машине</param>
     public static async Task Pull(int index, string local, string remote) =>
         await MemuCmd.ExecMemuc($"-i {index} adb pull {remote} {local}");
-    
+
     /// <summary>
     /// Изменить информацию об устройстве (устройство должно быть активно и после применения перезагруженно)
     /// </summary>

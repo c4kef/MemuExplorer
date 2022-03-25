@@ -9,107 +9,117 @@ using SocketIO.Client;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using MemuLib.Core.Contacts;
 using MemuTest.WhatsApp;
 using Newtonsoft.Json;
-using Client = MemuTest.WhatsApp.Client;
 
-var client = new Client("c4ke");
-await client.Init();
-await client.SendText("380992893157", "Hello world!");
-Console.WriteLine("END");
-return;
-/*
+var c = new WAClient("c4ke");
+await c.Init();
+
 Globals.IsLog = true;
 
-Memu.RunAdbServer();
-var mem = new Client(0);
+var mem = new Client(await Memu.Create());
 await mem.Start();
-Console.WriteLine(await WebReq.HttpGet($"https://5sim.net/v1/user/orders?category=activation"));
 
-again:
-await mem.StopApk("com.whatsapp");
-await mem.Shell("pm clear com.whatsapp");
-await mem.RunApk("com.whatsapp");
+foreach (var file in Directory.GetFiles(""))
+    if (file.Contains("com."))
+        await mem.InstallApk(file);
 
-await mem.Click("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']");
+var num = await Register(@"D:\Account");
 
-var obj = await FsService.Create(service: "whatsapp", country: "russia");
+var contacts = new List<CObj>();
 
-await mem.Input("//node[@text='номер тел.']", obj.Phone.Remove(0, 2));
+contacts.Add(new CObj("C4ke", num));
 
-Console.WriteLine($"Number: {obj.Phone}");
+File.WriteAllText(ContactManager.Export(contacts), @"D:\contact.vcf");
 
-await mem.Click("//node[@text='ДАЛЕЕ']");
+await mem.ImportContacts(@"D:\contact.vcf");
 
-await mem.Click("//node[@text='OK']");
+await LoginFile(mem, @"D:\Account");
 
-if (await mem.ExistsElement("//node[@resource-id='android:id/message']"))
+await c.SendText(num, "Hello world!");
+
+async Task<string> Register(string to)
 {
-    obj.Cancel();
-    goto again;
-}
+    Memu.RunAdbServer();
+    var mem = new Client(0);
+    await mem.Start();
 
-var _count = 0;
+    again:
+    await mem.StopApk("com.whatsapp");
+    await mem.Shell("pm clear com.whatsapp");
+    await mem.RunApk("com.whatsapp");
 
-while (await obj.GetMessage() == string.Empty)
-{
-    ++_count;
-    Thread.Sleep(1_500);
-    if (_count > 15)
+    await mem.Click("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']");
+
+    var obj = await FsService.Create(service: "whatsapp", country: "russia");
+
+    await mem.Input("//node[@text='номер тел.']", obj.Phone.Remove(0, 2));
+
+    Console.WriteLine($"Number: {obj.Phone}");
+
+    await mem.Click("//node[@text='ДАЛЕЕ']");
+
+    await mem.Click("//node[@text='OK']");
+
+    if (await mem.ExistsElement("//node[@resource-id='android:id/message']"))
     {
         obj.Cancel();
         goto again;
     }
+
+    var _count = 0;
+
+    while (await obj.GetMessage() == string.Empty)
+    {
+        ++_count;
+        Thread.Sleep(1_500);
+        if (_count > 15)
+        {
+            obj.Cancel();
+            goto again;
+        }
+    }
+
+    var code = new string(new Regex(@"\b\d{3}\-\d{3}\b").Match(await obj.GetMessage()).Value.Where(char.IsDigit).ToArray());
+
+    await mem.Input("//node[@text='––– –––']", code);
+
+    Console.WriteLine(code);
+
+    if (await mem.ExistsElement("//node[@resource-id='android:id/message']"))
+        goto again;//To-Do
+
+    await mem.Input("//node[@text='Введите своё имя']", "Тамара");
+    await mem.Click("//node[@text='ДАЛЕЕ']");
+
+    _count = 0;
+
+    while (await mem.ExistsElement("//node[@text='Инициализация…']"))
+    {
+        ++_count;
+        Thread.Sleep(1_500);
+        if (_count > 5)
+            goto again;
+    }
+
+    await mem.Pull(to, "/data/data/com.whatsapp/");
+
+    return obj.Phone;
 }
 
-var code = new string(new Regex(@"\b\d{3}\-\d{3}\b").Match(await obj.GetMessage()).Value.Where(char.IsDigit).ToArray());
-
-await mem.Input("//node[@text='––– –––']", code);
-
-Console.WriteLine(code);
-
-if (await mem.ExistsElement("//node[@resource-id='android:id/message']"))
-    goto again;//To-Do
-
-await mem.Input("//node[@text='Введите своё имя']", "Тамара");
-await mem.Click("//node[@text='ДАЛЕЕ']");
-
-_count = 0;
-
-while (await mem.ExistsElement("//node[@text='Инициализация…']"))
+async Task LoginFile(Client mem, string path)
 {
-    ++_count;
-    Thread.Sleep(1_500);
-    if (_count > 5)
-        goto again;
+    await mem.RunApk("com.whatsapp");
+    await mem.StopApk("com.whatsapp");
+    await mem.Push($@"{path}\.", @"/data/data/com.whatsapp");
+    await mem.RunApk("com.whatsapp");
+    await mem.Click("//node[@text='Выберите частоту резервного копирования']");
+    await mem.Click("//node[@text='Никогда']");
+    await mem.Click("//node[@text='ГОТОВО']");
+    await mem.Click("//node[@content-desc='Ещё']");
+    await mem.Click("//node[@text='Связанные устройства']");
+    await mem.Click("//node[@text='ОК']");
+    await mem.Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
+    await mem.Click("//node[@text='OK']");
 }
-
-await mem.Pull(@"D:\test", "/data/data/com.whatsapp/");
-
-
-//Auth
-        var chrome = new Chrome();
-        chrome.SetSize(new Point(200, 1080));
-        chrome.SetPosition(new Point(0, 0));
-        chrome.Start();
-
-        var mem = new Client(await Memu.Create());
-        await mem.Start();
-
-        foreach (var file in Directory.GetFiles(Settings.AppsDir))
-            if (file.Contains("com."))
-                await mem.InstallApk(file);
-
-        await mem.RunApk("com.whatsapp");
-        await mem.StopApk("com.whatsapp");
-        await mem.Push($@"{Settings.AccsDir}\blabla\.", @"/data/data/com.whatsapp");
-        await mem.RunApk("com.whatsapp");
-        await mem.Click("//node[@text='Выберите частоту резервного копирования']");
-        await mem.Click("//node[@text='Никогда']");
-        await mem.Click("//node[@text='ГОТОВО']");
-        await mem.Click("//node[@content-desc='Ещё']");
-        await mem.Click("//node[@text='Связанные устройства']");
-        await mem.Click("//node[@text='ОК']");
-        await mem.Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
-        await mem.Click("//node[@text='OK']");
-*/

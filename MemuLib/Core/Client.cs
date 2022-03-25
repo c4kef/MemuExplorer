@@ -106,6 +106,29 @@ public class Client
 
         Log.Write($"[{_index}] -> installed apk");
     }
+    
+    /// <summary>
+    /// Импорт контактов
+    /// </summary>
+    /// <param name="path">путь до контакта</param>
+    public async Task ImportContacts(string path)
+    {
+        if (!await Memu.Exists(_index))
+        {
+            Log.Write($"[{_index}] -> VM not found");
+            return;
+        }
+
+        if (!File.Exists(path))
+        {
+            Log.Write($"[{_index}] -> contact file not found");
+            return;
+        }
+
+        await ContactManager.Import(_index, path);
+
+        Log.Write($"[{_index}] -> contacts imported");
+    }
 
     /// <summary>
     /// Запуск приложения на машине

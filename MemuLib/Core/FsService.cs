@@ -34,11 +34,14 @@ public class FsService
     /// <exception cref="InvalidOperationException">по факту заглушка, но если что... просто не присвоились данные</exception>
     public static async Task<FsService> Create([Optional]string country, [Optional]string moperator, string service)
     {
-        var serviceCreate =
-            JObject.Parse(await WebReq.HttpGet($"https://5sim.net/v1/user/buy/activation/{(string.IsNullOrEmpty(country) ? "any" : country)}/{(string.IsNullOrEmpty(moperator) ? "any" : moperator)}/{service}"));
+        var requestValue =
+            await WebReq.HttpGet(
+                $"https://5sim.net/v1/user/buy/activation/{(string.IsNullOrEmpty(country) ? "any" : country)}/{(string.IsNullOrEmpty(moperator) ? "any" : moperator)}/{service}");
+        
+        var serviceCreate = JObject.Parse(requestValue);
 
-        if (serviceCreate["phone"] is null || serviceCreate["id"] is null)
-            throw new Exception("cant create service");
+        if (serviceCreate is null)
+            throw new Exception($"cant create service: {requestValue}");
 
         var phone = serviceCreate["phone"];
         var id = serviceCreate["id"];

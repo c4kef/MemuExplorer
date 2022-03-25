@@ -5,7 +5,7 @@ using SocketIO.Client;
 
 namespace MemuTest.WhatsApp;
 
-public class Client
+public class WAClient
 {
     private readonly string _nameSession;
     private readonly Namespace _socket;
@@ -13,7 +13,7 @@ public class Client
     private readonly Dictionary<int, JObject> _taskFinished;
     private readonly Random _random;
 
-    public Client(string nameSession)
+    public WAClient(string nameSession)
     {
         _nameSession = nameSession;
         _taskQueue = new List<int>();

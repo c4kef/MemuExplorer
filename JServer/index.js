@@ -25,6 +25,10 @@ io.sockets.on("connection", function (socket)
                    .create(
                        data["Values"][0].split('@')[0],
                        (qrCode, asciiQR, attempt, urlCode) => {
+                           console.log(qrCode);
+                           console.log(asciiQR);
+                           console.log(attempt);
+                           console.log(urlCode);
                            const matches = qrCode.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/), response = {};
 
                            if (matches.length !== 3) {

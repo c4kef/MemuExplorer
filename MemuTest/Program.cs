@@ -13,113 +13,109 @@ using MemuLib.Core.Contacts;
 using MemuTest.WhatsApp;
 using Newtonsoft.Json;
 
-var c = new WAClient("c4ke");
-await c.Init();
+Globals.IsLog = true;
+Memu.RunAdbServer();
 
+var cls = new List<WAClient>();
+var tsks = new List<Task>();
+var contacts = new List<CObj>
+{
+    new CObj($"Artemiy 1", "+12367056432"),
+    new CObj($"Artemiy 2", "+12367008836"),
+    new CObj($"Artemiy 3", "+14313038685")
+};
+
+await File.WriteAllTextAsync(@"D:\contact.vcf", ContactManager.Export(contacts));
+
+for (var i = 1; i < 4; i++)
+{
+    var client = new WAClient("", deviceId: i);
+    await client.Start();
+    cls.Add(client);
+}
+
+
+for (var i = 0; i < cls.Count; i++)
+{
+    var i1 = i;
+    tsks.Add(Task.Run(async () =>
+    {
+        await cls[i1].ImportContacts(@"D:\contact.vcf");
+        await cls[i1].LoginFile(@$"D:\Build\accs\{((i1 == 0) ? "12367056432" : (i1 == 1) ? "12367008836" : "14313038685")}\com.whatsapp");
+    }));
+}
+
+Task.WaitAll(tsks.ToArray(), -1);
+
+await cls[0].SendMessage("+12367008836", "Hello Artemiy!");
+await cls[0].SendMessage("+14313038685", "Hello Artemiy!");
+
+await cls[1].SendMessage("+12367056432", "Hello Artemiy!");
+await cls[1].SendMessage("+14313038685", "Hello Artemiy!");
+
+await cls[2].SendMessage("+12367008836", "Hello Artemiy!");
+await cls[2].SendMessage("+12367056432", "Hello Artemiy!");
+
+return;
+/*
+await mema.ImportContacts(@"D:\contact.vcf");
+await mema.Click("//node[@text='ОК']");
+await LoginFile(mema, @"C:\Users\artem\source\repos\MVP\MemuExplorer\Accounts\blabla");
+await mema.Shell($@"am start -a android.intent.action.VIEW -d https://wa.me/{phone}/?text={Uri.EscapeDataString("Hello world!")}");
+var i = 0;
+while (i < 3)
+{
+    if (!await mema.ExistsElement("//node[@content-desc='Отправить']"))
+    {
+        i++;
+        await Task.Delay(1_500);
+        continue;
+    }
+
+    await mema.Click("//node[@content-desc='Отправить']");
+}
+
+/*
+Thread.Sleep(500);
+
+IntPtr id = flash.MainWindowHandle;
+Console.Write(id);
+WAClient.MoveWindow(flash.MainWindowHandle, 0, 0, 500, 500, true);
+return;
 Globals.IsLog = true;
 
-var mem = new Client(await Memu.Create());
-await mem.Start();
-
-foreach (var file in Directory.GetFiles(""))
-    if (file.Contains("com."))
-        await mem.InstallApk(file);
-
-var num = await Register(@"D:\Account");
-
+var mems = new List<Client>();
+var tasks = new List<Task>();
 var contacts = new List<CObj>();
 
-contacts.Add(new CObj("C4ke", num));
-
-File.WriteAllText(ContactManager.Export(contacts), @"D:\contact.vcf");
-
-await mem.ImportContacts(@"D:\contact.vcf");
-
-await LoginFile(mem, @"D:\Account");
-
-await c.SendText(num, "Hello world!");
-
-async Task<string> Register(string to)
+for (var i = 0; i < 2; i++)
 {
-    Memu.RunAdbServer();
     var mem = new Client(0);
     await mem.Start();
 
-    again:
-    await mem.StopApk("com.whatsapp");
-    await mem.Shell("pm clear com.whatsapp");
-    await mem.RunApk("com.whatsapp");
+    foreach (var file in Directory.GetFiles(""))
+        if (file.Contains("com."))
+            await mem.InstallApk(file);
 
-    await mem.Click("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']");
+    var num = await Register(@"D:\Account");
 
-    var obj = await FsService.Create(service: "whatsapp", country: "russia");
-
-    await mem.Input("//node[@text='номер тел.']", obj.Phone.Remove(0, 2));
-
-    Console.WriteLine($"Number: {obj.Phone}");
-
-    await mem.Click("//node[@text='ДАЛЕЕ']");
-
-    await mem.Click("//node[@text='OK']");
-
-    if (await mem.ExistsElement("//node[@resource-id='android:id/message']"))
-    {
-        obj.Cancel();
-        goto again;
-    }
-
-    var _count = 0;
-
-    while (await obj.GetMessage() == string.Empty)
-    {
-        ++_count;
-        Thread.Sleep(1_500);
-        if (_count > 15)
-        {
-            obj.Cancel();
-            goto again;
-        }
-    }
-
-    var code = new string(new Regex(@"\b\d{3}\-\d{3}\b").Match(await obj.GetMessage()).Value.Where(char.IsDigit).ToArray());
-
-    await mem.Input("//node[@text='––– –––']", code);
-
-    Console.WriteLine(code);
-
-    if (await mem.ExistsElement("//node[@resource-id='android:id/message']"))
-        goto again;//To-Do
-
-    await mem.Input("//node[@text='Введите своё имя']", "Тамара");
-    await mem.Click("//node[@text='ДАЛЕЕ']");
-
-    _count = 0;
-
-    while (await mem.ExistsElement("//node[@text='Инициализация…']"))
-    {
-        ++_count;
-        Thread.Sleep(1_500);
-        if (_count > 5)
-            goto again;
-    }
-
-    await mem.Pull(to, "/data/data/com.whatsapp/");
-
-    return obj.Phone;
+    contacts.Add(new CObj($"C4ke_{i}", num));
+    mems.Add(mem);
 }
 
-async Task LoginFile(Client mem, string path)
+File.WriteAllText(ContactManager.Export(contacts), @"D:\contact.vcf");
+
+/*foreach (var VARIABLE in COLLECTION)
 {
-    await mem.RunApk("com.whatsapp");
-    await mem.StopApk("com.whatsapp");
-    await mem.Push($@"{path}\.", @"/data/data/com.whatsapp");
-    await mem.RunApk("com.whatsapp");
-    await mem.Click("//node[@text='Выберите частоту резервного копирования']");
-    await mem.Click("//node[@text='Никогда']");
-    await mem.Click("//node[@text='ГОТОВО']");
-    await mem.Click("//node[@content-desc='Ещё']");
-    await mem.Click("//node[@text='Связанные устройства']");
-    await mem.Click("//node[@text='ОК']");
-    await mem.Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
-    await mem.Click("//node[@text='OK']");
+    
 }
+await mem.ImportContacts(@"D:\contact.vcf");
+await LoginFile(mem, @"C:\Users\artem\source\repos\MVP\MemuExplorer\Accounts\blabla");
+
+var c = new WAClient("c4ke");
+await c.Init();
+
+await c.SendText("+79772801086", "Hello world!");
+
+Task.WaitAll()
+*/

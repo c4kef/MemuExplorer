@@ -47,7 +47,7 @@ public class Client
         
         await Memu.Start(_index);
 
-        await Task.Delay(2_500);//Ждем наверняка...
+        await Task.Delay(3_500);//Ждем наверняка...
         
         var host = new Regex(@"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b")
             .Match(await MemuCmd.ExecMemuc($"-i {_index} adb start-server")).Value;

@@ -25,7 +25,7 @@ public class ContactManager
     {
         await MemuCmd.ExecMemuc($@"-i {index} adb push {pathToContacts} /storage/emulated/0/contact.vcf");
         await MemuCmd.ExecMemuc(
-            $"-i {index} adb shell am start -t \"text/x-vcard\" -d \"file:///storage/emulated/0/contact.vcf\" -a android.intent.action.VIEW cz.psencik.com.android.contacts");
+            $"-i {index} adb shell am start -t \"text/x-vcard\" -d \"file:///storage/emulated/0/contact.vcf\" -a android.intent.action.VIEW com.android.contacts");
 
         Log.Write($"[{index}] -> contacts imported");
     }

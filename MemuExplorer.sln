@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemuLib", "MemuLib\MemuLib.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemuTest", "MemuTest\MemuTest.csproj", "{4F265F2E-2CF3-48FD-966C-B5359B0D42E0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WABot", "WABot\WABot.csproj", "{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{4F265F2E-2CF3-48FD-966C-B5359B0D42E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4F265F2E-2CF3-48FD-966C-B5359B0D42E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4F265F2E-2CF3-48FD-966C-B5359B0D42E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

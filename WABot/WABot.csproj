@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net6.0-windows10.0.18362.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="WindowsAPICodePack" Version="1.1.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="ModernWpf, Version=0.9.4.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>..\Libs\ModernWpf.dll</HintPath>
+      </Reference>
+      <Reference Include="ModernWpf.Controls, Version=0.9.4.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>..\Libs\ModernWpf.Controls.dll</HintPath>
+      </Reference>
+      <Reference Include="ModernWpf.MahApps, Version=0.9.4.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>..\Libs\ModernWpf.MahApps.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+</Project>

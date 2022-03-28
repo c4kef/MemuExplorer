@@ -1,0 +1,66 @@
+﻿<ui:Page x:Class="WABot.Pages.Settings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:WABot.Pages"
+        mc:Ignorable="d"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        Title="Settings" Height="450" Width="800">
+    <Grid HorizontalAlignment="Center" VerticalAlignment="Stretch">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="180"/>
+            <ColumnDefinition Width="180"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <Border Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0" Background="Transparent" BorderThickness="1" CornerRadius="10">
+            <StackPanel Orientation="Vertical">
+                <Label Content="Настройки прогрева" HorizontalAlignment="Center"/>
+                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding CountMessage}" ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Введите глубину" SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact">
+                    <ui:NumberBox.ToolTip>
+                        <ToolTip>
+                            Сколько сообщений от каждого бота должно быть в диалоге
+                        </ToolTip>
+                    </ui:NumberBox.ToolTip>
+                </ui:NumberBox>
+                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding DelayBetweenUsers}" ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Введите время" SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact">
+                    <ui:NumberBox.ToolTip>
+                        <ToolTip>
+                            Сколько должно пройти времени с момента последней переписки с другим контактом. Время в формате 1000 = 1сек
+                        </ToolTip>
+                    </ui:NumberBox.ToolTip>
+                </ui:NumberBox>
+            </StackPanel>
+        </Border>
+        
+        <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0" Background="Transparent" BorderThickness="1" CornerRadius="10">
+            <StackPanel Orientation="Vertical">
+                <Label Content="Настройки рассылки" HorizontalAlignment="Center"/>
+                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding TrustLevelAccount}" ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Уровень доверия" SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact">
+                    <ui:NumberBox.ToolTip>
+                        <ToolTip>
+                            Определяет уровень прогрева для аккаунтов которыми могут пользоваться боты
+                        </ToolTip>
+                    </ui:NumberBox.ToolTip>
+                </ui:NumberBox>
+                <Button HorizontalAlignment="Center" Margin="0,10,0,0" ui:ControlHelper.CornerRadius="5" Content="Выберите аккаунты" BorderBrush="{Binding ColorPathToDirectoryAccounts}" Click="SelectAccounts">
+                    <Button.ToolTip>
+                        <ToolTip>
+                            Укажите путь на папку с аккаунтами от WhatsApp
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+                <Button HorizontalAlignment="Center" Margin="0,10,0,0" ui:ControlHelper.CornerRadius="5" Content="Выберите номера" BorderBrush="{Binding ColorPathToPhonesUsers}" Click="SelectNumbers">
+                    <Button.ToolTip>
+                        <ToolTip>
+                            Укажите путь на текстовый файл с номерами на которые произведется рассылка
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</ui:Page>

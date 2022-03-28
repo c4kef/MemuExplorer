@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 Globals.IsLog = true;
 Memu.RunAdbServer();
 
+/*
 var cls = new List<WAClient>();
 var tsks = new List<Task>();
 var contacts = new List<CObj>

@@ -1,10 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using SocketIO.Client;
-
-namespace MemuTest.WhatsApp;
+﻿namespace WABot.WhatsApp;
 
 public class WAWebClient
 {

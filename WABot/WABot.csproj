@@ -22,6 +22,16 @@
       <Reference Include="ModernWpf.MahApps, Version=0.9.4.0, Culture=neutral, PublicKeyToken=null">
         <HintPath>..\Libs\ModernWpf.MahApps.dll</HintPath>
       </Reference>
+      <Reference Include="SocketIO.Client, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>..\Libs\SocketIO.Client.dll</HintPath>
+      </Reference>
+      <Reference Include="WebSocket4Net, Version=0.8.0.0, Culture=neutral, PublicKeyToken=eb4e154b696bf72a">
+        <HintPath>..\Libs\WebSocket4Net.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\MemuLib\MemuLib.csproj" />
     </ItemGroup>
 
 </Project>

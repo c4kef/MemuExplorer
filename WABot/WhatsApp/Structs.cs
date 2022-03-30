@@ -1,4 +1,4 @@
-﻿namespace MemuTest.WhatsApp;
+﻿namespace WABot.WhatsApp;
 
 public struct ServerData
 {

@@ -27,10 +27,24 @@
                             </ToolTip>
                         </Button.ToolTip>
                     </Button>
+                    <Button HorizontalAlignment="Center" Margin="10,0,0,0" ui:ControlHelper.CornerRadius="5" Content="Проверка" Click="CheckAccounts">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                Начнет процесс проверки аккаунтов на валидность
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
                     <Button HorizontalAlignment="Center" Margin="10,0,0,0" ui:ControlHelper.CornerRadius="5" Content="Рассылка" Click="Newsletter">
                         <Button.ToolTip>
                             <ToolTip>
                                 Начнет процесс рассылки сообщений пользователям
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
+                    <Button HorizontalAlignment="Center" Margin="10,0,0,0" ui:ControlHelper.CornerRadius="5" Content="{Binding DeviceBtnText}" Click="DevicesSetup">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                Начнет процесс запуска/отключения виртуальных устройств
                             </ToolTip>
                         </Button.ToolTip>
                     </Button>
@@ -39,7 +53,7 @@
         </Border>
         <TextBox AcceptsReturn="True" AcceptsTab="True" Grid.Row="1"  Margin="10,10,10,10" ui:ControlHelper.CornerRadius="10" ui:ControlHelper.PlaceholderText="Введите текст" Text="{Binding TextMessage}"/>
         <ProgressBar
-            Grid.Row="2" Margin="80,0,80,0" ui:ControlHelper.CornerRadius="2" IsEnabled="True"
+            Grid.Row="2" Margin="80,0,80,0" ui:ControlHelper.CornerRadius="2" IsEnabled="True" Maximum="100" Minimum="0"
             Value="{Binding ProgressValue}" />
     </Grid>
 </ui:Page>

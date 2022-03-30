@@ -197,7 +197,7 @@ public class Client
             return false;
         }
 
-        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(1.5f));
+        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(1.0f));
 
         return element is not null;
     }

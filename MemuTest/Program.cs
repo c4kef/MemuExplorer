@@ -1,20 +1,14 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
-using WebSocketSharp;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using MemuLib;
 using MemuLib.Core;
 using SocketIO.Client;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using MemuLib.Core.Contacts;
-using MemuTest.WhatsApp;
-using Newtonsoft.Json;
 
-Globals.IsLog = true;
-Memu.RunAdbServer();
+var dic = new Dictionary<string, int>();
+
+Console.WriteLine(dic.Take(5).Count());
 
 /*
 var cls = new List<WAClient>();

@@ -56,6 +56,18 @@ public static class Memu
 
         return int.Parse(answer.Split('\n')[1].Split(':')[1]);
     }
+    
+    /// <summary>
+    /// Импорт машины
+    /// </summary>
+    /// <param name="ova">путь до образа</param>
+    /// <exception cref="Exception">в случае тотального п***а просто вылезет ошибка</exception>
+    public static async Task Import(string ova)
+    {
+        var answer = await MemuCmd.ExecMemuc($"import {ova}");
+        if (!answer.Contains("SUCCESS"))
+            throw new Exception($"Error: {answer}");
+    }
 
     /// <summary>
     /// Удаление машины
@@ -67,6 +79,20 @@ public static class Memu
         var answer = await MemuCmd.ExecMemuc($"remove -i {index}");
         if (!answer.Contains("SUCCESS"))
             throw new Exception($"Error: {answer}");
+    }
+    
+    /// <summary>
+    /// Удаление всех машин
+    /// </summary>
+    public static async Task RemoveAll()
+    {
+        var index = 0;
+        while (true)
+        {
+            var answer = await MemuCmd.ExecMemuc($"remove -i {index++}");
+            if (!answer.Contains("SUCCESS"))
+                break;
+        }
     }
     
     /// <summary>

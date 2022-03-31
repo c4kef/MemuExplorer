@@ -27,17 +27,17 @@
                         </ToolTip>
                     </CheckBox.ToolTip>
                 </CheckBox>
-                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding CountMessage}" ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Введите глубину" SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact">
+                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding CountMessage}" ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Кол-во циклов" SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact">
                     <ui:NumberBox.ToolTip>
                         <ToolTip>
-                            Сколько сообщений от каждого бота должно быть в диалоге
+                            Сколько раз блок текста должен быть продублирован в сообщение
                         </ToolTip>
                     </ui:NumberBox.ToolTip>
                 </ui:NumberBox>
                 <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding DelayBetweenUsers}" ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Введите время" SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact">
                     <ui:NumberBox.ToolTip>
                         <ToolTip>
-                            Сколько должно пройти времени с момента последней переписки с другим контактом. Время в формате 1000 = 1сек
+                            Сколько должно пройти времени с момента последней переписки с другим контактом. Время в формате 1 = 1сек
                         </ToolTip>
                     </ui:NumberBox.ToolTip>
                 </ui:NumberBox>
@@ -74,7 +74,7 @@
         <Border Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0" Background="Transparent" BorderThickness="1" CornerRadius="10">
             <StackPanel Orientation="Vertical">
                 <Label Content="Настройки устройств" HorizontalAlignment="Center"/>
-                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding CountDevices}" ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Кол-во устройств" SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact">
+                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding CountDevices}" ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Кол-во устройств" SmallChange="2" LargeChange="10" Minimum="2" SpinButtonPlacementMode="Compact">
                     <ui:NumberBox.ToolTip>
                         <ToolTip>
                             Укажите кол-во виртуальных устройств которые будут одновременно запущены на данном устройстве

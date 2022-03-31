@@ -6,9 +6,8 @@ using MemuLib;
 using MemuLib.Core;
 using SocketIO.Client;
 
-var dic = new Dictionary<string, int>();
+Debug.Assert(true, "Test");
 
-Console.WriteLine(dic.Take(5).Count());
 
 /*
 var cls = new List<WAClient>();

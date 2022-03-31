@@ -41,34 +41,13 @@ public static class Globals
             await SaveSetup();
         
         //MemuLib.Globals.IsLog = true;
-        Memu.RunAdbServer();
     }
     
     public static async Task SaveSetup()
     {
         await File.WriteAllTextAsync(NameSetupFile, JsonConvert.SerializeObject(Setup));
     }
-    
-    public static async Task<(string phone, string path)> GetRandomAccount([Optional]int trustLevel)
-    {
-        foreach (var accountDirectory in Directory.GetDirectories(Setup.PathToDirectoryAccounts))
-        {
-            if (!File.Exists($@"{accountDirectory}\Data.json") || !Directory.Exists($@"{accountDirectory}\com.whatsapp"))
-                continue;
 
-            var dataAccount =
-                JsonConvert.DeserializeObject<AccountData>(
-                    await File.ReadAllTextAsync($@"{accountDirectory}\Data.json"));
-
-            if (Setup.EnableWarm)
-                return (new DirectoryInfo(accountDirectory).Name, accountDirectory);
-            else if (trustLevel != 0 && trustLevel >= dataAccount!.TrustLevelAccount)
-                return (new DirectoryInfo(accountDirectory).Name, accountDirectory);
-        }
-
-        return (string.Empty, string.Empty);
-    }
-    
     public static async Task<(string phone, string path)[]> GetAccountsWarm(string phoneFrom)
     {
         var accounts = new List<(string phone, string path)>();
@@ -86,7 +65,7 @@ public static class Globals
             if (phone != phoneFrom && !dataAccount!.LastActiveDialog!.ContainsKey(phone))
                 accounts.Add((phone, accountDirectory));
             else if (phone != phoneFrom && dataAccount!.LastActiveDialog!.ContainsKey(phone) &&
-                     (DateTime.Now - dataAccount.LastActiveDialog[phone]).TotalMilliseconds >= Setup.DelayBetweenUsers)
+                     (DateTime.Now - dataAccount.LastActiveDialog[phone]).TotalMilliseconds >= Setup.DelayBetweenUsers * 1000)
                 accounts.Add((phone, accountDirectory));
         }
 
@@ -110,7 +89,29 @@ public static class Globals
             if (!phoneFrom.Contains(phone) && !dataAccount!.LastActiveDialog!.ContainsKey(phone))
                 accounts.Add((phone, accountDirectory));
             else if (!phoneFrom.Contains(phone) && dataAccount!.LastActiveDialog!.ContainsKey(phone) &&
-                     (DateTime.Now - dataAccount.LastActiveDialog[phone]).TotalMilliseconds >= Setup.DelayBetweenUsers)
+                     (DateTime.Now - dataAccount.LastActiveDialog[phone]).TotalMilliseconds >= Setup.DelayBetweenUsers * 1000)
+                accounts.Add((phone, accountDirectory));
+        }
+
+        return accounts.ToArray();
+    }
+    
+    public static async Task<(string phone, string path)[]> GetAccounts(string[] phoneFrom, int trustLevelAccount)
+    {
+        var accounts = new List<(string phone, string path)>();
+
+        foreach (var accountDirectory in Directory.GetDirectories(Setup.PathToDirectoryAccounts))
+        {
+            if (!File.Exists($@"{accountDirectory}\Data.json") ||
+                !Directory.Exists($@"{accountDirectory}\com.whatsapp"))
+                continue;
+
+            var phone = new DirectoryInfo(accountDirectory).Name;
+            var dataAccount =
+                JsonConvert.DeserializeObject<AccountData>(
+                    await File.ReadAllTextAsync($@"{accountDirectory}\Data.json"));
+
+            if (!phoneFrom.Contains(phone) && dataAccount!.TrustLevelAccount >= trustLevelAccount)
                 accounts.Add((phone, accountDirectory));
         }
 
@@ -124,13 +125,13 @@ public static class Globals
 public class Setup
 {
     /// <summary>
-    /// Глубина сообщений
+    /// Кол-во циклов на блок сообщений
     /// </summary>
-    public int CountMessage = 0;
+    public int CountMessage = 1;
     /// <summary>
     /// Задержка между отправкой сообщений между двумя пользователями (срабатывает по окончанию цикла)
     /// </summary>
-    public int DelayBetweenUsers = 0;
+    public int DelayBetweenUsers = 24000;
     /// <summary>
     /// Уровень прогрева аккаунта для начала рассылки сообщений
     /// </summary>
@@ -138,7 +139,7 @@ public class Setup
     /// <summary>
     /// Кол-во виртуальный устройств
     /// </summary>
-    public int CountDevices = 0;
+    public int CountDevices = 2;
     /// <summary>
     /// Включить режим прогрева
     /// </summary>

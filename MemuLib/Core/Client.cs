@@ -327,11 +327,11 @@ public class Client
     /// </summary>
     /// <param name="countryCode">код страны (допустим Россия +7)</param>
     /// <param name="genNewHardware">сгенирировать новое оборудование или воспользоваться ранее сгенерированным?</param>
-    public async Task Spoof(int countryCode, bool genNewHardware = false)
+    public async Task Spoof(string countryCode, bool genNewHardware = false)
     {
         var random = new Random();
         var microvirt = await Globals.MicrovirtInfoGet();
-        var mcc = await Globals.MccMncGet(countryCode.ToString());
+        var mcc = await Globals.MccMncGet(countryCode);
 
         if (_deviceInfo is null || genNewHardware)
             _deviceInfo = new DeviceInfoGenerated()

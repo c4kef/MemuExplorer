@@ -3,25 +3,22 @@
 public class WAClient
 {
     private Client _mem;
-    private int temp;
     public string Phone { private set; get; }
     public string Account { private set; get; }
     public AccountData AccountData;
 
     public WAClient(string phone = "", string account = "", int deviceId = -1)
     {
-        if (phone[0] != '+')
-            throw new Exception("Not correct format number phone");
-        
         Phone = phone;
         Account = account;
-        AccountData = JsonConvert.DeserializeObject<AccountData>(File.ReadAllText($@"{account}\Data.json"))!;
+        if (account != string.Empty)
+            AccountData = JsonConvert.DeserializeObject<AccountData>(File.ReadAllText($@"{account}\Data.json"))!;
         
-        //To-Do fix client 0
         _mem = (deviceId == -1) ? new Client(0) : new Client(deviceId);
-        temp = deviceId;
     }
 
+    public Client GetInstance() => _mem;
+    
     public async Task Start()
     {
         await _mem.Start();
@@ -93,7 +90,6 @@ public class WAClient
 
         await _mem.Pull(to, "/data/data/com.whatsapp/");
 
-        //To-Do get path to directory account and set that
         Account = string.Empty;
 
         Phone = obj.Phone;
@@ -101,36 +97,48 @@ public class WAClient
         return obj.Phone;
     }
 
-    public async Task<bool> LoginFile([Optional] string path)
+    public async Task LoginFile([Optional] string path)
     {
         await _mem.RunApk("com.whatsapp");
         await _mem.StopApk("com.whatsapp");
         await _mem.Push($@"{((Account == string.Empty) ? path : Account)}\com.whatsapp\.", @"/data/data/com.whatsapp");
+        await _mem.Shell("rm -r /data/data/com.whatsapp/databases");
         await _mem.RunApk("com.whatsapp");
 
-        /*if (!await _mem.ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
-            goto end;
-
+        if (!await _mem.ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
+            goto s1;
+        
         await _mem.Click("//node[@text='Выберите частоту резервного копирования']");
         await _mem.Click("//node[@text='Никогда']");
         await _mem.Click("//node[@text='ГОТОВО']");
+        await Task.Delay(2_000);
         await _mem.StopApk("com.whatsapp");
         await _mem.RunApk("com.whatsapp");
         
-        end:*/
-        return !await _mem.ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']") && !await _mem.ExistsElement("//node[@text='ДАЛЕЕ']") && !await _mem.ExistsElement("//node[@resource-id='android:id/message']");
-
-        /*await _mem.Click("//node[@content-desc='Ещё']");
-        await _mem.Click("//node[@text='Связанные устройства']");
-        await _mem.Click("//node[@text='ОК']");
-        await _mem.Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
-        await _mem.Click("//node[@text='OK']");*/
+        s1:
+        if (!await _mem.ExistsElement("//node[@resource-id='com.whatsapp:id/registration_name']"))
+            return;
+        
+        await _mem.Input("//node[@resource-id='com.whatsapp:id/registration_name']",
+            new Random().Next(0, 10_000).ToString());
+        await _mem.Click("//node[@text='ДАЛЕЕ']");
+        await Task.Delay(2_000);
+        await _mem.StopApk("com.whatsapp");
+        await _mem.RunApk("com.whatsapp");
     }
 
-    public async Task ImportContacts(string path)
+    public async Task<bool> ImportContacts(string path)
     {
         await _mem.ImportContacts(path);
+        if (!await _mem.ExistsElement("//node[@text='ОК']"))
+            return false;
+        
         await _mem.Click("//node[@text='ОК']");
+        
+        await _mem.StopApk("com.whatsapp");
+        await _mem.RunApk("com.whatsapp");
+
+        return true;
     }
 
     public async Task SendMessage(string to, string text)
@@ -151,10 +159,11 @@ public class WAClient
 
     public async Task ReCreate([Optional] string? phone, [Optional] string? account, [Optional] int? deviceId)
     {
-        await _mem.Stop();
-        
         if (deviceId is not null)
-            _mem = new Client((int)deviceId);
+        {
+            await _mem.Stop();
+            _mem = new Client((int) deviceId);
+        }
 
         if (account is not null)
         {

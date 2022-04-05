@@ -13,6 +13,8 @@ public partial class Dashboard : INotifyPropertyChanged
 
     #region Variables
 
+    private static Task _activeTask = null!;//To-Do
+    
     private static bool _isBusy;
 
     private readonly Warm _warm;
@@ -72,10 +74,19 @@ public partial class Dashboard : INotifyPropertyChanged
                 return;
             
             _warm.Stop();
-            _isBusy = false;
-            MessageBox.Show("Вы отменили прогрев");
-            ProgressValue = 0;
-
+            
+            MessageBox.Show("Выполнена команда на завершение текущей задачи, дождитесь завершения текущего цикла");
+            
+            await Task.Run(() =>
+            {
+                while (!_activeTask.IsCompleted)
+                {
+                    _isBusy = false;
+                    MessageBox.Show("Задача была завершена");
+                    ProgressValue = 0;
+                }
+            });
+            
             return;
         }
 
@@ -98,7 +109,7 @@ public partial class Dashboard : INotifyPropertyChanged
 
             ProgressValue = 100;
 
-            await Task.Run(() => _warm.Start(TextMessage));
+            await Task.Run(() => _activeTask = _warm.Start(TextMessage));
             MessageBox.Show("Прогрев завершен");
             
             ProgressValue = 0;
@@ -119,7 +130,19 @@ public partial class Dashboard : INotifyPropertyChanged
             if (!_newsletter.IsWork) 
                 return;
             
-            MessageBox.Show("Дождитесь завершения рассылки");
+            _newsletter.Stop();
+            
+            MessageBox.Show("Выполнена команда на завершение текущей задачи, дождитесь завершения текущего цикла");
+            
+            await Task.Run(() =>
+            {
+                while (!_activeTask.IsCompleted)
+                {
+                    _isBusy = false;
+                    MessageBox.Show("Задача была завершена");
+                    ProgressValue = 0;
+                }
+            });
             return;
         }
 
@@ -142,7 +165,7 @@ public partial class Dashboard : INotifyPropertyChanged
 
             ProgressValue = 100;
 
-            await Task.Run(() => _newsletter.Start(TextMessage));
+            await Task.Run(() => _activeTask = _newsletter.Start(TextMessage));
             MessageBox.Show("Рассылка завершена");
             
             ProgressValue = 0;

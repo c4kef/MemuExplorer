@@ -151,6 +151,19 @@ public static class Memu
     }
 
     /// <summary>
+    /// Ввод текста на машину
+    /// </summary>
+    /// <param name="index">индекс машины</param>
+    /// <param name="text">текст ввода</param>
+    /// <exception cref="Exception">в случае тотального п***а просто вылезет ошибка</exception>
+    public static async Task SendText(int index, string text)
+    {
+        var answer = await MemuCmd.ExecMemuc($"input -i {index} \"{text}\"");
+        if (!answer.Contains("SUCCESS"))
+            throw new Exception($"Error: {answer}");
+    }
+    
+    /// <summary>
     /// Запуск apk на машине
     /// </summary>
     /// <param name="index">индекс машины</param>

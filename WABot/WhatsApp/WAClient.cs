@@ -29,7 +29,7 @@ public class WAClient
         await _mem.Stop();
     }
 
-    public async Task<string> Register(string to)
+    public async Task<string> Register(string to, string name)
     {
         again:
         await _mem.StopApk("com.whatsapp");
@@ -42,10 +42,14 @@ public class WAClient
 
         await _mem.Input("//node[@text='номер тел.']", obj.Phone.Remove(0, 2));
 
-        Console.WriteLine($"Number: {obj.Phone}");
-
         await _mem.Click("//node[@text='ДАЛЕЕ']");
 
+        if (!await _mem.ExistsElement("//node[@text='OK']"))
+        {
+            obj.Cancel();
+            goto again;
+        }
+        
         await _mem.Click("//node[@text='OK']");
 
         if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
@@ -60,22 +64,22 @@ public class WAClient
         {
             ++count;
             Thread.Sleep(1_500);
-            if (count > 15)
-            {
-                obj.Cancel();
-                goto again;
-            }
+            if (count <= 15) continue;
+            obj.Cancel();
+            goto again;
         }
 
         var code = new string(new Regex(@"\b\d{3}\-\d{3}\b").Match(await obj.GetMessage()).Value.Where(char.IsDigit)
             .ToArray());
 
-        await _mem.Input("//node[@text='––– –––']", code);
+        //await _mem.Input("//node[@text='––– –––']", code); - нихуя не работает из-за текста который меняется...
+        await _mem.Input(code);//Костыль, иначе не придумал как можно
 
         if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
             goto again; //To-Do
 
-        await _mem.Input("//node[@text='Введите своё имя']", "Тамара");
+        await _mem.Input(name);//Костыль, иначе не придумал как можно
+        //await _mem.Input("//node[@text='Введите своё имя']", "Tamara");
         await _mem.Click("//node[@text='ДАЛЕЕ']");
 
         count = 0;
@@ -94,10 +98,10 @@ public class WAClient
 
         Phone = obj.Phone;
 
-        return obj.Phone;
+        return obj.Phone.Remove(0, 1);
     }
 
-    public async Task LoginFile([Optional] string path)
+    public async Task LoginFile([Optional] string path, [Optional] string name)
     {
         await _mem.RunApk("com.whatsapp");
         await _mem.StopApk("com.whatsapp");
@@ -119,7 +123,8 @@ public class WAClient
         if (!await _mem.ExistsElement("//node[@resource-id='com.whatsapp:id/registration_name']"))
             return;
         
-        await _mem.Input("//node[@resource-id='com.whatsapp:id/registration_name']", Phone.Remove(0, 1));
+        //await _mem.Input("//node[@resource-id='com.whatsapp:id/registration_name']", Phone.Remove(0, 1));
+        await _mem.Input(name);
         await _mem.Click("//node[@text='ДАЛЕЕ']");
         await Task.Delay(2_000);
         await _mem.StopApk("com.whatsapp");

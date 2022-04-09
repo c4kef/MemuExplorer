@@ -7,6 +7,8 @@ public class Warm
     private readonly Dictionary<int, WAClient[]> _tetheredDevices;
     private readonly List<string> _busyPhone;
 
+    private string[] _names;
+
     public Warm()
     {
         _tetheredDevices = new Dictionary<int, WAClient[]>();
@@ -19,6 +21,8 @@ public class Warm
         var rnd = new Random();
         IsWork = true;
 
+        _names = File.ReadAllLines(Globals.Setup.PathToUserNames).ToArray();
+        
         for (var i = 0; i < Globals.Devices.Count; i += 2)
         {
             var id = rnd.Next(0, 10_000);
@@ -65,7 +69,7 @@ public class Warm
             _busyPhone.Add(c1Account.phone);
             
             await client1.ReCreate(phone: $"+{c1Account.phone}", account: c1Account.path);
-            await client1.LoginFile();
+            await client1.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
             
             if (!await IsValid(client1))
             {
@@ -86,7 +90,7 @@ public class Warm
             _busyPhone.Add(c2Account.phone);
             
             await client2.ReCreate(phone: $"+{c2Account.phone}", account: c2Account.path);
-            await client2.LoginFile();
+            await client2.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
             
             if (!await IsValid(client2))
             {

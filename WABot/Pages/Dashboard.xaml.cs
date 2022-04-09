@@ -8,7 +8,7 @@ public partial class Dashboard : INotifyPropertyChanged
         DataContext = this;
         DeviceBtnText = "Запустить";
         _warm = new Warm();
-        _newsletter = new Newsletter();
+        _register = new Register();
     }
 
     #region Variables
@@ -20,6 +20,8 @@ public partial class Dashboard : INotifyPropertyChanged
     private readonly Warm _warm;
     
     private readonly Newsletter _newsletter;
+    
+    private readonly Register _register;
 
     #endregion
     
@@ -182,6 +184,58 @@ public partial class Dashboard : INotifyPropertyChanged
         _isBusy = false;
     }
 
+    private async void RegAccounts(object sender, RoutedEventArgs e)
+    {
+        if (_isBusy)
+        {
+            if (!_register.IsWork) 
+                return;
+            
+            _register.Stop();
+            
+            MessageBox.Show("Выполнена команда на завершение текущей задачи, дождитесь завершения текущего цикла");
+            
+            await Task.Run( async () =>
+            {
+                while (!_activeTask.IsCompleted)
+                    await Task.Delay(1_500);
+
+                _isBusy = false;
+                MessageBox.Show("Задача была завершена");
+                ProgressValue = 0;
+            });
+            return;
+        }
+
+        if (Globals.Devices.Count == 0 || !Globals.Setup.EnableWarm)
+        {
+            MessageBox.Show("Запустите устройства и включите режим прогрева");
+            return;
+        }
+
+        _isBusy = true;
+
+        try
+        {
+
+            ProgressValue = 100;
+
+            _activeTask = Task.Run(() => _register.Start());
+            await _activeTask;
+            
+            MessageBox.Show("Регистрация завершена");
+            
+            ProgressValue = 0;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Произошла ошибка, лог создан на рабочем столе");
+            await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
+        }
+
+        _isBusy = false;
+    }
+    
     private async void DevicesSetup(object sender, RoutedEventArgs e)
     {
         if (_isBusy)
@@ -201,16 +255,16 @@ public partial class Dashboard : INotifyPropertyChanged
             
             if (DeviceBtnText == "Отключить")//Та самая карта-обраточка из uno
             {
-                await Memu.RemoveAll();
+                //await Memu.RemoveAll();
 
                 for (var i = 0; i < Globals.Setup.CountDevices; i++)
                 {
                     ProgressValue = (int)(((i + 1f) / Globals.Setup.CountDevices) * 100);
-                    await Memu.Import(Globals.Setup.PathToImageDevice);
+                    //await Memu.Import(Globals.Setup.PathToImageDevice);
 
                     var device = new WAClient(deviceId: i);
 
-                    await device.GetInstance().Spoof("7", true);
+                    //await device.GetInstance().Spoof("7", true);
                     await device.Start();
 
                     await device.GetInstance().Shell("settings put global window_animation_scale 0");

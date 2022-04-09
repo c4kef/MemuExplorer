@@ -30,6 +30,7 @@ public static class Globals
     public static Setup Setup { get; private set; } = null!;
     public static Dictionary<char, string> Alphabet{ get; private set; } = null!;
     public static DirectoryInfo RemoveAccountsDirectory { get; private set; } = null!;
+    public static DirectoryInfo TempAccountsDirectory { get; private set; } = null!;
 
     public static async Task Init()
     {
@@ -37,6 +38,7 @@ public static class Globals
         Alphabet = new Dictionary<char, string>();
 
         RemoveAccountsDirectory = Directory.CreateDirectory("RemoveAccounts");
+        TempAccountsDirectory = Directory.CreateDirectory("TempAccounts");
 
         #region Init alphabet
 

@@ -246,6 +246,23 @@ public class Client
 
         Log.Write($"[{_index}] -> input text uiElement");
     }
+    
+    /// <summary>
+    /// Симуляция ввода текста
+    /// </summary>
+    /// <param name="text">текст передаваемый на интерфейс</param>
+    public async Task Input(string text)
+    {
+        if (!await Memu.Exists(_index))
+        {
+            Log.Write($"[{_index}] -> VM not found");
+            return;
+        }
+
+        await Memu.SendText(_index, text);
+
+        Log.Write($"[{_index}] -> input text uiElement");
+    }
 
     /// <summary>
     /// Отправка на удаленку

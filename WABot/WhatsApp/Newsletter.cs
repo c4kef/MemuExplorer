@@ -8,6 +8,7 @@ public class Newsletter
     private readonly List<string> _usedPhones;
     private FileInfo _fileContacts;
     private string[] _contacts;
+    private string[] _names;
     
     public Newsletter()
     {
@@ -21,6 +22,8 @@ public class Newsletter
         var rnd = new Random();
         IsWork = true;
         
+        _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames)).ToArray();
+
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
 
         _fileContacts = new FileInfo("release_contacts.vcf");
@@ -69,7 +72,7 @@ public class Newsletter
             _usedPhones.Add(phone);
 
             await client.ReCreate(phone: $"+{phone}", account: path);
-            await client.LoginFile();
+            await client.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
 
             if (!await IsValid())
             {

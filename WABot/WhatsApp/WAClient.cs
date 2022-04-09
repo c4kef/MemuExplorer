@@ -119,8 +119,7 @@ public class WAClient
         if (!await _mem.ExistsElement("//node[@resource-id='com.whatsapp:id/registration_name']"))
             return;
         
-        await _mem.Input("//node[@resource-id='com.whatsapp:id/registration_name']",
-            new Random().Next(0, 10_000).ToString());
+        await _mem.Input("//node[@resource-id='com.whatsapp:id/registration_name']", Phone.Remove(0, 1));
         await _mem.Click("//node[@text='ДАЛЕЕ']");
         await Task.Delay(2_000);
         await _mem.StopApk("com.whatsapp");

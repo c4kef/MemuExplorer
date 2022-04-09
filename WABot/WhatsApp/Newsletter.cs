@@ -73,13 +73,13 @@ public class Newsletter
 
             if (!await IsValid())
             {
-                Directory.Delete(client.Account, true);
+                Directory.Move(client.Account, @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
                 goto reCreate;
             }
 
             if (!await client.ImportContacts(_fileContacts.FullName))
             {
-                Directory.Delete(client.Account, true);
+                Directory.Move(client.Account, @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
                 goto reCreate;
             }
 

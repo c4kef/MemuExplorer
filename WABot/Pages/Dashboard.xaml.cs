@@ -76,15 +76,15 @@ public partial class Dashboard : INotifyPropertyChanged
             _warm.Stop();
             
             MessageBox.Show("Выполнена команда на завершение текущей задачи, дождитесь завершения текущего цикла");
-            
-            await Task.Run(() =>
+
+            await Task.Run( async () =>
             {
                 while (!_activeTask.IsCompleted)
-                {
-                    _isBusy = false;
-                    MessageBox.Show("Задача была завершена");
-                    ProgressValue = 0;
-                }
+                    await Task.Delay(1_500);
+
+                _isBusy = false;
+                MessageBox.Show("Задача была завершена");
+                ProgressValue = 0;
             });
             
             return;
@@ -106,10 +106,11 @@ public partial class Dashboard : INotifyPropertyChanged
 
         try
         {
-
             ProgressValue = 100;
 
-            await Task.Run(() => _activeTask = _warm.Start(TextMessage));
+            _activeTask = Task.Run(() => _warm.Start(TextMessage));
+            await _activeTask;
+
             MessageBox.Show("Прогрев завершен");
             
             ProgressValue = 0;
@@ -134,14 +135,14 @@ public partial class Dashboard : INotifyPropertyChanged
             
             MessageBox.Show("Выполнена команда на завершение текущей задачи, дождитесь завершения текущего цикла");
             
-            await Task.Run(() =>
+            await Task.Run( async () =>
             {
                 while (!_activeTask.IsCompleted)
-                {
-                    _isBusy = false;
-                    MessageBox.Show("Задача была завершена");
-                    ProgressValue = 0;
-                }
+                    await Task.Delay(1_500);
+
+                _isBusy = false;
+                MessageBox.Show("Задача была завершена");
+                ProgressValue = 0;
             });
             return;
         }
@@ -165,7 +166,9 @@ public partial class Dashboard : INotifyPropertyChanged
 
             ProgressValue = 100;
 
-            await Task.Run(() => _activeTask = _newsletter.Start(TextMessage));
+            _activeTask = Task.Run(() => _newsletter.Start(TextMessage));
+            await _activeTask;
+            
             MessageBox.Show("Рассылка завершена");
             
             ProgressValue = 0;
@@ -184,7 +187,7 @@ public partial class Dashboard : INotifyPropertyChanged
         if (_isBusy)
             return;
         
-        if (Globals.Setup.CountDevices == 0 || !File.Exists(Globals.Setup.PathToImageDevice))
+        if (Globals.Setup.CountDevices == 0 || !File.Exists(Globals.Setup.PathToImageDevice) || !File.Exists(Globals.Setup.PathToUserNames))
         {
             MessageBox.Show("Похоже вы не указали все настройки для запуска устройств");
             return;

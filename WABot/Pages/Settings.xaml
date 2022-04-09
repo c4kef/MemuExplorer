@@ -88,6 +88,13 @@
                         </ToolTip>
                     </Button.ToolTip>
                 </Button>
+                <Button HorizontalAlignment="Center" Margin="0,10,0,0" ui:ControlHelper.CornerRadius="5" Content="Выберите имена" BorderBrush="{Binding ColorPathToUserNames}" Click="SelectUserNames">
+                    <Button.ToolTip>
+                        <ToolTip>
+                            Укажите путь на csv файл с именами юзверей
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
             </StackPanel>
         </Border>
     </Grid>

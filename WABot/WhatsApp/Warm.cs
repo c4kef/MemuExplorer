@@ -70,7 +70,7 @@ public class Warm
             if (!await IsValid(client1))
             {
                 _busyPhone.Remove(c1Account.phone);
-                Directory.Delete(client1.Account, true);
+                Directory.Move(client1.Account, @$"{Globals.RemoveAccountsDirectory.FullName}\{client1.Phone.Remove(0, 1)}");
                 goto reCreateC1;
             }
             
@@ -91,7 +91,7 @@ public class Warm
             if (!await IsValid(client2))
             {
                 _busyPhone.Remove(c2Account.phone);
-                Directory.Delete(client2.Account, true);
+                Directory.Move(client2.Account, @$"{Globals.RemoveAccountsDirectory.FullName}\{client2.Phone.Remove(0, 1)}");
                 goto reCreateC2;
             }
 
@@ -109,14 +109,14 @@ public class Warm
             if (!await client1.ImportContacts(fileContact.FullName))
             {
                 _busyPhone.Remove(c1Account.phone);
-                Directory.Delete(client1.Account, true);
+                Directory.Move(client1.Account, @$"{Globals.RemoveAccountsDirectory.FullName}\{client1.Phone.Remove(0, 1)}");
                 goto reCreateC1;
             }
             
             if (!await client2.ImportContacts(fileContact.FullName))
             {
                 _busyPhone.Remove(c2Account.phone);
-                Directory.Delete(client2.Account, true);
+                Directory.Move(client2.Account, @$"{Globals.RemoveAccountsDirectory.FullName}\{client2.Phone.Remove(0, 1)}");
                 goto reCreateC2;
             }
             
@@ -134,6 +134,13 @@ public class Warm
                     await Task.Delay(500);
 
                     await client2.SendMessage(client1.Phone, text);
+
+                    
+                    if (!await IsValid(client1))
+                        goto reCreateC1;
+                    
+                    if (!await IsValid(client2))
+                        goto reCreateC2;
                 }
             }
 

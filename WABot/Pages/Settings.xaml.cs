@@ -62,7 +62,13 @@ public partial class Settings : INotifyPropertyChanged
          !File.Exists(Globals.Setup.PathToImageDevice))
             ? Brushes.Red
             : Brushes.GreenYellow;
-
+    
+    public Brush ColorPathToUserNames =>
+        (string.IsNullOrEmpty(Globals.Setup.PathToUserNames) ||
+         !File.Exists(Globals.Setup.PathToUserNames))
+            ? Brushes.Red
+            : Brushes.GreenYellow;
+    
     #endregion
 
     private async void SelectAccounts(object sender, RoutedEventArgs e)
@@ -110,6 +116,19 @@ public partial class Settings : INotifyPropertyChanged
         }
 
         OnPropertyChanged("ColorPathToImageDevice");
+    }
+    
+    private async void SelectUserNames(object sender, RoutedEventArgs e)
+    {
+        var dialog = new CommonOpenFileDialog();
+        dialog.Filters.Add(new CommonFileDialogFilter("Имена пользователей", ".csv"));
+        if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+        {
+            Globals.Setup.PathToUserNames = dialog.FileName;
+            await Globals.SaveSetup();
+        }
+
+        OnPropertyChanged("ColorPathToUserNames");
     }
 
     private async void ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args) => await Globals.SaveSetup();

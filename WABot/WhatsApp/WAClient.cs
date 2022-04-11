@@ -1,16 +1,19 @@
 ﻿namespace WABot.WhatsApp;
 
-public class WAClient
+public class WaClient
 {
     private Client _mem;
     public string Phone { private set; get; }
     public string Account { private set; get; }
     public AccountData AccountData;
 
-    public WAClient(string phone = "", string account = "", int deviceId = -1)
+    public WaClient(string phone = "", string account = "", int deviceId = -1)
     {
         Phone = phone;
         Account = account;
+
+        AccountData = new AccountData();
+        
         if (account != string.Empty)
             AccountData = JsonConvert.DeserializeObject<AccountData>(File.ReadAllText($@"{account}\Data.json"))!;
         
@@ -40,6 +43,9 @@ public class WAClient
 
         var obj = await FsService.Create(service: "whatsapp", country: "russia");
 
+        if (obj is null)
+            return string.Empty;
+        
         await _mem.Input("//node[@text='номер тел.']", obj.Phone.Remove(0, 2));
 
         await _mem.Click("//node[@text='ДАЛЕЕ']");
@@ -78,8 +84,7 @@ public class WAClient
         if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
             goto again; //To-Do
 
-        await _mem.Input(name);//Костыль, иначе не придумал как можно
-        //await _mem.Input("//node[@text='Введите своё имя']", "Tamara");
+        await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
         await _mem.Click("//node[@text='ДАЛЕЕ']");
 
         count = 0;
@@ -123,8 +128,7 @@ public class WAClient
         if (!await _mem.ExistsElement("//node[@resource-id='com.whatsapp:id/registration_name']"))
             return;
         
-        //await _mem.Input("//node[@resource-id='com.whatsapp:id/registration_name']", Phone.Remove(0, 1));
-        await _mem.Input(name);
+        await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
         await _mem.Click("//node[@text='ДАЛЕЕ']");
         await Task.Delay(2_000);
         await _mem.StopApk("com.whatsapp");

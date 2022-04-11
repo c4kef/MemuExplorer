@@ -1,6 +1,6 @@
 ﻿namespace WABot.WhatsApp;
 
-public class WAWebClient
+public class WaWebClient
 {
     private readonly string _nameSession;
     private readonly Namespace _socket;
@@ -9,9 +9,9 @@ public class WAWebClient
     private readonly Random _random;
 
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+    public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int nWidth, int nHeight, bool bRepaint);
     
-    public WAWebClient(string nameSession)
+    public WaWebClient(string nameSession)
     {
         _nameSession = nameSession;
         _taskQueue = new List<int>();

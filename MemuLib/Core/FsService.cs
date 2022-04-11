@@ -32,22 +32,29 @@ public class FsService
     /// <returns>новый объявленный класс для дальнейшей работы с сервисом</returns>
     /// <exception cref="Exception">евреи зажали номер, кладем болт и идем дальше</exception>
     /// <exception cref="InvalidOperationException">по факту заглушка, но если что... просто не присвоились данные</exception>
-    public static async Task<FsService> Create([Optional]string country, [Optional]string moperator, string service)
+    public static async Task<FsService?> Create([Optional]string country, [Optional]string moperator, string service)
     {
-        var requestValue =
-            await WebReq.HttpGet(
-                $"https://5sim.net/v1/user/buy/activation/{(string.IsNullOrEmpty(country) ? "any" : country)}/{(string.IsNullOrEmpty(moperator) ? "any" : moperator)}/{service}");
-        
-        var serviceCreate = JObject.Parse(requestValue);
+        try
+        {
+            var requestValue =
+                await WebReq.HttpGet(
+                    $"https://5sim.net/v1/user/buy/activation/{(string.IsNullOrEmpty(country) ? "any" : country)}/{(string.IsNullOrEmpty(moperator) ? "any" : moperator)}/{service}");
 
-        if (serviceCreate is null)
-            throw new Exception($"cant create service: {requestValue}");
+            var serviceCreate = JObject.Parse(requestValue);
 
-        var phone = serviceCreate["phone"];
-        var id = serviceCreate["id"];
+            if (serviceCreate is null)
+                throw new Exception($"cant create service: {requestValue}");
 
-        return new FsService(phone?.ToString() ?? throw new InvalidOperationException(),
-            int.Parse(id?.ToString() ?? throw new InvalidOperationException()));
+            var phone = serviceCreate["phone"];
+            var id = serviceCreate["id"];
+
+            return new FsService(phone?.ToString() ?? throw new InvalidOperationException(),
+                int.Parse(id?.ToString() ?? throw new InvalidOperationException()));
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>

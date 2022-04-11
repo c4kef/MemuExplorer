@@ -2,6 +2,7 @@
 
 public class SampleFrame : Frame
 {
+    /// <inheritdoc />
     public SampleFrame()
     {
     }

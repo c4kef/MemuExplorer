@@ -4,16 +4,17 @@ public class Newsletter
 {
     public bool IsWork { get; private set; }
 
-    private readonly Dictionary<int, WAClient> _tetheredDevices;
+    private readonly Dictionary<int, WaClient> _tetheredDevices;
     private readonly List<string> _usedPhones;
-    private FileInfo _fileContacts;
+    private FileInfo _fileContacts = null!;
     private string[] _contacts;
     private string[] _names;
     
     public Newsletter()
     {
-        _tetheredDevices = new Dictionary<int, WAClient>();
+        _tetheredDevices = new Dictionary<int, WaClient>();
         _usedPhones = new List<string>();
+        _contacts = _names = new[] {""};
     }
 
     public async Task Start(string text)
@@ -22,7 +23,7 @@ public class Newsletter
         var rnd = new Random();
         IsWork = true;
         
-        _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames)).ToArray();
+        _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames)).Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
 

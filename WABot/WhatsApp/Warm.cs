@@ -4,15 +4,16 @@ public class Warm
 {
     public bool IsWork { get; private set; }
 
-    private readonly Dictionary<int, WAClient[]> _tetheredDevices;
+    private readonly Dictionary<int, WaClient[]> _tetheredDevices;
     private readonly List<string> _busyPhone;
 
     private string[] _names;
 
     public Warm()
     {
-        _tetheredDevices = new Dictionary<int, WAClient[]>();
+        _tetheredDevices = new Dictionary<int, WaClient[]>();
         _busyPhone = new List<string>();
+        _names = new[] { "" };
     }
 
     public Task Start(string text)
@@ -21,7 +22,7 @@ public class Warm
         var rnd = new Random();
         IsWork = true;
 
-        _names = File.ReadAllLines(Globals.Setup.PathToUserNames).ToArray();
+        _names = File.ReadAllLines(Globals.Setup.PathToUserNames).Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
         
         for (var i = 0; i < Globals.Devices.Count; i += 2)
         {
@@ -155,7 +156,7 @@ public class Warm
             await client2.UpdateData();
         }
 
-        async Task<bool> IsValid(WAClient client) =>
+        async Task<bool> IsValid(WaClient client) =>
             !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']") &&//To-Do
             !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']") &&//To-Do
             !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']");

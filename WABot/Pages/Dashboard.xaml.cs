@@ -9,6 +9,7 @@ public partial class Dashboard : INotifyPropertyChanged
         DeviceBtnText = "Запустить";
         _warm = new Warm();
         _register = new Register();
+        _newsletter = new Newsletter();
     }
 
     #region Variables
@@ -85,7 +86,6 @@ public partial class Dashboard : INotifyPropertyChanged
                     await Task.Delay(1_500);
 
                 _isBusy = false;
-                MessageBox.Show("Задача была завершена");
                 ProgressValue = 0;
             });
             
@@ -143,7 +143,6 @@ public partial class Dashboard : INotifyPropertyChanged
                     await Task.Delay(1_500);
 
                 _isBusy = false;
-                MessageBox.Show("Задача была завершена");
                 ProgressValue = 0;
             });
             return;
@@ -201,7 +200,6 @@ public partial class Dashboard : INotifyPropertyChanged
                     await Task.Delay(1_500);
 
                 _isBusy = false;
-                MessageBox.Show("Задача была завершена");
                 ProgressValue = 0;
             });
             return;
@@ -255,16 +253,16 @@ public partial class Dashboard : INotifyPropertyChanged
             
             if (DeviceBtnText == "Отключить")//Та самая карта-обраточка из uno
             {
-                //await Memu.RemoveAll();
+                await Memu.RemoveAll();
 
                 for (var i = 0; i < Globals.Setup.CountDevices; i++)
                 {
                     ProgressValue = (int)(((i + 1f) / Globals.Setup.CountDevices) * 100);
-                    //await Memu.Import(Globals.Setup.PathToImageDevice);
+                    await Memu.Import(Globals.Setup.PathToImageDevice);
 
-                    var device = new WAClient(deviceId: i);
+                    var device = new WaClient(deviceId: i);
 
-                    //await device.GetInstance().Spoof("7", true);
+                    await device.GetInstance().Spoof("7", true);
                     await device.Start();
 
                     await device.GetInstance().Shell("settings put global window_animation_scale 0");

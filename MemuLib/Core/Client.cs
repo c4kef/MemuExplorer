@@ -196,6 +196,8 @@ public class Client
             Log.Write($"[{_index}] -> VM not found");
             return false;
         }
+        
+        await Task.Delay(Settings.WaitingSecs);
 
         var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(1.0f));
 
@@ -214,6 +216,8 @@ public class Client
             return;
         }
 
+        await Task.Delay(Settings.WaitingSecs);
+        
         var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(1.5f));
        
         if (element is null)
@@ -237,6 +241,8 @@ public class Client
             return;
         }
 
+        await Task.Delay(Settings.WaitingSecs);
+
         var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(1.5f));
        
         if (element is null)
@@ -258,7 +264,9 @@ public class Client
             Log.Write($"[{_index}] -> VM not found");
             return;
         }
-
+        
+        await Task.Delay(Settings.WaitingSecs);
+        
         await Memu.SendText(_index, text);
 
         Log.Write($"[{_index}] -> input text uiElement");

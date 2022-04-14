@@ -8,7 +8,9 @@ using SocketIO.Client;
 
 Debug.Assert(true, "Test");
 
-
+var c = new Client(0);
+await c.Start();
+await c.Click("//node[@text='bbbbbbbbbb']");
 /*
 var cls = new List<WAClient>();
 var tsks = new List<Task>();

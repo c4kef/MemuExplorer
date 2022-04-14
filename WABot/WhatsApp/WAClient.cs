@@ -39,12 +39,19 @@ public class WaClient
         await _mem.Shell("pm clear com.whatsapp");
         await _mem.RunApk("com.whatsapp");
 
+
+        if (!await _mem.ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']"))
+            goto again;
+        
         await _mem.Click("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']");
 
         var obj = await FsService.Create(service: "whatsapp", country: "russia");
 
         if (obj is null)
             return string.Empty;
+        
+        if (!await _mem.ExistsElement("//node[@text='номер тел.']"))
+            goto again;
         
         await _mem.Input("//node[@text='номер тел.']", obj.Phone.Remove(0, 2));
 

@@ -141,10 +141,10 @@ public class Warm
                     await client2.SendMessage(client1.Phone, text);
 
                     
-                    if (!await IsValid(client1))
+                    if (!await IsValid(client1, false))
                         goto reCreateC1;
                     
-                    if (!await IsValid(client2))
+                    if (!await IsValid(client2, false))
                         goto reCreateC2;
                 }
             }
@@ -156,9 +156,9 @@ public class Warm
             await client2.UpdateData();
         }
 
-        async Task<bool> IsValid(WaClient client) =>
-            !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']") &&//To-Do
-            !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']") &&//To-Do
-            !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']");
+        async Task<bool> IsValid(WaClient client, bool isWait = true) =>
+            !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", isWait) &&//To-Do
+            !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", isWait) &&//To-Do
+            !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']", isWait);
     }
 }

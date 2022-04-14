@@ -189,15 +189,16 @@ public class Client
     /// Проверка элемента на существование
     /// </summary>
     /// <param name="uiElement">название элемента в интерфейсе</param>
-    public async Task<bool> ExistsElement(string uiElement)
+    public async Task<bool> ExistsElement(string uiElement, bool isWait = true)
     {
         if (!await Memu.Exists(_index))
         {
             Log.Write($"[{_index}] -> VM not found");
             return false;
         }
-        
-        await Task.Delay(Settings.WaitingSecs);
+
+        if (isWait)
+            await Task.Delay(Settings.WaitingSecs);
 
         var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(1.0f));
 

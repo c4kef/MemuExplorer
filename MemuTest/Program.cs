@@ -4,13 +4,35 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using MemuLib;
 using MemuLib.Core;
+using Newtonsoft.Json;
 using SocketIO.Client;
 
-Debug.Assert(true, "Test");
+foreach (var dirPath in Directory.GetDirectories(@"C:\Users\artem\source\repos\MVP\MemuExplorer\Data\Accounts"))
+{
+    if (!Directory.Exists(@$"{dirPath}\com.whatsapp"))
+    {
+        Directory.Delete(dirPath);
+        continue;
+    }
+    
+    await File.WriteAllTextAsync($@"{dirPath}\Data.json",
+        JsonConvert.SerializeObject(new AccountData()
+            {LastActiveDialog = new Dictionary<string, DateTime>(), TrustLevelAccount = 0}));
+}
 
-var c = new Client(0);
-await c.Start();
-await c.Click("//node[@text='bbbbbbbbbb']");
+[Serializable]
+public class AccountData
+{
+    /// <summary>
+    /// Уровень прогрева аккаунта для начала рассылки сообщений
+    /// </summary>
+    public int TrustLevelAccount = 0;
+    /// <summary>
+    /// Последняя переписка с аккаунтом
+    /// </summary>
+    public Dictionary<string, DateTime>? LastActiveDialog;
+}
+
 /*
 var cls = new List<WAClient>();
 var tsks = new List<Task>();

@@ -115,6 +115,7 @@ public class WaClient
 
     public async Task LoginFile([Optional] string path, [Optional] string name)
     {
+        await _mem.Shell("pm clear com.whatsapp");
         await _mem.RunApk("com.whatsapp");
         await _mem.StopApk("com.whatsapp");
         await _mem.Push($@"{((Account == string.Empty) ? path : Account)}\com.whatsapp\.", @"/data/data/com.whatsapp");

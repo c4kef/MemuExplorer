@@ -145,6 +145,7 @@ public class WaClient
 
     public async Task<bool> ImportContacts(string path)
     {
+        await _mem.ClearContacts();
         await _mem.ImportContacts(path);
         if (!await _mem.ExistsElement("//node[@text='ОК']"))
             return false;

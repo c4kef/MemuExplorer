@@ -129,6 +129,22 @@ public class Client
 
         Log.Write($"[{_index}] -> contacts imported");
     }
+    
+    /// <summary>
+    /// Очистка контактов
+    /// </summary>
+    public async Task ClearContacts()
+    {
+        if (!await Memu.Exists(_index))
+        {
+            Log.Write($"[{_index}] -> VM not found");
+            return;
+        }
+
+        await Shell("pm clear com.android.providers.contacts");
+
+        Log.Write($"[{_index}] -> contacts cleaned");
+    }
 
     /// <summary>
     /// Запуск приложения на машине

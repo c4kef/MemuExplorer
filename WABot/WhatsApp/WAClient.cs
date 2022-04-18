@@ -76,7 +76,7 @@ public class WaClient
             goto again;
         }
         
-        if (!await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
+        if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
         {
             await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
             goto again;
@@ -102,7 +102,7 @@ public class WaClient
         if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
             goto again; //To-Do
 
-        if (!await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
+        if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
         {
             await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
             goto again;
@@ -111,7 +111,7 @@ public class WaClient
         await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
         await _mem.Click("//node[@text='ДАЛЕЕ']");
 
-        if (!await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
+        if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
         {
             await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
             goto again;

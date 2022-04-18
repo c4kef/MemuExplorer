@@ -1,4 +1,6 @@
-﻿namespace WABot.WhatsApp;
+﻿using MemuLib.Core.SimServices;
+
+namespace WABot.WhatsApp;
 
 public class WaClient
 {

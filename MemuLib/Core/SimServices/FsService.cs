@@ -1,4 +1,4 @@
-﻿namespace MemuLib.Core;
+﻿namespace MemuLib.Core.SimServices;
 
 public class FsService
 {

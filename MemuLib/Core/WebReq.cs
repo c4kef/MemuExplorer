@@ -20,7 +20,7 @@ public static class WebReq
             
         request.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
         request.DefaultRequestHeaders.Add("Accept", $"application/json");
-        request.DefaultRequestHeaders.Add("Authorization", $"Bearer {Settings.FSimApi}");
+        request.DefaultRequestHeaders.Add("Authorization", $"Bearer {Settings.SimApi}");
 
         return await (await request.GetAsync(url)).Content.ReadAsStringAsync();
     }
@@ -39,7 +39,7 @@ public static class WebReq
 
         request.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
         request.DefaultRequestHeaders.Add("Accept", "application/json");
-        request.DefaultRequestHeaders.Add("Authorization", $"Bearer {Settings.FSimApi}");
+        request.DefaultRequestHeaders.Add("Authorization", $"Bearer {Settings.SimApi}");
 
         var content = new FormUrlEncodedContent(values);
 

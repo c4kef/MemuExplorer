@@ -53,7 +53,7 @@ public class WaClient
             return string.Empty;
 
         if (!await _mem.ExistsElement("//node[@text='номер тел.']"))
-            goto again;//android:id/aerr_restart
+            goto again;
 
         await _mem.ClearInput("//node[@resource-id='com.whatsapp:id/registration_cc']");
         await _mem.Input("//node[@resource-id='com.whatsapp:id/registration_cc']", obj.Phone[0].ToString());
@@ -77,7 +77,10 @@ public class WaClient
         }
         
         if (!await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
+        {
+            await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
             goto again;
+        }
 
         var count = 0;
 
@@ -100,13 +103,19 @@ public class WaClient
             goto again; //To-Do
 
         if (!await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
+        {
+            await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
             goto again;
-        
+        }
+
         await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
         await _mem.Click("//node[@text='ДАЛЕЕ']");
 
         if (!await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
+        {
+            await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
             goto again;
+        }
         
         count = 0;
 

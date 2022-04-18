@@ -271,6 +271,30 @@ public class Client
     }
     
     /// <summary>
+    /// Очистка элемента ввода
+    /// </summary>
+    /// <param name="uiElement">название элемента в интерфейсе</param>
+    public async Task ClearInput(string uiElement)
+    {
+        if (!await Memu.Exists(_index))
+        {
+            Log.Write($"[{_index}] -> VM not found");
+            return;
+        }
+
+        await Task.Delay(Settings.WaitingSecs);
+
+        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(1.5f));
+       
+        if (element is null)
+            throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
+
+        element.ClearInput();
+
+        Log.Write($"[{_index}] -> clear text uiElement");
+    }
+    
+    /// <summary>
     /// Симуляция ввода текста
     /// </summary>
     /// <param name="text">текст передаваемый на интерфейс</param>

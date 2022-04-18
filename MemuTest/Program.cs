@@ -1,10 +1,8 @@
-﻿using MemuLib.Core.SimServices;
+﻿using MemuLib.Core;
+using MemuLib.Core.SimServices;
+using OpenQA.Selenium;
+using OpenQA.Selenium.DevTools.V85.IndexedDB;
 
-var sms = await SmsCode.Create(service: "wa");
+var client = new Client(0);
+await client.Start();
 
-Console.WriteLine(sms!.Phone);
-
-while(await sms!.GetMessage() == string.Empty)
-    await Task.Delay(500);
-    
-Console.WriteLine(await sms!.GetMessage());

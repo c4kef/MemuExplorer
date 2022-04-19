@@ -33,6 +33,12 @@ public partial class Settings : INotifyPropertyChanged
         set => Globals.Setup.TrustLevelAccount = value;
     }
     
+    public int CountMessageFromAccount
+    {
+        get => Globals.Setup.CountMessageFromAccount;
+        set => Globals.Setup.CountMessageFromAccount = value;
+    }
+    
     public int CountDevices
     {
         get => Globals.Setup.CountDevices;

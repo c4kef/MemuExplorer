@@ -6,14 +6,14 @@ public class Newsletter
 
     private readonly Dictionary<int, WaClient> _tetheredDevices;
     private readonly List<string> _usedPhones;
-    private FileInfo _fileContacts = null!;
+    private readonly List<string> _usedPhonesUsers;
     private string[] _contacts;
     private string[] _names;
     
     public Newsletter()
     {
         _tetheredDevices = new Dictionary<int, WaClient>();
-        _usedPhones = new List<string>();
+        _usedPhonesUsers = _usedPhones = new List<string>();
         _contacts = _names = new[] {""};
     }
 
@@ -27,20 +27,16 @@ public class Newsletter
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
 
-        _fileContacts = new FileInfo("release_contacts.vcf");
-
-        await File.WriteAllTextAsync(_fileContacts.FullName, ContactManager.Export(
-            new List<CObj>(_contacts.Select(phonenumber =>
-                new CObj($"Artemiy {new Random().Next(0, 20_000)}", phonenumber)).ToArray())
-        ));
-
         foreach (var t in Globals.Devices)
         {
             var id = rnd.Next(0, 10_000);
 
             _tetheredDevices[id] = t;
 
-            tasks.Add(Task.Run(() => Handler(id, text)));
+            var task = Handler(id, text);
+            await Task.Delay(1_000);
+            
+            tasks.Add(task);
         }
         
         Task.WaitAll(tasks.ToArray(), -1);
@@ -53,7 +49,6 @@ public class Newsletter
         _tetheredDevices.Clear();
         _usedPhones.Clear();
         IsWork = false;
-        File.Delete(_fileContacts.FullName);
     }
 
     private async Task Handler(int idThread, string text)
@@ -67,9 +62,9 @@ public class Newsletter
 
             if (result.Length == 0)
                 break;
-            
+
             var (phone, path) = result[0];
-            
+
             _usedPhones.Add(phone);
 
             await client.ReCreate(phone: $"+{phone}", account: path);
@@ -77,24 +72,47 @@ public class Newsletter
 
             if (!await IsValid())
             {
-                Directory.Move(client.Account, @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+                Directory.Move(client.Account,
+                    @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
                 goto reCreate;
             }
 
-            if (!await client.ImportContacts(_fileContacts.FullName))
+            var countMsg = 0;
+
+            recurseSendMessageToContact:
+            var contact = GetFreeNumberUser();
+
+            if (string.IsNullOrEmpty(contact))
+                break;
+
+            if (!await IsValid())
             {
-                Directory.Move(client.Account, @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+                Directory.Move(client.Account,
+                    @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+            
                 goto reCreate;
             }
 
-            File.Delete(_fileContacts.FullName);
+            await client.SendMessage(contact, text);
+            
+            if (++countMsg > Globals.Setup.CountMessageFromAccount)
+                goto reCreate;
 
+            await Task.Delay(500);
+            
+            goto recurseSendMessageToContact;
+        }
+
+        string GetFreeNumberUser()
+        {
             foreach (var contact in _contacts)
-            {
-                await client.SendMessage(contact, text);
+                if (!_usedPhonesUsers.Contains(contact))
+                {
+                    _usedPhonesUsers.Add(contact);
+                    return (contact[0] == '+') ? contact.Remove(0, 1) : contact;
+                }
 
-                await Task.Delay(500);
-            }
+            return string.Empty;
         }
 
         async Task<bool> IsValid() =>

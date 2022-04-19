@@ -183,9 +183,17 @@ public class WaClient
 
     public async Task SendMessage(string to, string text)
     {
-        await _mem.Shell($@"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
+        //await _mem.Shell($@"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
+        var command = new FileInfo($"{to}.sh");
+
+        await File.WriteAllTextAsync(command.FullName,
+            $"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
+
+        await _mem.Push(command.FullName, "/data/local/tmp");
+        await _mem.Shell($@"sh /data/local/tmp/{to}.sh");
+
         for (var i = 0; i < 3; i++)
-        { 
+        {
             if (!await _mem.ExistsElement("//node[@content-desc='Отправить']"))
             {
                 await Task.Delay(1_500);
@@ -195,6 +203,9 @@ public class WaClient
             await _mem.Click("//node[@content-desc='Отправить']");
             break;
         }
+
+        await _mem.Shell($"rm /data/local/tmp/{to}.sh");
+        File.Delete(command.FullName);
     }
 
     public async Task ReCreate([Optional] string? phone, [Optional] string? account, [Optional] int? deviceId)

@@ -218,7 +218,7 @@ public partial class Dashboard : INotifyPropertyChanged
 
             ProgressValue = 100;
 
-            _activeTask = Task.Run(() => _register.Start());
+            _activeTask = Task.Run(async () => await _register.Start());
             await _activeTask;
             
             MessageBox.Show("Регистрация завершена");
@@ -253,16 +253,15 @@ public partial class Dashboard : INotifyPropertyChanged
             
             if (DeviceBtnText == "Отключить")//Та самая карта-обраточка из uno
             {
-                await Memu.RemoveAll();
+                //await Memu.RemoveAll();
 
                 for (var i = 0; i < Globals.Setup.CountDevices; i++)
                 {
                     ProgressValue = (int)(((i + 1f) / Globals.Setup.CountDevices) * 100);
-                    await Memu.Import(Globals.Setup.PathToImageDevice);
+                    //await Memu.Import(Globals.Setup.PathToImageDevice);
 
                     var device = new WaClient(deviceId: i);
 
-                    await device.GetInstance().Spoof("7", true);
                     await device.Start();
 
                     await device.GetInstance().Shell("settings put global window_animation_scale 0");

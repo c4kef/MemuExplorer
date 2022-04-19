@@ -123,6 +123,10 @@ public class Setup
     /// </summary>
     public int CountDevices = 2;
     /// <summary>
+    /// Кол-во сообщений с аккаунта при рассылке
+    /// </summary>
+    public int CountMessageFromAccount = 2;
+    /// <summary>
     /// Включить режим прогрева
     /// </summary>
     public bool EnableWarm = false;

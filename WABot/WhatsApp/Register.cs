@@ -14,7 +14,7 @@ public class Register
         _tetheredDevices = new Dictionary<int, WaClient>();
     }
 
-    public Task Start()
+    public async Task Start()
     {
         var tasks = new List<Task>();
         var rnd = new Random();
@@ -27,6 +27,9 @@ public class Register
             var id = rnd.Next(0, 10_000);
 
             _tetheredDevices[id] = client;
+            await client.GetInstance().Spoof("7", true);
+            await client.GetInstance().Stop();
+            await client.GetInstance().Start();
 
             tasks.Add(Task.Run(() => Handler(id)));
         }
@@ -34,8 +37,6 @@ public class Register
         Task.WaitAll(tasks.ToArray(), -1);
 
         Stop();
-        
-        return Task.CompletedTask;
     }
 
     public void Stop()

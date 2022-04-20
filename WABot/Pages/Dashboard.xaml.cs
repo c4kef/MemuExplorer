@@ -110,7 +110,7 @@ public partial class Dashboard : INotifyPropertyChanged
         {
             ProgressValue = 100;
 
-            _activeTask = Task.Run(() => _warm.Start(TextMessage));
+            _activeTask = Task.Run(async () => await _warm.Start(TextMessage));
             await _activeTask;
 
             MessageBox.Show("Прогрев завершен");

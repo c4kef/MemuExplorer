@@ -31,7 +31,10 @@ public class Register
             await client.GetInstance().Stop();
             await client.GetInstance().Start();
 
-            tasks.Add(Task.Run(() => Handler(id)));
+            var task = Handler(id);
+            await Task.Delay(1_000);
+            
+            tasks.Add(task);
         }
 
         Task.WaitAll(tasks.ToArray(), -1);

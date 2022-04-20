@@ -18,13 +18,13 @@ public class Warm
         _names = new[] {""};
     }
 
-    public Task Start(string text)
+    public async Task Start(string text)
     {
         var tasks = new List<Task>();
         var rnd = new Random();
         IsWork = true;
 
-        _names = File.ReadAllLines(Globals.Setup.PathToUserNames)
+        _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames))
             .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
 
         for (var i = 0; i < Globals.Devices.Count; i += 2)
@@ -32,15 +32,16 @@ public class Warm
             var id = rnd.Next(0, 10_000);
 
             _tetheredDevices[id] = new[] {Globals.Devices[i], Globals.Devices[i + 1]};
-
-            tasks.Add(Task.Run(() => Handler(id, text.Split('\n'))));
+            
+            var task = Handler(id, text.Split('\n'));
+            await Task.Delay(1_000);
+            
+            tasks.Add(task);
         }
 
         Task.WaitAll(tasks.ToArray(), -1);
 
         Stop();
-
-        return Task.CompletedTask;
     }
 
     public void Stop()

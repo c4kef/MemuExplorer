@@ -3,10 +3,13 @@
 public class Newsletter
 {
     public bool IsWork { get; private set; }
+    public int MessagesSendedCount { get; private set; }
 
     private readonly Dictionary<int, WaClient> _tetheredDevices;
     private readonly List<string> _usedPhones;
     private readonly List<string> _usedPhonesUsers;
+    private readonly FileInfo _logFile;
+
     private string[] _contacts;
     private string[] _names;
     
@@ -15,6 +18,7 @@ public class Newsletter
         _tetheredDevices = new Dictionary<int, WaClient>();
         _usedPhonesUsers = _usedPhones = new List<string>();
         _contacts = _names = new[] {""};
+        _logFile = new FileInfo($"{DateTime.Now:MMddyyyyHHmmss}_log.txt");
     }
 
     public async Task Start(string text)
@@ -27,6 +31,9 @@ public class Newsletter
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
 
+        await File.AppendAllTextAsync(_logFile.FullName,
+            $"Добро пожаловать в логи, текст рассылки:\n{text}\n\n");
+        
         foreach (var t in Globals.Devices)
         {
             var id = rnd.Next(0, 10_000);
@@ -41,6 +48,9 @@ public class Newsletter
         
         Task.WaitAll(tasks.ToArray(), -1);
 
+        await File.AppendAllTextAsync(_logFile.FullName,
+            $"Количество отправленных сообщений: {MessagesSendedCount}\n");
+        
         Stop();
     }
 
@@ -48,6 +58,7 @@ public class Newsletter
     {
         _tetheredDevices.Clear();
         _usedPhones.Clear();
+        _usedPhonesUsers.Clear();
         IsWork = false;
     }
 
@@ -69,7 +80,6 @@ public class Newsletter
 
             await client.ReCreate(phone: $"+{phone}", account: path);
             await client.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
-
             if (!await IsValid())
             {
                 Directory.Move(client.Account,
@@ -89,17 +99,24 @@ public class Newsletter
             {
                 Directory.Move(client.Account,
                     @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
-            
+
                 goto reCreate;
             }
 
             await client.SendMessage(contact, text);
-            
+
             if (++countMsg > Globals.Setup.CountMessageFromAccount)
                 goto reCreate;
 
+            ++MessagesSendedCount;
+            await File.AppendAllTextAsync(_logFile.FullName,
+                $"[{DateTime.Now:HH:mm:ss}] - Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n");
+
             await Task.Delay(500);
-            
+
+            if (!IsWork)
+                break;
+
             goto recurseSendMessageToContact;
         }
 

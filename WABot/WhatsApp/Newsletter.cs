@@ -6,6 +6,7 @@ public class Newsletter
     public int MessagesSendedCount { get; private set; }
 
     private readonly Dictionary<int, WaClient> _tetheredDevices;
+    private readonly Dictionary<string, int> _sendedMessagesCountFromAccount;
     private readonly List<string> _usedPhones;
     private readonly List<string> _usedPhonesUsers;
     private readonly FileInfo _logFile;
@@ -15,6 +16,7 @@ public class Newsletter
     
     public Newsletter()
     {
+        _sendedMessagesCountFromAccount = new Dictionary<string, int>();
         _tetheredDevices = new Dictionary<int, WaClient>();
         _usedPhonesUsers = _usedPhones = new List<string>();
         _contacts = _names = new[] {""};
@@ -47,9 +49,14 @@ public class Newsletter
         }
         
         Task.WaitAll(tasks.ToArray(), -1);
-
+        
+        await File.AppendAllTextAsync(_logFile.FullName, "\n\nКол-во сообщений с аккаунта:\n");
+        
+        foreach (var account in _sendedMessagesCountFromAccount)
+            await File.AppendAllTextAsync(_logFile.FullName, $"{account.Key} - {account.Value}\n");
+        
         await File.AppendAllTextAsync(_logFile.FullName,
-            $"Количество отправленных сообщений: {MessagesSendedCount}\n");
+            $"\nОбщее количество отправленных сообщений: {MessagesSendedCount}\n");
         
         Stop();
     }
@@ -78,6 +85,8 @@ public class Newsletter
 
             _usedPhones.Add(phone);
 
+            _sendedMessagesCountFromAccount[phone] = 0;
+            
             await client.ReCreate(phone: $"+{phone}", account: path);
             await client.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
             if (!await IsValid())
@@ -108,6 +117,7 @@ public class Newsletter
             if (++countMsg > Globals.Setup.CountMessageFromAccount)
                 goto reCreate;
 
+            ++_sendedMessagesCountFromAccount[phone];
             ++MessagesSendedCount;
             await File.AppendAllTextAsync(_logFile.FullName,
                 $"[{DateTime.Now:HH:mm:ss}] - Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n");

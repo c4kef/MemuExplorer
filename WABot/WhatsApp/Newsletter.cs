@@ -95,7 +95,7 @@ public class Newsletter
             if (!await IsValid())
             {
                 if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
-                    Directory.Delete(client.Account);
+                    Directory.Delete(client.Account, true);
                 else if (Directory.Exists(client.Account))
                     Directory.Move(client.Account,
                         @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
@@ -113,7 +113,7 @@ public class Newsletter
             if (!await IsValid())
             {
                 if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
-                    Directory.Delete(client.Account);
+                    Directory.Delete(client.Account, true);
                 else if (Directory.Exists(client.Account))
                     Directory.Move(client.Account,
                         @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");

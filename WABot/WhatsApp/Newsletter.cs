@@ -83,6 +83,9 @@ public class Newsletter
 
             var (phone, path) = result[0];
 
+            if (_usedPhones.Contains(phone))
+                goto reCreate;
+            
             _usedPhones.Add(phone);
 
             _sendedMessagesCountFromAccount[phone] = 0;
@@ -91,8 +94,11 @@ public class Newsletter
             await client.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
             if (!await IsValid())
             {
-                Directory.Move(client.Account,
-                    @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+                if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
+                    Directory.Delete(client.Account);
+                else if (Directory.Exists(client.Account))
+                    Directory.Move(client.Account,
+                        @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
                 goto reCreate;
             }
 
@@ -106,8 +112,11 @@ public class Newsletter
 
             if (!await IsValid())
             {
-                Directory.Move(client.Account,
-                    @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+                if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
+                    Directory.Delete(client.Account);
+                else if (Directory.Exists(client.Account))
+                    Directory.Move(client.Account,
+                        @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
 
                 goto reCreate;
             }

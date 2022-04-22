@@ -11,9 +11,13 @@ public partial class Settings : INotifyPropertyChanged
     }
 
     #region Variables
-    
+
     public event PropertyChangedEventHandler? PropertyChanged;
-    private void OnPropertyChanged(string prop = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+
+    private void OnPropertyChanged(string prop = "")
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+    }
 
     public int CountMessage
     {
@@ -32,19 +36,19 @@ public partial class Settings : INotifyPropertyChanged
         get => Globals.Setup.TrustLevelAccount;
         set => Globals.Setup.TrustLevelAccount = value;
     }
-    
+
     public int CountMessageFromAccount
     {
         get => Globals.Setup.CountMessageFromAccount;
         set => Globals.Setup.CountMessageFromAccount = value;
     }
-    
+
     public int CountDevices
     {
         get => Globals.Setup.CountDevices;
         set => Globals.Setup.CountDevices = value;
     }
-    
+
     public bool EnableWarm
     {
         get => Globals.Setup.EnableWarm;
@@ -52,33 +56,33 @@ public partial class Settings : INotifyPropertyChanged
     }
 
     public Brush ColorPathToDirectoryAccounts =>
-        (string.IsNullOrEmpty(Globals.Setup.PathToDirectoryAccounts) ||
-         !Directory.Exists(Globals.Setup.PathToDirectoryAccounts))
+        string.IsNullOrEmpty(Globals.Setup.PathToDirectoryAccounts) ||
+        !Directory.Exists(Globals.Setup.PathToDirectoryAccounts)
             ? Brushes.Red
             : Brushes.GreenYellow;
-    
+
     public Brush ColorPathToPhonesUsers =>
-        (string.IsNullOrEmpty(Globals.Setup.PathToPhonesUsers) ||
-         !File.Exists(Globals.Setup.PathToPhonesUsers))
+        string.IsNullOrEmpty(Globals.Setup.PathToPhonesUsers) ||
+        !File.Exists(Globals.Setup.PathToPhonesUsers)
             ? Brushes.Red
             : Brushes.GreenYellow;
-    
+
     public Brush ColorPathToImageDevice =>
-        (string.IsNullOrEmpty(Globals.Setup.PathToImageDevice) ||
-         !File.Exists(Globals.Setup.PathToImageDevice))
+        string.IsNullOrEmpty(Globals.Setup.PathToImageDevice) ||
+        !File.Exists(Globals.Setup.PathToImageDevice)
             ? Brushes.Red
             : Brushes.GreenYellow;
-    
+
     public Brush ColorPathToUserNames =>
-        (string.IsNullOrEmpty(Globals.Setup.PathToUserNames) ||
-         !File.Exists(Globals.Setup.PathToUserNames))
+        string.IsNullOrEmpty(Globals.Setup.PathToUserNames) ||
+        !File.Exists(Globals.Setup.PathToUserNames)
             ? Brushes.Red
             : Brushes.GreenYellow;
-    
+
     #endregion
 
     private async void SelectAccounts(object sender, RoutedEventArgs e)
-    { 
+    {
         var dialog = new CommonOpenFileDialog();
         dialog.IsFolderPicker = true;
         if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
@@ -91,7 +95,7 @@ public partial class Settings : INotifyPropertyChanged
                         {
                             LastActiveDialog = new Dictionary<string, DateTime>()
                         }));
-            
+
             await Globals.SaveSetup();
         }
 
@@ -110,7 +114,7 @@ public partial class Settings : INotifyPropertyChanged
 
         OnPropertyChanged("ColorPathToPhonesUsers");
     }
-    
+
     private async void SelectImageDevice(object sender, RoutedEventArgs e)
     {
         var dialog = new CommonOpenFileDialog();
@@ -123,7 +127,7 @@ public partial class Settings : INotifyPropertyChanged
 
         OnPropertyChanged("ColorPathToImageDevice");
     }
-    
+
     private async void SelectUserNames(object sender, RoutedEventArgs e)
     {
         var dialog = new CommonOpenFileDialog();
@@ -137,11 +141,14 @@ public partial class Settings : INotifyPropertyChanged
         OnPropertyChanged("ColorPathToUserNames");
     }
 
-    private async void ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args) => await Globals.SaveSetup();
+    private async void ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        await Globals.SaveSetup();
+    }
 
     private async void EnableWarmClicked(object sender, RoutedEventArgs e)
     {
-        EnableWarm = ((sender as CheckBox)!).IsChecked!.Value;
+        EnableWarm = (sender as CheckBox)!.IsChecked!.Value;
         OnPropertyChanged("EnableWarm");
 
         await Globals.SaveSetup();

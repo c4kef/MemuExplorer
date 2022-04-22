@@ -13,7 +13,7 @@ public class Newsletter
 
     private string[] _contacts;
     private string[] _names;
-    
+
     public Newsletter()
     {
         _sendedMessagesCountFromAccount = new Dictionary<string, int>();
@@ -28,14 +28,15 @@ public class Newsletter
         var tasks = new List<Task>();
         var rnd = new Random();
         IsWork = true;
-        
-        _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames)).Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
+
+        _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames))
+            .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
 
         await File.AppendAllTextAsync(_logFile.FullName,
             $"Добро пожаловать в логи, текст рассылки:\n{text}\n\n");
-        
+
         foreach (var t in Globals.Devices)
         {
             var id = rnd.Next(0, 10_000);
@@ -44,20 +45,20 @@ public class Newsletter
 
             var task = Handler(id, text);
             await Task.Delay(1_000);
-            
+
             tasks.Add(task);
         }
-        
+
         Task.WaitAll(tasks.ToArray(), -1);
-        
+
         await File.AppendAllTextAsync(_logFile.FullName, "\n\nКол-во сообщений с аккаунта:\n");
-        
+
         foreach (var account in _sendedMessagesCountFromAccount)
             await File.AppendAllTextAsync(_logFile.FullName, $"{account.Key} - {account.Value}\n");
-        
+
         await File.AppendAllTextAsync(_logFile.FullName,
             $"\nОбщее количество отправленных сообщений: {MessagesSendedCount}\n");
-        
+
         Stop();
     }
 
@@ -76,7 +77,7 @@ public class Newsletter
         while (IsWork)
         {
             reCreate:
-            var result = (await Globals.GetAccounts(_usedPhones.ToArray(), Globals.Setup.TrustLevelAccount));
+            var result = await Globals.GetAccounts(_usedPhones.ToArray(), Globals.Setup.TrustLevelAccount);
 
             if (result.Length == 0)
                 break;
@@ -85,16 +86,17 @@ public class Newsletter
 
             if (_usedPhones.Contains(phone))
                 goto reCreate;
-            
+
             _usedPhones.Add(phone);
 
             _sendedMessagesCountFromAccount[phone] = 0;
-            
-            await client.ReCreate(phone: $"+{phone}", account: path);
+
+            await client.ReCreate($"+{phone}", path);
             await client.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
             if (!await IsValid())
             {
-                if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
+                if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") &&
+                    Directory.Exists(client.Account))
                     Directory.Delete(client.Account, true);
                 else if (Directory.Exists(client.Account))
                     Directory.Move(client.Account,
@@ -112,7 +114,8 @@ public class Newsletter
 
             if (!await IsValid())
             {
-                if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
+                if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") &&
+                    Directory.Exists(client.Account))
                     Directory.Delete(client.Account, true);
                 else if (Directory.Exists(client.Account))
                     Directory.Move(client.Account,
@@ -145,15 +148,17 @@ public class Newsletter
                 if (!_usedPhonesUsers.Contains(contact))
                 {
                     _usedPhonesUsers.Add(contact);
-                    return (contact[0] == '+') ? contact.Remove(0, 1) : contact;
+                    return contact[0] == '+' ? contact.Remove(0, 1) : contact;
                 }
 
             return string.Empty;
         }
 
-        async Task<bool> IsValid() =>
-            !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']") && //To-Do
-            !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']") && //To-Do
-            !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']");
+        async Task<bool> IsValid()
+        {
+            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']") && //To-Do
+                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']") && //To-Do
+                   !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']");
+        }
     }
 }

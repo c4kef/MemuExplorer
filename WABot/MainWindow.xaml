@@ -9,5 +9,5 @@
         Title="Whatsapp Bot" Height="500" Width="800"
         xmlns:ui="http://schemas.modernwpf.com/2019"
         ui:WindowHelper.UseModernWindowStyle="True">
-        <local:Main/>
+    <local:Main />
 </Window>

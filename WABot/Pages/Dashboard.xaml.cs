@@ -14,22 +14,26 @@ public partial class Dashboard : INotifyPropertyChanged
 
     #region Variables
 
-    private static Task _activeTask = null!;//To-Do
-    
+    private static Task _activeTask = null!; //To-Do
+
     private static bool _isBusy;
 
     private readonly Warm _warm;
-    
+
     private readonly Newsletter _newsletter;
-    
+
     private readonly Register _register;
 
     #endregion
-    
+
     #region Variables UI
-    
+
     public event PropertyChangedEventHandler? PropertyChanged;
-    private void OnPropertyChanged(string prop = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+
+    private void OnPropertyChanged(string prop = "")
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+    }
 
     private int _progressValue;
 
@@ -42,7 +46,7 @@ public partial class Dashboard : INotifyPropertyChanged
             OnPropertyChanged("ProgressValue");
         }
     }
-    
+
     private string _textMessage = null!;
 
     public string TextMessage
@@ -54,7 +58,7 @@ public partial class Dashboard : INotifyPropertyChanged
             OnPropertyChanged("TextMessage");
         }
     }
-    
+
     private string _deviceBtnText = null!;
 
     public string DeviceBtnText
@@ -66,21 +70,21 @@ public partial class Dashboard : INotifyPropertyChanged
             OnPropertyChanged("DeviceBtnText");
         }
     }
-    
+
     #endregion
 
     private async void Warming(object sender, RoutedEventArgs e)
     {
         if (_isBusy)
         {
-            if (!_warm.IsWork) 
+            if (!_warm.IsWork)
                 return;
-            
+
             _warm.Stop();
-            
+
             MessageBox.Show("Выполнена команда на завершение текущей задачи, дождитесь завершения текущего цикла");
 
-            await Task.Run( async () =>
+            await Task.Run(async () =>
             {
                 while (!_activeTask.IsCompleted)
                     await Task.Delay(1_500);
@@ -88,7 +92,7 @@ public partial class Dashboard : INotifyPropertyChanged
                 _isBusy = false;
                 ProgressValue = 0;
             });
-            
+
             return;
         }
 
@@ -97,7 +101,7 @@ public partial class Dashboard : INotifyPropertyChanged
             MessageBox.Show("Запустите устройства в режиме прогрева");
             return;
         }
-        
+
         if (string.IsNullOrEmpty(TextMessage))
         {
             MessageBox.Show("Укажите текст сообщений");
@@ -114,7 +118,7 @@ public partial class Dashboard : INotifyPropertyChanged
             await _activeTask;
 
             MessageBox.Show("Прогрев завершен");
-            
+
             ProgressValue = 0;
         }
         catch (Exception ex)
@@ -130,14 +134,14 @@ public partial class Dashboard : INotifyPropertyChanged
     {
         if (_isBusy)
         {
-            if (!_newsletter.IsWork) 
+            if (!_newsletter.IsWork)
                 return;
-            
+
             _newsletter.Stop();
-            
+
             MessageBox.Show("Выполнена команда на завершение текущей задачи, дождитесь завершения текущего цикла");
-            
-            await Task.Run( async () =>
+
+            await Task.Run(async () =>
             {
                 while (!_activeTask.IsCompleted)
                     await Task.Delay(1_500);
@@ -153,7 +157,7 @@ public partial class Dashboard : INotifyPropertyChanged
             MessageBox.Show("Запустите устройства или отключите режим прогрева");
             return;
         }
-        
+
         if (string.IsNullOrEmpty(TextMessage))
         {
             MessageBox.Show("Укажите текст сообщения");
@@ -164,14 +168,13 @@ public partial class Dashboard : INotifyPropertyChanged
 
         try
         {
-
             ProgressValue = 100;
 
             _activeTask = Task.Run(() => _newsletter.Start(TextMessage));
             await _activeTask;
-            
+
             MessageBox.Show("Рассылка завершена");
-            
+
             ProgressValue = 0;
         }
         catch (Exception ex)
@@ -187,14 +190,14 @@ public partial class Dashboard : INotifyPropertyChanged
     {
         if (_isBusy)
         {
-            if (!_register.IsWork) 
+            if (!_register.IsWork)
                 return;
-            
+
             _register.Stop();
-            
+
             MessageBox.Show("Выполнена команда на завершение текущей задачи, дождитесь завершения текущего цикла");
-            
-            await Task.Run( async () =>
+
+            await Task.Run(async () =>
             {
                 while (!_activeTask.IsCompleted)
                     await Task.Delay(1_500);
@@ -215,14 +218,13 @@ public partial class Dashboard : INotifyPropertyChanged
 
         try
         {
-
             ProgressValue = 100;
 
             _activeTask = Task.Run(async () => await _register.Start());
             await _activeTask;
-            
+
             MessageBox.Show("Регистрация завершена");
-            
+
             ProgressValue = 0;
         }
         catch (Exception ex)
@@ -233,31 +235,32 @@ public partial class Dashboard : INotifyPropertyChanged
 
         _isBusy = false;
     }
-    
+
     private async void DevicesSetup(object sender, RoutedEventArgs e)
     {
         if (_isBusy)
             return;
-        
-        if (Globals.Setup.CountDevices == 0 || !File.Exists(Globals.Setup.PathToImageDevice) || !File.Exists(Globals.Setup.PathToUserNames))
+
+        if (Globals.Setup.CountDevices == 0 || !File.Exists(Globals.Setup.PathToImageDevice) ||
+            !File.Exists(Globals.Setup.PathToUserNames))
         {
             MessageBox.Show("Похоже вы не указали все настройки для запуска устройств");
             return;
         }
-        
+
         _isBusy = true;
-        
+
         try
         {
-            DeviceBtnText = (DeviceBtnText == "Запустить") ? "Отключить" : "Запустить";
-            
-            if (DeviceBtnText == "Отключить")//Та самая карта-обраточка из uno
+            DeviceBtnText = DeviceBtnText == "Запустить" ? "Отключить" : "Запустить";
+
+            if (DeviceBtnText == "Отключить") //Та самая карта-обраточка из uno
             {
                 //await Memu.RemoveAll();
 
                 for (var i = 0; i < Globals.Setup.CountDevices; i++)
                 {
-                    ProgressValue = (int)(((i + 1f) / Globals.Setup.CountDevices) * 100);
+                    ProgressValue = (int) ((i + 1f) / Globals.Setup.CountDevices * 100);
                     //await Memu.Import(Globals.Setup.PathToImageDevice);
 
                     var device = new WaClient(deviceId: i);
@@ -267,7 +270,7 @@ public partial class Dashboard : INotifyPropertyChanged
                     await device.GetInstance().Shell("settings put global window_animation_scale 0");
                     await device.GetInstance().Shell("settings put global transition_animation_scale 0");
                     await device.GetInstance().Shell("settings put global animator_duration_scale 0");
-                    
+
                     Globals.Devices.Add(device);
                 }
 
@@ -280,7 +283,7 @@ public partial class Dashboard : INotifyPropertyChanged
             {
                 foreach (var device in Globals.Devices)
                     await device.Stop();
-                
+
                 Globals.Devices.Clear();
             }
         }
@@ -289,7 +292,7 @@ public partial class Dashboard : INotifyPropertyChanged
             MessageBox.Show("Произошла ошибка, лог создан на рабочем столе");
             await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
         }
-        
+
         ProgressValue = 0;
         _isBusy = false;
     }

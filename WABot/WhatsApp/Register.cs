@@ -19,8 +19,9 @@ public class Register
         var tasks = new List<Task>();
         var rnd = new Random();
         IsWork = true;
-        
-        _names = File.ReadLines(Globals.Setup.PathToUserNames).Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
+
+        _names = File.ReadLines(Globals.Setup.PathToUserNames)
+            .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
 
         foreach (var client in Globals.Devices)
         {
@@ -33,7 +34,7 @@ public class Register
 
             var task = Handler(id);
             await Task.Delay(1_000);
-            
+
             tasks.Add(task);
         }
 
@@ -52,21 +53,23 @@ public class Register
     {
         await Task.Delay(new Random().Next(1_000, 5_000));
         var client = _tetheredDevices[idThread];
-        
+
         while (IsWork)
         {
             var directoryThread = Directory.CreateDirectory($@"{Globals.TempAccountsDirectory.FullName}\{idThread}");
-            var directoryThreadWhatsApp = Directory.CreateDirectory($@"{Globals.TempAccountsDirectory.FullName}\{idThread}\com.whatsapp");
+            var directoryThreadWhatsApp =
+                Directory.CreateDirectory($@"{Globals.TempAccountsDirectory.FullName}\{idThread}\com.whatsapp");
 
             await File.WriteAllTextAsync($@"{directoryThread.FullName}\Data.json",
                 JsonConvert.SerializeObject(new AccountData()
                     {LastActiveDialog = new Dictionary<string, DateTime>(), TrustLevelAccount = 0}));
 
-            var phone = await client.Register(directoryThreadWhatsApp.FullName, _names[new Random().Next(0, _names.Length)]);
+            var phone = await client.Register(directoryThreadWhatsApp.FullName,
+                _names[new Random().Next(0, _names.Length)]);
 
             if (string.IsNullOrEmpty(phone))
                 break;
-            
+
             Directory.Move(directoryThread.FullName, $@"{Globals.Setup.PathToDirectoryAccounts}\{phone}");
         }
     }

@@ -58,7 +58,8 @@ public static class Globals
 
         foreach (var accountDirectory in Directory.GetDirectories(Setup.PathToDirectoryAccounts))
         {
-            if (!File.Exists($@"{accountDirectory}\Data.json") || !Directory.Exists($@"{accountDirectory}\com.whatsapp"))
+            if (!File.Exists($@"{accountDirectory}\Data.json") ||
+                !Directory.Exists($@"{accountDirectory}\com.whatsapp"))
                 continue;
 
             var phone = new DirectoryInfo(accountDirectory).Name;
@@ -69,7 +70,9 @@ public static class Globals
             switch (phoneFrom.Contains(phone))
             {
                 case false when !dataAccount!.LastActiveDialog!.ContainsKey(phone):
-                case false when dataAccount.LastActiveDialog!.ContainsKey(phone) && (DateTime.Now - dataAccount.LastActiveDialog[phone]).TotalMilliseconds >= Setup.DelayBetweenUsers * 1000:
+                case false when dataAccount.LastActiveDialog!.ContainsKey(phone) &&
+                                (DateTime.Now - dataAccount.LastActiveDialog[phone]).TotalMilliseconds >=
+                                Setup.DelayBetweenUsers * 1000:
                     accounts.Add((phone, accountDirectory));
                     break;
             }
@@ -77,7 +80,7 @@ public static class Globals
 
         return accounts.ToArray();
     }
-    
+
     public static async Task<(string phone, string path)[]> GetAccounts(string[] phoneFrom, int trustLevelAccount)
     {
         var accounts = new List<(string phone, string path)>();
@@ -110,38 +113,47 @@ public class Setup
     /// Кол-во циклов на блок сообщений
     /// </summary>
     public int CountMessage = 1;
+
     /// <summary>
     /// Задержка между отправкой сообщений между двумя пользователями (срабатывает по окончанию цикла)
     /// </summary>
     public int DelayBetweenUsers = 24000;
+
     /// <summary>
     /// Уровень прогрева аккаунта для начала рассылки сообщений
     /// </summary>
     public int TrustLevelAccount = 0;
+
     /// <summary>
     /// Кол-во виртуальный устройств
     /// </summary>
     public int CountDevices = 2;
+
     /// <summary>
     /// Кол-во сообщений с аккаунта при рассылке
     /// </summary>
     public int CountMessageFromAccount = 2;
+
     /// <summary>
     /// Включить режим прогрева
     /// </summary>
     public bool EnableWarm = false;
+
     /// <summary>
     /// Путь до директории с аккаунтами WhhatsApp
     /// </summary>
     public string PathToDirectoryAccounts = string.Empty;
+
     /// <summary>
     /// Путь до файла с номерами пользователей для рассылки сообщений
     /// </summary>
     public string PathToPhonesUsers = string.Empty;
+
     /// <summary>
     /// Путь до образа виртуального устройства
     /// </summary>
     public string PathToImageDevice = string.Empty;
+
     /// <summary>
     /// Путь до файла с именами пользователей
     /// </summary>
@@ -155,6 +167,7 @@ public class AccountData
     /// Уровень прогрева аккаунта для начала рассылки сообщений
     /// </summary>
     public int TrustLevelAccount = 0;
+
     /// <summary>
     /// Последняя переписка с аккаунтом
     /// </summary>

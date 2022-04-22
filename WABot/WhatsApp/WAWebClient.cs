@@ -10,7 +10,7 @@ public class WaWebClient
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int nWidth, int nHeight, bool bRepaint);
-    
+
     public WaWebClient(string nameSession)
     {
         _nameSession = nameSession;
@@ -19,7 +19,7 @@ public class WaWebClient
         _random = new Random();
 
         var socketIoClient = new SocketIOClient();
-        
+
         _socket = socketIoClient.Connect("http://localhost:3000/");
         _socket.On("data", HandlerDataRequests);
     }
@@ -32,7 +32,7 @@ public class WaWebClient
 
         var data = JObject.Parse(builder.ToString());
         var id = int.Parse(data["value"]![0]!.ToString());
-        
+
         _taskFinished.Add(id, data);
         _taskQueue.RemoveAll(task => task == id);
     }
@@ -55,7 +55,7 @@ public class WaWebClient
         if ((int) (data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {data["value"]![1]}");
     }
-    
+
     public async Task SendText(string number, string text)
     {
         var id = _random.Next(1_000_000, 10_000_000);
@@ -74,7 +74,7 @@ public class WaWebClient
         if ((int) (data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {data["value"]![1]}");
     }
-    
+
     public async Task Logout()
     {
         var id = _random.Next(1_000_000, 10_000_000);

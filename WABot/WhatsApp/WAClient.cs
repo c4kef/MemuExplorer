@@ -15,20 +15,23 @@ public class WaClient
         Account = account;
 
         AccountData = new AccountData();
-        
+
         if (account != string.Empty)
             AccountData = JsonConvert.DeserializeObject<AccountData>(File.ReadAllText($@"{account}\Data.json"))!;
-        
-        _mem = (deviceId == -1) ? new Client(0) : new Client(deviceId);
+
+        _mem = deviceId == -1 ? new Client(0) : new Client(deviceId);
     }
 
-    public Client GetInstance() => _mem;
-    
+    public Client GetInstance()
+    {
+        return _mem;
+    }
+
     public async Task Start()
     {
         await _mem.Start();
     }
-    
+
     public async Task Stop()
     {
         await _mem.Stop();
@@ -44,7 +47,7 @@ public class WaClient
 
         if (!await _mem.ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']"))
             goto again;
-        
+
         await _mem.Click("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']");
 
         var obj = await SmsCode.Create(service: "wa");
@@ -57,7 +60,7 @@ public class WaClient
 
         await _mem.ClearInput("//node[@resource-id='com.whatsapp:id/registration_cc']");
         await _mem.Input("//node[@resource-id='com.whatsapp:id/registration_cc']", obj.Phone[0].ToString());
-        
+
         await _mem.Input("//node[@text='номер тел.']", obj.Phone.Remove(0, 1));
 
         await _mem.Click("//node[@text='ДАЛЕЕ']");
@@ -67,7 +70,7 @@ public class WaClient
             obj.Cancel();
             goto again;
         }
-        
+
         await _mem.Click("//node[@text='OK']");
 
         if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
@@ -75,7 +78,7 @@ public class WaClient
             obj.Cancel();
             goto again;
         }
-        
+
         if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
         {
             await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
@@ -93,11 +96,12 @@ public class WaClient
             goto again;
         }
 
-        var code = await obj.GetMessage();/*new string(new Regex(@"\b\d{3}\-\d{3}\b").Match(await obj.GetMessage()).Value.Where(char.IsDigit)
+        var code = await obj
+            .GetMessage(); /*new string(new Regex(@"\b\d{3}\-\d{3}\b").Match(await obj.GetMessage()).Value.Where(char.IsDigit)
             .ToArray());*/
 
         //await _mem.Input("//node[@text='––– –––']", code); - нихуя не работает из-за текста который меняется...
-        await _mem.Input(code);//Костыль, иначе не придумал как можно
+        await _mem.Input(code); //Костыль, иначе не придумал как можно
 
         if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
             goto again; //To-Do
@@ -116,7 +120,7 @@ public class WaClient
             await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
             goto again;
         }
-        
+
         count = 0;
 
         while (await _mem.ExistsElement("//node[@text='Инициализация…']"))
@@ -141,24 +145,24 @@ public class WaClient
         await _mem.Shell("pm clear com.whatsapp");
         await _mem.RunApk("com.whatsapp");
         await _mem.StopApk("com.whatsapp");
-        await _mem.Push($@"{((Account == string.Empty) ? path : Account)}\com.whatsapp\.", @"/data/data/com.whatsapp");
+        await _mem.Push($@"{(Account == string.Empty ? path : Account)}\com.whatsapp\.", @"/data/data/com.whatsapp");
         await _mem.Shell("rm -r /data/data/com.whatsapp/databases");
         await _mem.RunApk("com.whatsapp");
 
         if (!await _mem.ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
             goto s1;
-        
+
         await _mem.Click("//node[@text='Выберите частоту резервного копирования']");
         await _mem.Click("//node[@text='Никогда']");
         await _mem.Click("//node[@text='ГОТОВО']");
         await Task.Delay(2_000);
         await _mem.StopApk("com.whatsapp");
         await _mem.RunApk("com.whatsapp");
-        
+
         s1:
         if (!await _mem.ExistsElement("//node[@resource-id='com.whatsapp:id/registration_name']"))
             return;
-        
+
         await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
         await _mem.Click("//node[@text='ДАЛЕЕ']");
         await Task.Delay(2_000);
@@ -172,9 +176,9 @@ public class WaClient
         await _mem.ImportContacts(path);
         if (!await _mem.ExistsElement("//node[@text='ОК']"))
             return false;
-        
+
         await _mem.Click("//node[@text='ОК']");
-        
+
         await _mem.StopApk("com.whatsapp");
         await _mem.RunApk("com.whatsapp");
 
@@ -219,12 +223,16 @@ public class WaClient
         if (account is not null)
         {
             Account = account;
-            AccountData = JsonConvert.DeserializeObject<AccountData>(await File.ReadAllTextAsync($@"{account}\Data.json"))!;
+            AccountData =
+                JsonConvert.DeserializeObject<AccountData>(await File.ReadAllTextAsync($@"{account}\Data.json"))!;
         }
 
         if (phone is not null)
             Phone = phone;
     }
 
-    public async Task UpdateData() => await File.WriteAllTextAsync($@"{Account}\Data.json", JsonConvert.SerializeObject(AccountData));
+    public async Task UpdateData()
+    {
+        await File.WriteAllTextAsync($@"{Account}\Data.json", JsonConvert.SerializeObject(AccountData));
+    }
 }

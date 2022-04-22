@@ -32,10 +32,10 @@ public class Warm
             var id = rnd.Next(0, 10_000);
 
             _tetheredDevices[id] = new[] {Globals.Devices[i], Globals.Devices[i + 1]};
-            
+
             var task = Handler(id, text.Split('\n'));
             await Task.Delay(1_000);
-            
+
             tasks.Add(task);
         }
 
@@ -64,7 +64,7 @@ public class Warm
             //Попытка войти в аккаунт для собеседника 1
             reCreateC1:
 
-            var resultC1 = (await Globals.GetAccountsWarm(_busyPhone.ToArray()));
+            var resultC1 = await Globals.GetAccountsWarm(_busyPhone.ToArray());
 
             if (resultC1.Length == 0)
                 break;
@@ -73,7 +73,7 @@ public class Warm
 
             _busyPhone.Add(c1Account.phone);
 
-            await client1.ReCreate(phone: $"+{c1Account.phone}", account: c1Account.path);
+            await client1.ReCreate($"+{c1Account.phone}", c1Account.path);
             await client1.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
 
             if (!await IsValid(client1))
@@ -86,7 +86,7 @@ public class Warm
 
             //Попытка войти в аккаунт для собеседника 2
             reCreateC2:
-            var resultC2 = (await Globals.GetAccountsWarm(_busyPhone.ToArray()));
+            var resultC2 = await Globals.GetAccountsWarm(_busyPhone.ToArray());
 
             if (resultC2.Length == 0)
                 break;
@@ -95,7 +95,7 @@ public class Warm
 
             _busyPhone.Add(c2Account.phone);
 
-            await client2.ReCreate(phone: $"+{c2Account.phone}", account: c2Account.path);
+            await client2.ReCreate($"+{c2Account.phone}", c2Account.path);
             await client2.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
 
             if (!await IsValid(client2))
@@ -114,8 +114,8 @@ public class Warm
                 await File.WriteAllTextAsync(fileContact.FullName, ContactManager.Export(
                     new List<CObj>()
                     {
-                        new CObj($"Artemiy {new Random().Next(0, 20_000)}", client1.Phone),
-                        new CObj($"Artemiy {new Random().Next(0, 20_000)}", client2.Phone),
+                        new($"Artemiy {new Random().Next(0, 20_000)}", client1.Phone),
+                        new($"Artemiy {new Random().Next(0, 20_000)}", client2.Phone)
                     }
                 ));
 
@@ -141,7 +141,6 @@ public class Warm
                 client2.AccountData.TrustLevelAccount++;
 
                 for (var i = 0; i < Globals.Setup.CountMessage; i++)
-                {
                     foreach (var text in texts)
                     {
                         await client1.SendMessage(client2.Phone, text);
@@ -157,7 +156,6 @@ public class Warm
                         if (!await IsValid(client2, false))
                             goto reCreateC2;
                     }
-                }
             }
             catch (DeviceNotFoundException)
             {
@@ -174,9 +172,11 @@ public class Warm
             await client2.UpdateData();
         }
 
-        async Task<bool> IsValid(WaClient client, bool isWait = true) =>
-            !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", isWait) && //To-Do
-            !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", isWait) && //To-Do
-            !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']", isWait);
+        async Task<bool> IsValid(WaClient client, bool isWait = true)
+        {
+            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", isWait) && //To-Do
+                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", isWait) && //To-Do
+                   !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']", isWait);
+        }
     }
 }

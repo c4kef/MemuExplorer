@@ -9,23 +9,23 @@
       Title="Main" Height="500" Width="800">
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="50"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="50" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <ui:SimpleStackPanel Grid.Row="0" HorizontalAlignment="Left" Margin="20,5,0,0">
             <StackPanel Orientation="Horizontal">
-                <Button Margin="0,0,10,0" Content="Главная" Click="OpenDashboard"/>
-                <Button Margin="0,0,10,0" Content="Настройки" Click="OpenSettings"/>
+                <Button Margin="0,0,10,0" Content="Главная" Click="OpenDashboard" />
+                <Button Margin="0,0,10,0" Content="Настройки" Click="OpenSettings" />
             </StackPanel>
         </ui:SimpleStackPanel>
-        <Separator Margin="0,30,0,0" Grid.Row="0" HorizontalAlignment="Stretch"/>
+        <Separator Margin="0,30,0,0" Grid.Row="0" HorizontalAlignment="Stretch" />
         <local:SampleFrame
             Grid.Column="0" Grid.Row="1"
             Margin="0,10,0,0"
             x:Name="RootFrame"
-            Navigating="RootFrame_Navigating"/>
+            Navigating="RootFrame_Navigating" />
     </Grid>
 </Page>

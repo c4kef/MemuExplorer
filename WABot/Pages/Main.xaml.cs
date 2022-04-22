@@ -16,13 +16,16 @@ public partial class Main
 
     private void RootFrame_Navigating(object sender, NavigatingCancelEventArgs e)
     {
-        if (e.NavigationMode == NavigationMode.Back)
-        {
-            RootFrame.RemoveBackEntry();
-        }
+        if (e.NavigationMode == NavigationMode.Back) RootFrame.RemoveBackEntry();
     }
 
-    private void OpenSettings(object sender, RoutedEventArgs e) => RootFrame.Navigate(_settings);
+    private void OpenSettings(object sender, RoutedEventArgs e)
+    {
+        RootFrame.Navigate(_settings);
+    }
 
-    private void OpenDashboard(object sender, RoutedEventArgs e) => RootFrame.Navigate(_dashboard);
+    private void OpenDashboard(object sender, RoutedEventArgs e)
+    {
+        RootFrame.Navigate(_dashboard);
+    }
 }

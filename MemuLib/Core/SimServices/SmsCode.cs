@@ -43,7 +43,10 @@ public class SmsCode
             var serviceCreate = requestValue.Split(':');
 
             if (serviceCreate[0] != "ACCESS_NUMBER")
-                throw new Exception($"cant create service: {requestValue[0]}");
+                if (serviceCreate[0] == "NO_BALANCE")
+                    return null;
+                else
+                    throw new Exception($"cant create service: {requestValue[0]}");
 
             var phone = serviceCreate[2];
             var id = serviceCreate[1];

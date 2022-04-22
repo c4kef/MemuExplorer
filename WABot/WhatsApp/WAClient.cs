@@ -58,8 +58,13 @@ public class WaClient
         if (!await _mem.ExistsElement("//node[@text='номер тел.']"))
             goto again;
 
-        await _mem.ClearInput("//node[@resource-id='com.whatsapp:id/registration_cc']");
-        await _mem.Input("//node[@resource-id='com.whatsapp:id/registration_cc']", obj.Phone[0].ToString());
+        //await _mem.ClearInput("//node[@resource-id='com.whatsapp:id/registration_cc']");
+        //await _mem.Input("//node[@resource-id='com.whatsapp:id/registration_cc']", obj.Phone[0].ToString());
+        
+        await _mem.Click("//node[@resource-id='com.whatsapp:id/registration_country']");
+        await _mem.Click("//node[@resource-id='com.whatsapp:id/menuitem_search']");
+        await _mem.Input("//node[@resource-id='com.whatsapp:id/search_src_text']", "Canada");//text="Канада"
+        await _mem.Click("//node[@text='Канада']");
 
         await _mem.Input("//node[@text='номер тел.']", obj.Phone.Remove(0, 1));
 

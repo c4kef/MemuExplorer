@@ -27,10 +27,10 @@ public class Register
         {
             var id = rnd.Next(0, 10_000);
 
-            _tetheredDevices[id] = client;
-            await client.GetInstance().Spoof("7", true);
-            await client.GetInstance().Stop();
-            await client.GetInstance().Start();
+            _tetheredDevices[id] = client.Client;
+            await client.Client.GetInstance().Spoof("7", true);
+            await client.Client.GetInstance().Stop();
+            await client.Client.GetInstance().Start();
 
             var task = Handler(id);
             await Task.Delay(1_000);

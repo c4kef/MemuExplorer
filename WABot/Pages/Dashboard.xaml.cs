@@ -1,4 +1,7 @@
-﻿namespace WABot.Pages;
+﻿using System.Windows.Controls;
+using System.Windows.Threading;
+
+namespace WABot.Pages;
 
 public partial class Dashboard : INotifyPropertyChanged
 {
@@ -6,10 +9,12 @@ public partial class Dashboard : INotifyPropertyChanged
     {
         InitializeComponent();
         DataContext = this;
-        DeviceBtnText = "Запустить";
         _warm = new Warm();
         _register = new Register();
         _newsletter = new Newsletter();
+        
+        if (!_managerDevicesIsRuning)
+            _ = Task.Run(ManagerDevices);
     }
 
     #region Variables
@@ -24,6 +29,8 @@ public partial class Dashboard : INotifyPropertyChanged
 
     private readonly Register _register;
 
+    private static bool _managerDevicesIsRuning;
+    
     #endregion
 
     #region Variables UI
@@ -59,19 +66,49 @@ public partial class Dashboard : INotifyPropertyChanged
         }
     }
 
-    private string _deviceBtnText = null!;
+    #endregion
 
-    public string DeviceBtnText
+    private async Task ManagerDevices()
     {
-        get => _deviceBtnText;
-        set
+        _managerDevicesIsRuning = true;
+        while (_managerDevicesIsRuning)
         {
-            _deviceBtnText = value;
-            OnPropertyChanged("DeviceBtnText");
+            await Task.Delay(1_500);
+            
+            Dispatcher.Invoke(() =>
+            {
+                if (DataGrid.IsEditing())
+                    return;
+                
+                DataGrid.Items.Refresh();
+            });
+            
+            var indexDevices = (await MemuCmd.ExecMemuc("listvms -r")).Split('\n').Select(line => line.Split(',')[0]).Where(index => int.TryParse(index, out _)).Select(int.Parse).ToArray();
+
+            if (indexDevices.Length == 0)
+            {
+                Globals.Devices.Clear();
+                continue;
+            }
+
+            if (Globals.Devices.Count != 0)
+            {
+                foreach (var newDeviceIndex in indexDevices)
+                    if (Globals.Devices.Find(device => device.Index == newDeviceIndex) == null)
+                        Globals.Devices.Add(
+                            new Device()
+                            {
+                                Index = newDeviceIndex, Client = new WaClient(deviceId: newDeviceIndex),
+                                IsActive = false
+                            });
+
+                Globals.Devices.RemoveAll(device => !indexDevices.Contains(device.Index));
+            }
+            else
+                Globals.Devices.Add(
+                    new Device() {Index = indexDevices[0], Client = new WaClient(deviceId: indexDevices[0]), IsActive = false});
         }
     }
-
-    #endregion
 
     private async void Warming(object sender, RoutedEventArgs e)
     {
@@ -236,7 +273,7 @@ public partial class Dashboard : INotifyPropertyChanged
         _isBusy = false;
     }
 
-    private async void DevicesSetup(object sender, RoutedEventArgs e)
+    private async void DevicesSetup()
     {
         if (_isBusy)
             return;
@@ -252,9 +289,7 @@ public partial class Dashboard : INotifyPropertyChanged
 
         try
         {
-            DeviceBtnText = DeviceBtnText == "Запустить" ? "Отключить" : "Запустить";
-
-            if (DeviceBtnText == "Отключить") //Та самая карта-обраточка из uno
+            /*if (DeviceBtnText == "Отключить") //Та самая карта-обраточка из uno
             {
                 //await Memu.RemoveAll();
 
@@ -285,7 +320,7 @@ public partial class Dashboard : INotifyPropertyChanged
                     await device.Stop();
 
                 Globals.Devices.Clear();
-            }
+            }*/
         }
         catch (Exception ex)
         {
@@ -295,5 +330,11 @@ public partial class Dashboard : INotifyPropertyChanged
 
         ProgressValue = 0;
         _isBusy = false;
+    }
+
+    private void DataGrid_OnRowEditEnding(object? sender, DataGridRowEditEndingEventArgs e)
+    {
+        var index = Globals.Devices.FindIndex(device => device.Index == (e.Row.Item as Device)!.Index);
+        Globals.Devices[index].IsActive = (e.Row.Item as Device)!.IsActive;
     }
 }

@@ -5,7 +5,8 @@ public partial class MainWindow
 {
     public MainWindow()
     {
-        InitializeComponent();
         Task.Run(Globals.Init).Wait();
+
+        InitializeComponent();
     }
 }

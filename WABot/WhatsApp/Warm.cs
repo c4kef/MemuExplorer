@@ -31,7 +31,7 @@ public class Warm
         {
             var id = rnd.Next(0, 10_000);
 
-            _tetheredDevices[id] = new[] {Globals.Devices[i], Globals.Devices[i + 1]};
+            _tetheredDevices[id] = new[] {Globals.Devices[i].Client, Globals.Devices[i + 1].Client};
 
             var task = Handler(id, text.Split('\n'));
             await Task.Delay(1_000);

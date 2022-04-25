@@ -41,7 +41,7 @@ public class Newsletter
         {
             var id = rnd.Next(0, 10_000);
 
-            _tetheredDevices[id] = t;
+            _tetheredDevices[id] = t.Client;
 
             var task = Handler(id, text);
             await Task.Delay(1_000);

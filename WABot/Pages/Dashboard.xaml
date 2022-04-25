@@ -4,6 +4,7 @@
          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
          mc:Ignorable="d"
+         xmlns:wabot="clr-namespace:WABot"
          xmlns:ui="http://schemas.modernwpf.com/2019"
          Title="Settings" Height="450" Width="800">
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
@@ -44,20 +45,36 @@
                             </ToolTip>
                         </Button.ToolTip>
                     </Button>
-                    <Button HorizontalAlignment="Center" Margin="10,0,0,0" ui:ControlHelper.CornerRadius="5"
-                            Content="{Binding DeviceBtnText}" Click="DevicesSetup">
-                        <Button.ToolTip>
-                            <ToolTip>
-                                Начнет процесс запуска/отключения виртуальных устройств
-                            </ToolTip>
-                        </Button.ToolTip>
-                    </Button>
                 </StackPanel>
             </StackPanel>
         </Border>
-        <TextBox AcceptsReturn="True" AcceptsTab="True" Grid.Row="1" Margin="10,10,10,10"
-                 ui:ControlHelper.CornerRadius="10" ui:ControlHelper.PlaceholderText="Введите текст"
-                 Text="{Binding TextMessage}" />
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
+            <TextBox AcceptsReturn="True" AcceptsTab="True" Margin="20,10,10,10"
+                     ui:ControlHelper.CornerRadius="10" ui:ControlHelper.PlaceholderText="Введите текст"
+                     Text="{Binding TextMessage}" Width="560" HorizontalAlignment="Left"/>
+            
+            <DataGrid AutoGenerateColumns="False"
+                      x:Name="DataGrid" Margin="20,10,10,10" 
+                      ItemsSource="{Binding Path=(wabot:Globals.Devices), Mode=TwoWay, IsAsync=True}"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Stretch"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      Focusable="False"
+                      RowDetailsVisibilityMode="Collapsed"
+                      RowEditEnding="DataGrid_OnRowEditEnding"
+                      VirtualizingPanel.VirtualizationMode="Recycling"
+                      VirtualizingPanel.IsVirtualizingWhenGrouping="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Индекс" Binding="{Binding Index}"/>
+                    <DataGridCheckBoxColumn Header="Активность" Binding="{Binding IsActive}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
+
         <ProgressBar
             Grid.Row="2" Margin="80,0,80,0" ui:ControlHelper.CornerRadius="2" IsEnabled="True" Maximum="100"
             Minimum="0"

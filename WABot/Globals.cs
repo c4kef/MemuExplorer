@@ -25,14 +25,14 @@ namespace WABot;
 public static class Globals
 {
     private const string NameSetupFile = "Setup.json";
-    public static List<WaClient> Devices { get; private set; } = null!;
+    public static List<Device> Devices { get; set; } = null!;
     public static Setup Setup { get; private set; } = null!;
     public static DirectoryInfo RemoveAccountsDirectory { get; private set; } = null!;
     public static DirectoryInfo TempAccountsDirectory { get; private set; } = null!;
 
     public static async Task Init()
     {
-        Devices = new List<WaClient>();
+        Devices = new List<Device>();
 
         RemoveAccountsDirectory = Directory.CreateDirectory("RemoveAccounts");
         TempAccountsDirectory = Directory.CreateDirectory("TempAccounts");
@@ -172,6 +172,13 @@ public class AccountData
     /// Последняя переписка с аккаунтом
     /// </summary>
     public Dictionary<string, DateTime>? LastActiveDialog;
+}
+
+public class Device
+{
+    public int Index { get; set; }
+    public bool IsActive { get; set; }
+    public WaClient Client;
 }
 
 #endregion

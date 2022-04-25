@@ -50,7 +50,7 @@ public class WaClient
 
         await _mem.Click("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']");
 
-        var obj = await SmsCode.Create(service: "wa");
+        var obj = await SmsCode.Create(service: "wa", country: "1");
 
         if (obj is null)
             return string.Empty;

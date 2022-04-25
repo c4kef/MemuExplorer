@@ -39,24 +39,23 @@ public class WaClient
 
     public async Task<string> Register(string to, string name)
     {
-        again:
         await _mem.StopApk("com.whatsapp");
         await _mem.Shell("pm clear com.whatsapp");
         await _mem.RunApk("com.whatsapp");
 
 
         if (!await _mem.ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']"))
-            goto again;
+            return string.Empty;
 
         await _mem.Click("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']");
 
-        var obj = await SmsCode.Create(service: "wa", country: "1");
+        var obj = await SmsCode.Create(service: "wa", country: "0");
 
         if (obj is null)
-            return string.Empty;
+            return "stop";
 
         if (!await _mem.ExistsElement("//node[@text='номер тел.']"))
-            goto again;
+            return string.Empty;
 
         //await _mem.ClearInput("//node[@resource-id='com.whatsapp:id/registration_cc']");
         //await _mem.Input("//node[@resource-id='com.whatsapp:id/registration_cc']", obj.Phone[0].ToString());
@@ -73,7 +72,7 @@ public class WaClient
         if (!await _mem.ExistsElement("//node[@text='OK']"))
         {
             obj.Cancel();
-            goto again;
+            return string.Empty;
         }
 
         await _mem.Click("//node[@text='OK']");
@@ -81,13 +80,13 @@ public class WaClient
         if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
         {
             obj.Cancel();
-            goto again;
+            return string.Empty;
         }
 
         if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
         {
             await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
-            goto again;
+            return string.Empty;
         }
 
         var count = 0;
@@ -98,7 +97,7 @@ public class WaClient
             Thread.Sleep(1_500);
             if (count <= 15) continue;
             obj.Cancel();
-            goto again;
+            return string.Empty;
         }
 
         var code = await obj
@@ -109,12 +108,12 @@ public class WaClient
         await _mem.Input(code); //Костыль, иначе не придумал как можно
 
         if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
-            goto again; //To-Do
+            return string.Empty; //To-Do
 
         if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
         {
             await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
-            goto again;
+            return string.Empty;
         }
 
         await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
@@ -123,7 +122,7 @@ public class WaClient
         if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
         {
             await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
-            goto again;
+            return string.Empty;
         }
 
         count = 0;
@@ -133,7 +132,7 @@ public class WaClient
             ++count;
             Thread.Sleep(1_500);
             if (count > 5)
-                goto again;
+                return string.Empty;
         }
 
         await _mem.Pull(to, "/data/data/com.whatsapp/");

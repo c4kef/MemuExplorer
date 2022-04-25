@@ -4,16 +4,14 @@ namespace WABot.WhatsApp;
 
 public class Warm
 {
-    public bool IsWork { get; private set; }
-
-    private readonly Dictionary<int, WaClient[]> _tetheredDevices;
+    private readonly Dictionary<int, Device[]> _tetheredDevices;
     private readonly List<string> _busyPhone;
 
     private string[] _names;
 
     public Warm()
     {
-        _tetheredDevices = new Dictionary<int, WaClient[]>();
+        _tetheredDevices = new Dictionary<int, Device[]>();
         _busyPhone = new List<string>();
         _names = new[] {""};
     }
@@ -22,25 +20,48 @@ public class Warm
     {
         var tasks = new List<Task>();
         var rnd = new Random();
-        IsWork = true;
 
         _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames))
             .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
 
-        for (var i = 0; i < Globals.Devices.Count; i += 2)
+        var busyDevices = new List<int>();
+
+        while (true)
         {
+            var devices = Globals.Devices.Where(device => !busyDevices.Contains(device.Index) && device.IsActive)
+                .Take(2).ToArray();
+
+            if (devices.Length != 2)
+                break;
+            
             var id = rnd.Next(0, 10_000);
 
-            _tetheredDevices[id] = new[] {Globals.Devices[i].Client, Globals.Devices[i + 1].Client};
+            foreach (var device in devices)
+            {
+                device.InUsage = true;
+                
+                await device.Client.Start();
+                await device.Client.GetInstance().Shell("settings put global window_animation_scale 0");
+                await device.Client.GetInstance().Shell("settings put global transition_animation_scale 0");
+                await device.Client.GetInstance().Shell("settings put global animator_duration_scale 0");
+            }
+
+            _tetheredDevices[id] = new[] {devices[0], devices[1]};
 
             var task = Handler(id, text.Split('\n'));
             await Task.Delay(1_000);
 
             tasks.Add(task);
+
+            busyDevices.AddRange(new[] {devices[0].Index, devices[1].Index});
         }
 
         Task.WaitAll(tasks.ToArray(), -1);
 
+        foreach (var device in Globals.Devices)
+            device.InUsage = false;
+
+        busyDevices.Clear();
         Stop();
     }
 
@@ -48,22 +69,22 @@ public class Warm
     {
         _tetheredDevices.Clear();
         _busyPhone.Clear();
-        IsWork = false;
     }
 
     private async Task Handler(int idThread, string[] texts)
     {
-        var client1 = _tetheredDevices[idThread][0];
-        var client2 = _tetheredDevices[idThread][1];
+        var client1 = _tetheredDevices[idThread][0].Client;
+        var client2 = _tetheredDevices[idThread][1].Client;
 
+        var (c1Index, c2Index) = (_tetheredDevices[idThread][0].Index, _tetheredDevices[idThread][1].Index);
+        
         _busyPhone.Add(client1.Phone);
         _busyPhone.Add(client2.Phone);
 
-        while (IsWork)
+        while (Globals.Devices.Where(device => device.Index == c1Index).ToArray()[0].IsActive &&
+               Globals.Devices.Where(device => device.Index == c2Index).ToArray()[0].IsActive)
         {
             //Попытка войти в аккаунт для собеседника 1
-            reCreateC1:
-
             var resultC1 = await Globals.GetAccountsWarm(_busyPhone.ToArray());
 
             if (resultC1.Length == 0)
@@ -81,7 +102,7 @@ public class Warm
                 _busyPhone.Remove(c1Account.phone);
                 Directory.Move(client1.Account,
                     @$"{Globals.RemoveAccountsDirectory.FullName}\{client1.Phone.Remove(0, 1)}");
-                goto reCreateC1;
+                continue;
             }
 
             //Попытка войти в аккаунт для собеседника 2
@@ -124,7 +145,7 @@ public class Warm
                     _busyPhone.Remove(c1Account.phone);
                     Directory.Move(client1.Account,
                         @$"{Globals.RemoveAccountsDirectory.FullName}\{client1.Phone.Remove(0, 1)}");
-                    goto reCreateC1;
+                    continue;
                 }
 
                 if (!await client2.ImportContacts(fileContact.FullName))
@@ -143,18 +164,17 @@ public class Warm
                 for (var i = 0; i < Globals.Setup.CountMessage; i++)
                     foreach (var text in texts)
                     {
+                        if (!await IsValid(client1, false))
+                            break;
+
+                        if (!await IsValid(client2, false))
+                            goto reCreateC2;
+                        
                         await client1.SendMessage(client2.Phone, text);
 
                         await Task.Delay(500);
 
                         await client2.SendMessage(client1.Phone, text);
-
-
-                        if (!await IsValid(client1, false))
-                            goto reCreateC1;
-
-                        if (!await IsValid(client2, false))
-                            goto reCreateC2;
                     }
             }
             catch (DeviceNotFoundException)
@@ -162,7 +182,7 @@ public class Warm
                 await client1.Start();
                 await client2.Start();
 
-                goto reCreateC1;
+                continue;
             }
 
             client1.AccountData.LastActiveDialog![client2.Phone] = DateTime.Now;

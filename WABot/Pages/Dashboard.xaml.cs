@@ -30,7 +30,7 @@ public partial class Dashboard : INotifyPropertyChanged
     private readonly Register _register;
 
     private static bool _managerDevicesIsRuning;
-    
+
     #endregion
 
     #region Variables UI
@@ -102,7 +102,7 @@ public partial class Dashboard : INotifyPropertyChanged
                                 IsActive = false
                             });
 
-                Globals.Devices.RemoveAll(device => !indexDevices.Contains(device.Index));
+                Globals.Devices.RemoveAll(device => !indexDevices.Contains(device.Index) && !device.InUsage);
             }
             else
                 Globals.Devices.Add(
@@ -113,27 +113,9 @@ public partial class Dashboard : INotifyPropertyChanged
     private async void Warming(object sender, RoutedEventArgs e)
     {
         if (_isBusy)
-        {
-            if (!_warm.IsWork)
-                return;
-
-            _warm.Stop();
-
-            MessageBox.Show("Выполнена команда на завершение текущей задачи, дождитесь завершения текущего цикла");
-
-            await Task.Run(async () =>
-            {
-                while (!_activeTask.IsCompleted)
-                    await Task.Delay(1_500);
-
-                _isBusy = false;
-                ProgressValue = 0;
-            });
-
             return;
-        }
 
-        if (Globals.Devices.Count == 0 || !Globals.Setup.EnableWarm)
+        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive) || !Globals.Setup.EnableWarm)
         {
             MessageBox.Show("Запустите устройства в режиме прогрева");
             return;
@@ -142,6 +124,12 @@ public partial class Dashboard : INotifyPropertyChanged
         if (string.IsNullOrEmpty(TextMessage))
         {
             MessageBox.Show("Укажите текст сообщений");
+            return;
+        }
+        
+        if (Globals.Devices.Count(device => device.IsActive) % 2 != 0)
+        {
+            MessageBox.Show("Активных устройств должно быть четное кол-во");
             return;
         }
 
@@ -170,26 +158,9 @@ public partial class Dashboard : INotifyPropertyChanged
     private async void Newsletter(object sender, RoutedEventArgs e)
     {
         if (_isBusy)
-        {
-            if (!_newsletter.IsWork)
-                return;
-
-            _newsletter.Stop();
-
-            MessageBox.Show("Выполнена команда на завершение текущей задачи, дождитесь завершения текущего цикла");
-
-            await Task.Run(async () =>
-            {
-                while (!_activeTask.IsCompleted)
-                    await Task.Delay(1_500);
-
-                _isBusy = false;
-                ProgressValue = 0;
-            });
             return;
-        }
 
-        if (Globals.Devices.Count == 0 || Globals.Setup.EnableWarm)
+        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive) || Globals.Setup.EnableWarm)
         {
             MessageBox.Show("Запустите устройства или отключите режим прогрева");
             return;
@@ -226,26 +197,9 @@ public partial class Dashboard : INotifyPropertyChanged
     private async void RegAccounts(object sender, RoutedEventArgs e)
     {
         if (_isBusy)
-        {
-            if (!_register.IsWork)
-                return;
-
-            _register.Stop();
-
-            MessageBox.Show("Выполнена команда на завершение текущей задачи, дождитесь завершения текущего цикла");
-
-            await Task.Run(async () =>
-            {
-                while (!_activeTask.IsCompleted)
-                    await Task.Delay(1_500);
-
-                _isBusy = false;
-                ProgressValue = 0;
-            });
             return;
-        }
 
-        if (Globals.Devices.Count == 0 || !Globals.Setup.EnableWarm)
+        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive) || !Globals.Setup.EnableWarm)
         {
             MessageBox.Show("Запустите устройства и включите режим прогрева");
             return;
@@ -270,65 +224,6 @@ public partial class Dashboard : INotifyPropertyChanged
             await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
         }
 
-        _isBusy = false;
-    }
-
-    private async void DevicesSetup()
-    {
-        if (_isBusy)
-            return;
-
-        if (Globals.Setup.CountDevices == 0 || !File.Exists(Globals.Setup.PathToImageDevice) ||
-            !File.Exists(Globals.Setup.PathToUserNames))
-        {
-            MessageBox.Show("Похоже вы не указали все настройки для запуска устройств");
-            return;
-        }
-
-        _isBusy = true;
-
-        try
-        {
-            /*if (DeviceBtnText == "Отключить") //Та самая карта-обраточка из uno
-            {
-                //await Memu.RemoveAll();
-
-                for (var i = 0; i < Globals.Setup.CountDevices; i++)
-                {
-                    ProgressValue = (int) ((i + 1f) / Globals.Setup.CountDevices * 100);
-                    //await Memu.Import(Globals.Setup.PathToImageDevice);
-
-                    var device = new WaClient(deviceId: i);
-
-                    await device.Start();
-
-                    await device.GetInstance().Shell("settings put global window_animation_scale 0");
-                    await device.GetInstance().Shell("settings put global transition_animation_scale 0");
-                    await device.GetInstance().Shell("settings put global animator_duration_scale 0");
-
-                    Globals.Devices.Add(device);
-                }
-
-                await Task.Run(Memu.RunAdbServer);
-
-                MessageBox.Show(
-                    $"Устройства были запущены со следующими параметрами:\nМин. уровень прогрева: {Globals.Setup.TrustLevelAccount}\nРежим прогрева: {Globals.Setup.EnableWarm}");
-            }
-            else
-            {
-                foreach (var device in Globals.Devices)
-                    await device.Stop();
-
-                Globals.Devices.Clear();
-            }*/
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show("Произошла ошибка, лог создан на рабочем столе");
-            await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
-        }
-
-        ProgressValue = 0;
         _isBusy = false;
     }
 

@@ -178,7 +178,9 @@ public class Device
 {
     public int Index { get; set; }
     public bool IsActive { get; set; }
-    public WaClient Client;
+
+    public bool InUsage;
+    public WaClient Client = null!;
 }
 
 #endregion

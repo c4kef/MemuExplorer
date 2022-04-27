@@ -131,6 +131,8 @@ public class Newsletter
 
             var countMsg = 0;
 
+            Log.Write($"Текст рассылки:\n{text}\n", logAccount.FullName);
+            
             recurseSendMessageToContact:
 
             if (!Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
@@ -166,11 +168,11 @@ public class Newsletter
                     ++MessagesSendedCount;
                 
                     Log.Write(
-                        $"[{DateTime.Now:HH:mm:ss}] - Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
+                        $"Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
                         _logFile.FullName);
 
                     Log.Write(
-                        $"[{DateTime.Now:HH:mm:ss}] [{_sendedMessagesCountFromAccount[phone]}] - Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
+                        $"[{_sendedMessagesCountFromAccount[phone]}] - Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
                         logAccount.FullName);
                 
                     if (++countMsg > Globals.Setup.CountMessageFromAccount)

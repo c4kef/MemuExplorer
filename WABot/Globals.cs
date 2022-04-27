@@ -19,6 +19,8 @@ global using System.Linq;
 global using System.Threading;
 global using WABot.WhatsApp;
 global using MemuLib.Core.Contacts;
+global using ModernWpf;
+global using System.Windows.Controls;
 
 namespace WABot;
 
@@ -28,14 +30,14 @@ public static class Globals
     public static List<Device> Devices { get; set; } = null!;
     public static Setup Setup { get; private set; } = null!;
     public static DirectoryInfo RemoveAccountsDirectory { get; private set; } = null!;
-    public static DirectoryInfo TempAccountsDirectory { get; private set; } = null!;
+    public static DirectoryInfo TempDirectory { get; private set; } = null!;
 
     public static async Task Init()
     {
         Devices = new List<Device>();
 
         RemoveAccountsDirectory = Directory.CreateDirectory("RemoveAccounts");
-        TempAccountsDirectory = Directory.CreateDirectory("TempAccounts");
+        TempDirectory = Directory.CreateDirectory("Temp");
 
         Setup = (File.Exists(NameSetupFile)
             ? JsonConvert.DeserializeObject<Setup>(await File.ReadAllTextAsync(NameSetupFile))
@@ -44,7 +46,16 @@ public static class Globals
         if (!File.Exists(NameSetupFile))
             await SaveSetup();
 
-        //MemuLib.Globals.IsLog = true;
+        MemuLib.Globals.IsLog = true;
+    }
+
+    public static async Task InitAccountsFolder()
+    {
+        foreach (var directory in Directory.GetDirectories(Setup.PathToDirectoryAccounts))
+            if (!File.Exists($@"{directory}\Data.json") && Directory.Exists($@"{directory}\com.whatsapp"))
+                await File.WriteAllTextAsync($@"{directory}\Data.json",
+                    JsonConvert.SerializeObject(new AccountData()
+                        {LastActiveDialog = new Dictionary<string, DateTime>(), TrustLevelAccount = 0}));
     }
 
     public static async Task SaveSetup()
@@ -123,11 +134,6 @@ public class Setup
     /// Уровень прогрева аккаунта для начала рассылки сообщений
     /// </summary>
     public int TrustLevelAccount = 0;
-
-    /// <summary>
-    /// Кол-во виртуальный устройств
-    /// </summary>
-    public int CountDevices = 2;
 
     /// <summary>
     /// Кол-во сообщений с аккаунта при рассылке

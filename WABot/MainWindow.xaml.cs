@@ -1,6 +1,5 @@
 ﻿namespace WABot;
 
-// ReSharper disable once ClassNeverInstantiated.Global
 public partial class MainWindow
 {
     public MainWindow()
@@ -8,5 +7,7 @@ public partial class MainWindow
         Task.Run(Globals.Init).Wait();
 
         InitializeComponent();
+
+        ThemeManager.Current.ApplicationTheme = ApplicationTheme.Dark;
     }
 }

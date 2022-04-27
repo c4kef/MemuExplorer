@@ -69,7 +69,7 @@ public class WaClient
 
         await _mem.Click("//node[@text='ДАЛЕЕ']");
 
-        if (!await _mem.ExistsElement("//node[@text='OK']"))
+        if (!await _mem.ExistsElement("//node[@text='ИЗМЕНИТЬ']"))
         {
             obj.Cancel();
             return string.Empty;
@@ -178,6 +178,7 @@ public class WaClient
     {
         await _mem.ClearContacts();
         await _mem.ImportContacts(path);
+        
         if (!await _mem.ExistsElement("//node[@text='ОК']"))
             return false;
 
@@ -189,31 +190,35 @@ public class WaClient
         return true;
     }
 
-    public async Task SendMessage(string to, string text)
+    public async Task<bool> SendMessage(string to, string text)
     {
         //await _mem.Shell($@"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
-        var command = new FileInfo($"{to}.sh");
+        var command = new FileInfo($@"{Globals.TempDirectory.FullName}\{to}.sh");
+        var isSended = false;
 
         await File.WriteAllTextAsync(command.FullName,
             $"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
 
         await _mem.Push(command.FullName, "/data/local/tmp");
         await _mem.Shell($@"sh /data/local/tmp/{to}.sh");
-
+        
         for (var i = 0; i < 3; i++)
         {
             if (!await _mem.ExistsElement("//node[@content-desc='Отправить']"))
             {
-                await Task.Delay(1_500);
+                await Task.Delay(1_000);
                 continue;
             }
 
             await _mem.Click("//node[@content-desc='Отправить']");
+            isSended = true;
             break;
         }
 
         await _mem.Shell($"rm /data/local/tmp/{to}.sh");
         File.Delete(command.FullName);
+
+        return isSended;
     }
 
     public async Task ReCreate([Optional] string? phone, [Optional] string? account, [Optional] int? deviceId)

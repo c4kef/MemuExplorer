@@ -1,6 +1,15 @@
 ﻿namespace MemuLib;
 
 /// <summary>
+/// Информация для логирования асинка
+/// </summary>
+struct DataWrite
+{
+    public string Path;
+    public string Text;
+}
+
+/// <summary>
 /// Информация о релизе андроида
 /// </summary>
 public struct AndroidRelease

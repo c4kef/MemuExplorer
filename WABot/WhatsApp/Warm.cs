@@ -26,6 +26,8 @@ public class Warm
 
         var busyDevices = new List<int>();
 
+        await Globals.InitAccountsFolder();
+        
         while (true)
         {
             var devices = Globals.Devices.Where(device => !busyDevices.Contains(device.Index) && device.IsActive)
@@ -130,7 +132,7 @@ public class Warm
             try
             {
                 //Импорт контактов на устройства
-                var fileContact = new FileInfo($"{idThread}_contacts.vcf");
+                var fileContact = new FileInfo($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf");
 
                 await File.WriteAllTextAsync(fileContact.FullName, ContactManager.Export(
                     new List<CObj>()

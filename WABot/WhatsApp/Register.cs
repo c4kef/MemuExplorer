@@ -36,8 +36,8 @@ public class Register
             _tetheredDevices[id] = devices[0];
             await devices[0].Client.Start();
             await devices[0].Client.GetInstance().Spoof("7", true);
-            await devices[0].Client.GetInstance().Stop();
-            await devices[0].Client.GetInstance().Start();
+            //await devices[0].Client.GetInstance().Stop();
+            //await devices[0].Client.GetInstance().Start();
 
             var task = Handler(id);
             await Task.Delay(1_000);
@@ -69,9 +69,9 @@ public class Register
         
         while (Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
         {
-            var directoryThread = Directory.CreateDirectory($@"{Globals.TempAccountsDirectory.FullName}\{idThread}");
+            var directoryThread = Directory.CreateDirectory($@"{Globals.TempDirectory.FullName}\{idThread}");
             var directoryThreadWhatsApp =
-                Directory.CreateDirectory($@"{Globals.TempAccountsDirectory.FullName}\{idThread}\com.whatsapp");
+                Directory.CreateDirectory($@"{Globals.TempDirectory.FullName}\{idThread}\com.whatsapp");
 
             await File.WriteAllTextAsync($@"{directoryThread.FullName}\Data.json",
                 JsonConvert.SerializeObject(new AccountData()
@@ -80,8 +80,11 @@ public class Register
             var phone = await client.Register(directoryThreadWhatsApp.FullName,
                 _names[new Random().Next(0, _names.Length)]);
 
-            if (phone == "stop")
+            if (phone is "stop")
                 break;
+            
+            if (phone is "")
+                continue;
 
             Directory.Move(directoryThread.FullName, $@"{Globals.Setup.PathToDirectoryAccounts}\{phone}");
         }

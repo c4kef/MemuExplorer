@@ -1,6 +1,4 @@
-﻿using System.Windows.Controls;
-
-namespace WABot.Pages;
+﻿namespace WABot.Pages;
 
 public partial class Manager : INotifyPropertyChanged
 {

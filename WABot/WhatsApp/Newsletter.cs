@@ -19,7 +19,7 @@ public class Newsletter
         _tetheredDevices = new Dictionary<int, Device>();
         _usedPhonesUsers = _usedPhones = new List<string>();
         _contacts = _names = new[] {""};
-        _logFile = new FileInfo($"{DateTime.Now:MMddyyyyHHmmss}_log.txt");
+        _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_log.txt");
     }
 
     public async Task Start(string text)
@@ -32,10 +32,11 @@ public class Newsletter
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
 
-        await File.AppendAllTextAsync(_logFile.FullName,
-            $"Добро пожаловать в логи, текст рассылки:\n{text}\n\n");
+        Log.Write($"Добро пожаловать в логи, текст рассылки:\n{text}\n\n", _logFile.FullName);
 
         var busyDevices = new List<int>();
+
+        await Globals.InitAccountsFolder();
         
         while (true)
         {
@@ -65,21 +66,20 @@ public class Newsletter
         foreach (var device in Globals.Devices)
             device.InUsage = false;
 
-        await File.AppendAllTextAsync(_logFile.FullName, "\n\nКол-во сообщений с аккаунта:\n");
+        Log.Write("\n\nКол-во сообщений с аккаунта:\n", _logFile.FullName);
 
         foreach (var account in _sendedMessagesCountFromAccount)
-            await File.AppendAllTextAsync(_logFile.FullName, $"{account.Key} - {account.Value}\n");
+            Log.Write($"{account.Key} - {account.Value}\n", _logFile.FullName);
 
-        await File.AppendAllTextAsync(_logFile.FullName,
-            $"\nОбщее количество отправленных сообщений: {MessagesSendedCount}\n");
-
+        Log.Write($"\nОбщее количество отправленных сообщений: {MessagesSendedCount}\n", _logFile.FullName);
+        Log.Write($"\nОтлетело: {_sendedMessagesCountFromAccount.Count(account => account.Value == 0)}\n", _logFile.FullName);
         busyDevices.Clear();
         Stop();
         
         string SelectWord(string value)
         {
             var backValue = value;
-            foreach (var match in new Regex(@"(\w+)\|\|(\w+)").Matches(backValue))
+            foreach (var match in new Regex(@"(\w+)\|\|(\w+)", RegexOptions.Multiline).Matches(backValue))
                 backValue = backValue.Replace(match.ToString()!,  match.ToString()!.Split("||")[new Random().Next(0, 100) >= 50 ? 1 : 0]);
 
             return backValue;
@@ -97,7 +97,7 @@ public class Newsletter
     {
         var client = _tetheredDevices[idThread].Client;
         var clientIndex = _tetheredDevices[idThread].Index;
-        
+
         while (Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
         {
             var result = await Globals.GetAccounts(_usedPhones.ToArray(), Globals.Setup.TrustLevelAccount);
@@ -112,6 +112,8 @@ public class Newsletter
 
             _usedPhones.Add(phone);
 
+            var logAccount = new FileInfo($@"{path}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_log.txt");
+            
             _sendedMessagesCountFromAccount[phone] = 0;
 
             await client.ReCreate($"+{phone}", path);
@@ -130,6 +132,10 @@ public class Newsletter
             var countMsg = 0;
 
             recurseSendMessageToContact:
+
+            if (!Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
+                break;
+
             var contact = GetFreeNumberUser();
 
             if (string.IsNullOrEmpty(contact))
@@ -147,20 +153,33 @@ public class Newsletter
                 continue;
             }
 
-            await client.SendMessage(contact, text);
+            var messageSended = await client.SendMessage(contact, text);
+            
+            switch (messageSended)
+            {
+                case false when await client.GetInstance().ExistsElement("//node[@text='OK']", false):
+                    await client.GetInstance().Click("//node[@text='OK']");
+                    break;
+                case true:
+                {
+                    ++_sendedMessagesCountFromAccount[phone];
+                    ++MessagesSendedCount;
+                
+                    Log.Write(
+                        $"[{DateTime.Now:HH:mm:ss}] - Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
+                        _logFile.FullName);
 
-            if (++countMsg > Globals.Setup.CountMessageFromAccount)
-                continue;
-
-            ++_sendedMessagesCountFromAccount[phone];
-            ++MessagesSendedCount;
-            await File.AppendAllTextAsync(_logFile.FullName,
-                $"[{DateTime.Now:HH:mm:ss}] - Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n");
+                    Log.Write(
+                        $"[{DateTime.Now:HH:mm:ss}] [{_sendedMessagesCountFromAccount[phone]}] - Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
+                        logAccount.FullName);
+                
+                    if (++countMsg > Globals.Setup.CountMessageFromAccount)
+                        continue;
+                    break;
+                }
+            }
 
             await Task.Delay(500);
-
-            if (!Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
-                break;
 
             goto recurseSendMessageToContact;
         }
@@ -179,9 +198,9 @@ public class Newsletter
 
         async Task<bool> IsValid()
         {
-            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']") && //To-Do
-                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']") && //To-Do
-                   !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']");
+            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", false) && //To-Do
+                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", false) && //To-Do
+                   !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']", false);
         }
     }
 }

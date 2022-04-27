@@ -95,15 +95,6 @@
                 Background="Transparent" BorderThickness="1" CornerRadius="10">
             <StackPanel Orientation="Vertical">
                 <Label Content="Настройки устройств" HorizontalAlignment="Center" />
-                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding CountDevices}"
-                              ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Кол-во устройств"
-                              SmallChange="1" LargeChange="10" Minimum="1" SpinButtonPlacementMode="Compact">
-                    <ui:NumberBox.ToolTip>
-                        <ToolTip>
-                            Укажите кол-во виртуальных устройств которые будут одновременно запущены на данном устройстве
-                        </ToolTip>
-                    </ui:NumberBox.ToolTip>
-                </ui:NumberBox>
                 <Button HorizontalAlignment="Center" Margin="0,10,0,0" ui:ControlHelper.CornerRadius="5"
                         Content="Выберите образ" BorderBrush="{Binding ColorPathToImageDevice}"
                         Click="SelectImageDevice">

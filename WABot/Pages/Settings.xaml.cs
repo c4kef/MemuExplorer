@@ -42,13 +42,7 @@ public partial class Settings : INotifyPropertyChanged
         get => Globals.Setup.CountMessageFromAccount;
         set => Globals.Setup.CountMessageFromAccount = value;
     }
-
-    public int CountDevices
-    {
-        get => Globals.Setup.CountDevices;
-        set => Globals.Setup.CountDevices = value;
-    }
-
+    
     public bool EnableWarm
     {
         get => Globals.Setup.EnableWarm;

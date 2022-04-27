@@ -1,7 +1,4 @@
-﻿using System.Windows.Controls;
-using System.Windows.Threading;
-
-namespace WABot.Pages;
+﻿namespace WABot.Pages;
 
 public partial class Dashboard : INotifyPropertyChanged
 {

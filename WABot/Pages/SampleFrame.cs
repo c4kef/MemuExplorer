@@ -1,6 +1,6 @@
 ﻿namespace WABot.Pages;
 
-public class SampleFrame : Frame
+public class SampleFrame : ModernWpf.Controls.Frame
 {
     /// <inheritdoc />
     public SampleFrame()

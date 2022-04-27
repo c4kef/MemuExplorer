@@ -1,8 +1,18 @@
-﻿using MemuLib.Core;
-using MemuLib.Core.SimServices;
-using OpenQA.Selenium;
-using OpenQA.Selenium.DevTools.V85.IndexedDB;
+﻿using System.Text.RegularExpressions;
 
-var client = new Client(0);
-await client.Start();
+var text =
+    "Mama s papoy||mamoy myli ramu.\nPapa s mamoy||papoy yeli ramu\nKhuy poymesh' kto-yest' kto, no PApa||mama kuda luchshe";
 
+Console.WriteLine(text);
+
+Console.WriteLine("\nBefore\n");
+Console.WriteLine(SelectWord(text));
+
+string SelectWord(string value)
+{
+    var backValue = value;
+    foreach (var match in new Regex(@"(\w+)\|\|(\w+)").Matches(backValue))
+        backValue = backValue.Replace(match.ToString()!,  match.ToString()!.Split("||")[new Random().Next(0, 100) >= 50 ? 1 : 0]);
+
+    return backValue;
+}

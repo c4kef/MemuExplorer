@@ -52,7 +52,7 @@ public class Newsletter
             _tetheredDevices[id] = devices[0];
             await devices[0].Client.Start();
 
-            var task = Handler(id, text);
+            var task = Handler(id, SelectWord(text));
             await Task.Delay(1_000);
 
             tasks.Add(task);
@@ -75,6 +75,15 @@ public class Newsletter
 
         busyDevices.Clear();
         Stop();
+        
+        string SelectWord(string value)
+        {
+            var backValue = value;
+            foreach (var match in new Regex(@"(\w+)\|\|(\w+)").Matches(backValue))
+                backValue = backValue.Replace(match.ToString()!,  match.ToString()!.Split("||")[new Random().Next(0, 100) >= 50 ? 1 : 0]);
+
+            return backValue;
+        }
     }
 
     public void Stop()

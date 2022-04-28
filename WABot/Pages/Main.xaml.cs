@@ -2,7 +2,14 @@
 
 public partial class Main
 {
+    /// <summary>
+    /// Страница настроек
+    /// </summary>
     private static Settings _settings = null!;
+    
+    /// <summary>
+    /// Домашняя страница
+    /// </summary>
     private static Dashboard _dashboard = null!;
 
     public Main()

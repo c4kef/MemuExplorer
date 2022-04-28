@@ -139,6 +139,11 @@ public class Setup
     /// Кол-во сообщений с аккаунта при рассылке
     /// </summary>
     public int CountMessageFromAccount = 2;
+    
+    /// <summary>
+    /// Индекс страны для регистрации
+    /// </summary>
+    public int CountryIndexRegister = 0;
 
     /// <summary>
     /// Включить режим прогрева

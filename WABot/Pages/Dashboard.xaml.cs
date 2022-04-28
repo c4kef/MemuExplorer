@@ -16,16 +16,34 @@ public partial class Dashboard : INotifyPropertyChanged
 
     #region Variables
 
+    /// <summary>
+    /// Активный таск (определяем завершение работы)
+    /// </summary>
     private static Task _activeTask = null!; //To-Do
-
+    
+    /// <summary>
+    /// Активна задача?
+    /// </summary>
     private static bool _isBusy;
 
+    /// <summary>
+    /// Прогрев аккаунтов
+    /// </summary>
     private readonly Warm _warm;
 
+    /// <summary>
+    /// Рассылка сообщений
+    /// </summary>
     private readonly Newsletter _newsletter;
 
+    /// <summary>
+    /// Регистрация аккаунтов
+    /// </summary>
     private readonly Register _register;
 
+    /// <summary>
+    /// Обработчик устройств запущен
+    /// </summary>
     private static bool _managerDevicesIsRuning;
 
     #endregion
@@ -41,6 +59,9 @@ public partial class Dashboard : INotifyPropertyChanged
 
     private int _progressValue;
 
+    /// <summary>
+    /// Отображение статуса завершения задачи
+    /// </summary>
     public int ProgressValue
     {
         get => _progressValue;
@@ -53,6 +74,9 @@ public partial class Dashboard : INotifyPropertyChanged
 
     private string _textMessage = null!;
 
+    /// <summary>
+    /// Тест для прогрева/рассылки
+    /// </summary>
     public string TextMessage
     {
         get => _textMessage;
@@ -65,6 +89,9 @@ public partial class Dashboard : INotifyPropertyChanged
 
     #endregion
 
+    /// <summary>
+    /// Обработчик устройств (показывает или скрывает активные/неактивные устройства)
+    /// </summary>
     private async Task ManagerDevices()
     {
         _managerDevicesIsRuning = true;
@@ -107,6 +134,11 @@ public partial class Dashboard : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Запуск прогрева
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private async void Warming(object sender, RoutedEventArgs e)
     {
         if (_isBusy)
@@ -152,6 +184,11 @@ public partial class Dashboard : INotifyPropertyChanged
         _isBusy = false;
     }
 
+    /// <summary>
+    /// Запуск рассылки
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private async void Newsletter(object sender, RoutedEventArgs e)
     {
         if (_isBusy)
@@ -191,6 +228,11 @@ public partial class Dashboard : INotifyPropertyChanged
         _isBusy = false;
     }
 
+    /// <summary>
+    /// Запуск регистрации
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private async void RegAccounts(object sender, RoutedEventArgs e)
     {
         if (_isBusy)
@@ -224,6 +266,11 @@ public partial class Dashboard : INotifyPropertyChanged
         _isBusy = false;
     }
 
+    /// <summary>
+    /// Применяем выбранный пользователем девайс для работы, или отключаем от работы
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void DataGrid_OnRowEditEnding(object? sender, DataGridRowEditEndingEventArgs e)
     {
         var index = Globals.Devices.FindIndex(device => device.Index == (e.Row.Item as Device)!.Index);

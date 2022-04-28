@@ -64,7 +64,7 @@ public static class Memu
     /// <exception cref="Exception">в случае тотального п***а просто вылезет ошибка</exception>
     public static async Task Import(string ova)
     {
-        var answer = await MemuCmd.ExecMemuc($"import {ova}");
+        var answer = await MemuCmd.ExecMemuc($"import \"{ova}\"");
         if (!answer.Contains("SUCCESS"))
             throw new Exception($"Error: {answer}");
     }
@@ -142,7 +142,7 @@ public static class Memu
         var newPath = $@"{new FileInfo(path).Directory?.FullName}\{new Random().Next(1_000_000, 5_000_000)}.apk";
         File.Copy(path,newPath);//Решает проблему загруженности
         
-        var answer = await MemuCmd.ExecMemuc($"installapp -i {index} {newPath}");
+        var answer = await MemuCmd.ExecMemuc($"installapp -i {index} \"{newPath}\"");
         
         if (!answer.Contains("SUCCESS"))
             throw new Exception($"Error: {answer}");
@@ -171,7 +171,7 @@ public static class Memu
     /// <exception cref="Exception">в случае тотального п***а просто вылезет ошибка</exception>
     public static async Task StartApk(int index, string path)
     {
-        var answer = await MemuCmd.ExecMemuc($"startapp -i {index} {path}");
+        var answer = await MemuCmd.ExecMemuc($"startapp -i {index} \"{path}\"");
         if (!answer.Contains("SUCCESS"))
             throw new Exception($"Error: {answer}");
     }
@@ -184,7 +184,7 @@ public static class Memu
     /// <exception cref="Exception">в случае тотального п***а просто вылезет ошибка</exception>
     public static async Task StopApk(int index, string path)
     {
-        var answer = await MemuCmd.ExecMemuc($"stopapp -i {index} {path}");
+        var answer = await MemuCmd.ExecMemuc($"stopapp -i {index} \"{path}\"");
         if (!answer.Contains("SUCCESS"))
             throw new Exception($"Error: {answer}");
     }
@@ -196,7 +196,7 @@ public static class Memu
     /// <param name="local">путь на локальной машине</param>
     /// <param name="remote">путь на удаленной машине</param>
     public static async Task Push(int index, string local, string remote) =>
-        await MemuCmd.ExecMemuc($"-i {index} adb push {local} {remote}");
+        await MemuCmd.ExecMemuc($"-i {index} adb push \"{local}\" \"{remote}\"");
 
     /// <summary>
     /// Загрузка с удаленки
@@ -205,7 +205,7 @@ public static class Memu
     /// <param name="local">путь на локальной машине</param>
     /// <param name="remote">путь на удаленной машине</param>
     public static async Task Pull(int index, string local, string remote) =>
-        await MemuCmd.ExecMemuc($"-i {index} adb pull {remote} {local}");
+        await MemuCmd.ExecMemuc($"-i {index} adb pull \"{remote}\" \"{local}\"");
 
     /// <summary>
     /// Изменить информацию об устройстве (устройство должно быть активно и после применения перезагруженно)

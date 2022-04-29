@@ -1,5 +1,17 @@
-﻿using MemuLib.Core;
+﻿var test = true;
+while (test)
+{
+    Console.WriteLine("Test");
 
-var client = new Client(1);
-await client.Start();
-Console.WriteLine(await client.ExistsElement(""));
+    if (!test)
+        test = true;
+    await Task.Delay(500);
+    if (test)
+    {
+        test = false;
+        continue;
+    }
+    
+    Console.WriteLine("Test1");
+
+}

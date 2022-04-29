@@ -126,13 +126,12 @@ public class Newsletter
                 else if (Directory.Exists(client.Account))
                     Directory.Move(client.Account,
                         @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+
                 continue;
             }
 
             var countMsg = 0;
 
-            Log.Write($"Текст рассылки:\n{text}\n", logAccount.FullName);
-            
             recurseSendMessageToContact:
 
             if (!Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)

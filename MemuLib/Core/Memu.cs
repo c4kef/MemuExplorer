@@ -54,7 +54,7 @@ public static class Memu
         if (!answer.Contains("SUCCESS"))
             throw new Exception($"Error: {answer}");
 
-        return int.Parse(answer.Split('\n')[1].Split(':')[1]);
+        return int.Parse(answer.Split('\n')[1].Split(':')[1]); 
     }
     
     /// <summary>

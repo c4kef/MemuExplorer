@@ -21,10 +21,10 @@ global using WABot.WhatsApp;
 global using MemuLib.Core.Contacts;
 global using ModernWpf;
 global using System.Windows.Controls;
-using System.Drawing;
-using System.Drawing.Imaging;
-using VirtualCameraOutput;
-using Image = System.Windows.Controls.Image;
+global using System.Drawing;
+global using System.Drawing.Imaging;
+global using VirtualCameraOutput;
+global using Image = System.Windows.Controls.Image;
 
 namespace WABot;
 
@@ -173,6 +173,11 @@ public class Setup
     /// Путь до файла с именами пользователей
     /// </summary>
     public string PathToUserNames = string.Empty;
+
+    /// <summary>
+    /// Путь до папки с QR кодами
+    /// </summary>
+    public string PathToQRs = string.Empty;
 }
 
 [Serializable]

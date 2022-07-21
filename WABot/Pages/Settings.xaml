@@ -90,6 +90,15 @@
                     </Button.ToolTip>
                 </Button>
                 <Button HorizontalAlignment="Center" Margin="0,10,0,0" ui:ControlHelper.CornerRadius="5"
+                        Content="Выберите папку QR" BorderBrush="{Binding ColorPathToQRs}"
+                        Click="SelectQrCodes">
+                    <Button.ToolTip>
+                        <ToolTip>
+                            Укажите путь на папку с qr кодами от WhatsApp Web
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+                <Button HorizontalAlignment="Center" Margin="0,10,0,0" ui:ControlHelper.CornerRadius="5"
                         Content="Выберите номера" BorderBrush="{Binding ColorPathToPhonesUsers}" Click="SelectNumbers">
                     <Button.ToolTip>
                         <ToolTip>

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace WABot.WhatsApp.Web
+﻿namespace WABot.WhatsApp.Web
 {
     public class AccPreparation
     {
@@ -83,7 +76,7 @@ namespace WABot.WhatsApp.Web
 
             while (Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
             {
-                var result = await Globals.GetAccounts(_usedPhones.ToArray(), Globals.Setup.TrustLevelAccount);
+                /*var result = await Globals.GetAccounts(_usedPhones.ToArray(), Globals.Setup.TrustLevelAccount);
 
                 if (result.Length == 0)
                     break;
@@ -107,9 +100,18 @@ namespace WABot.WhatsApp.Web
                             @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
 
                     continue;
-                }
+                }*///Условно мы успешно авторизовались и все в этом духе
 
-                Debug.WriteLine("Auth successful");
+                await client.GetInstance().Click("//node[@content-desc='Ещё']");
+                await client.GetInstance().Click("//node[@text='Связанные устройства']");
+                await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
+                if (await client.GetInstance().ExistsElement("//node[@text='OK']"))
+                    await client.GetInstance().Click("//node[@text='OK']");
+
+                var wClient = new WAWClient("7736066737");
+                await wClient.Init();
+                await wClient.SendText("79772801086", "Hello world!");
+                await wClient.Free();
             }
 
             async Task<bool> IsValid()

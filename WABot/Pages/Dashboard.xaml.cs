@@ -156,6 +156,12 @@ public partial class Dashboard : INotifyPropertyChanged
             return;
         }
 
+        if (string.IsNullOrEmpty(Globals.Setup.PathToQRs))
+        {
+            MessageBox.Show("Проведите настройку приложения");
+            return;
+        }
+
         _isBusy = true;
 
         try

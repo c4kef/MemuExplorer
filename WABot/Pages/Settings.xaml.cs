@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using Brush = System.Windows.Media.Brush;
+using Brushes = System.Windows.Media.Brushes;
 
 namespace WABot.Pages;
 
@@ -97,7 +98,26 @@ public partial class Settings : INotifyPropertyChanged
             ? Brushes.Red
             : Brushes.GreenYellow;
 
+    public Brush ColorPathToQRs =>
+        string.IsNullOrEmpty(Globals.Setup.PathToQRs) ||
+        !Directory.Exists(Globals.Setup.PathToQRs)
+            ? Brushes.Red
+            : Brushes.GreenYellow;
+
     #endregion
+
+    private async void SelectQrCodes(object sender, RoutedEventArgs e)
+    {
+        var dialog = new CommonOpenFileDialog();
+        dialog.IsFolderPicker = true;
+        if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+        {
+            Globals.Setup.PathToQRs = dialog.FileName;
+            await Globals.SaveSetup();
+        }
+
+        OnPropertyChanged("ColorPathToQRs");
+    }
 
     private async void SelectAccounts(object sender, RoutedEventArgs e)
     {

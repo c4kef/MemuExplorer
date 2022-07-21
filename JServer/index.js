@@ -1,6 +1,7 @@
 const io = require("socket.io").listen(3000);
 const wppconnect = require('@wppconnect-team/wppconnect');
 const sessions = [];
+const QRCode = require('qrcode');
 
 io.configure('development', function()
 {
@@ -11,7 +12,7 @@ io.sockets.on("connection", function (socket)
 {
    socket.on("data", async function (ndata) {
 
-       const data = JSON.parse(ndata);
+    const data = JSON.parse(ndata);
        const backdata = {
            status: 0,
            value: []
@@ -25,11 +26,8 @@ io.sockets.on("connection", function (socket)
                    .create(
                        data["Values"][0].split('@')[0],
                        (qrCode, asciiQR, attempt, urlCode) => {
-                           console.log(qrCode);
-                           console.log(asciiQR);
-                           console.log(attempt);
-                           console.log(urlCode);
-                           const matches = qrCode.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/), response = {};
+                        QRCode.toDataURL(urlCode, function (err, url) {
+                           const matches = url.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/), response = {};
 
                            if (matches.length !== 3) {
                                backdata.status = 500;
@@ -52,6 +50,7 @@ io.sockets.on("connection", function (socket)
                                        return null;
                                    }
                                });
+                            });
                        },
                        null,
                        {
@@ -99,6 +98,12 @@ io.sockets.on("connection", function (socket)
                removeSession(data["Values"][0].split('@')[0]);
                socket.emit("data", JSON.stringify(backdata));
                break;
+
+            case "free":
+                backdata.status = 200
+                removeSession(data["Values"][0].split('@')[0]);
+                socket.emit("data", JSON.stringify(backdata));
+                break;
                
            case "sendText":
                await getSession(data["Values"][0].split('@')[0])
@@ -131,5 +136,6 @@ function getSession(name) {
 
 function removeSession(name) {
     const index = sessions.findIndex(session => session.name === name);
+    sessions[index].value.close();
     sessions.splice(index, 1);
 }

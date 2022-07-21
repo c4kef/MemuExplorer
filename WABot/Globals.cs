@@ -21,6 +21,10 @@ global using WABot.WhatsApp;
 global using MemuLib.Core.Contacts;
 global using ModernWpf;
 global using System.Windows.Controls;
+using System.Drawing;
+using System.Drawing.Imaging;
+using VirtualCameraOutput;
+using Image = System.Windows.Controls.Image;
 
 namespace WABot;
 
@@ -178,11 +182,21 @@ public class AccountData
     /// Уровень прогрева аккаунта для начала рассылки сообщений
     /// </summary>
     public int TrustLevelAccount = 0;
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    public int CountMessages = 0;
+    
+    /// <summary>
+    /// Дата создания
+    /// </summary>
+    public DateTime CreatedDate = DateTime.Now;
 
     /// <summary>
     /// Последняя переписка с аккаунтом
     /// </summary>
-    public Dictionary<string, DateTime>? LastActiveDialog;
+    public Dictionary<string, DateTime>? LastActiveDialog = new Dictionary<string, DateTime>();
 }
 
 public class Device

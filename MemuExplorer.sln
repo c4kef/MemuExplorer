@@ -5,9 +5,17 @@ VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemuLib", "MemuLib\MemuLib.csproj", "{1DBD3C2B-EA2A-4F2B-8785-32646B2294EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemuTest", "MemuTest\MemuTest.csproj", "{4F265F2E-2CF3-48FD-966C-B5359B0D42E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemuTest", "MemuTest\MemuTest.csproj", "{4F265F2E-2CF3-48FD-966C-B5359B0D42E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WABot", "WABot\WABot.csproj", "{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WABot", "WABot\WABot.csproj", "{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VirtualOutput", "OBSCamera\VirtualOutput\VirtualOutput.vcxproj", "{D25AB49C-5E45-4511-8A86-B5B20CDF2416}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeOBS", "OBSCamera\NativeOBS\NativeOBS.vcxproj", "{48D33263-F5A7-4529-A0FB-A5FCA72B7767}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualCameraOutput.Extensions", "OBSCamera\VirtualCameraOutput.Extensions\VirtualCameraOutput.Extensions.csproj", "{A634493F-826B-451B-BB93-73870CB45882}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OBSCamera", "OBSCamera", "{0D6D63EC-EB1A-4AFB-AA48-E943FEAEEA51}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,9 +35,26 @@ Global
 		{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D25AB49C-5E45-4511-8A86-B5B20CDF2416}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{D25AB49C-5E45-4511-8A86-B5B20CDF2416}.Debug|Any CPU.Build.0 = Debug|Win32
+		{D25AB49C-5E45-4511-8A86-B5B20CDF2416}.Release|Any CPU.ActiveCfg = Release|Win32
+		{D25AB49C-5E45-4511-8A86-B5B20CDF2416}.Release|Any CPU.Build.0 = Release|Win32
+		{48D33263-F5A7-4529-A0FB-A5FCA72B7767}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{48D33263-F5A7-4529-A0FB-A5FCA72B7767}.Debug|Any CPU.Build.0 = Debug|Win32
+		{48D33263-F5A7-4529-A0FB-A5FCA72B7767}.Release|Any CPU.ActiveCfg = Release|Win32
+		{48D33263-F5A7-4529-A0FB-A5FCA72B7767}.Release|Any CPU.Build.0 = Release|Win32
+		{A634493F-826B-451B-BB93-73870CB45882}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A634493F-826B-451B-BB93-73870CB45882}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A634493F-826B-451B-BB93-73870CB45882}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A634493F-826B-451B-BB93-73870CB45882}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D25AB49C-5E45-4511-8A86-B5B20CDF2416} = {0D6D63EC-EB1A-4AFB-AA48-E943FEAEEA51}
+		{48D33263-F5A7-4529-A0FB-A5FCA72B7767} = {0D6D63EC-EB1A-4AFB-AA48-E943FEAEEA51}
+		{A634493F-826B-451B-BB93-73870CB45882} = {0D6D63EC-EB1A-4AFB-AA48-E943FEAEEA51}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3D395E06-B629-40C6-A8B3-55C4B5F67F1D}

@@ -5,10 +5,23 @@
         <TargetFramework>net6.0-windows10.0.18362.0</TargetFramework>
         <Nullable>enable</Nullable>
         <UseWPF>true</UseWPF>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>AnyCPU</Platforms>
+        <PlatformTarget>AnyCPU</PlatformTarget>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <Prefer32bit>false</Prefer32bit>
+      <PlatformTarget>x86</PlatformTarget>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <PlatformTarget>x86</PlatformTarget>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
         <PackageReference Include="WindowsAPICodePack" Version="1.1.2" />
     </ItemGroup>
 
@@ -32,6 +45,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\MemuLib\MemuLib.csproj" />
+        <ProjectReference Include="..\OBSCamera\VirtualOutput\VirtualOutput.vcxproj" />
     </ItemGroup>
 
 </Project>

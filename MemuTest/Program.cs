@@ -11,7 +11,6 @@ while (test)
         test = false;
         continue;
     }
-    
-    Console.WriteLine("Test1");
 
+    Console.WriteLine("Test1");
 }

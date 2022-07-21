@@ -1,4 +1,9 @@
-﻿namespace WABot.Pages;
+﻿using System.Drawing;
+using System.Drawing.Imaging;
+using VirtualCameraOutput;
+using WABot.WhatsApp.Web;
+
+namespace WABot.Pages;
 
 public partial class Dashboard : INotifyPropertyChanged
 {
@@ -9,7 +14,8 @@ public partial class Dashboard : INotifyPropertyChanged
         _warm = new Warm();
         _register = new Register();
         _newsletter = new Newsletter();
-        
+        _preparation = new AccPreparation();
+
         if (!_managerDevicesIsRuning)
             _ = Task.Run(ManagerDevices);
     }
@@ -30,6 +36,11 @@ public partial class Dashboard : INotifyPropertyChanged
     /// Прогрев аккаунтов
     /// </summary>
     private readonly Warm _warm;
+
+    /// <summary>
+    /// Подготовка аккаунтов
+    /// </summary>
+    private readonly AccPreparation _preparation;
 
     /// <summary>
     /// Рассылка сообщений
@@ -132,6 +143,39 @@ public partial class Dashboard : INotifyPropertyChanged
                 Globals.Devices.Add(
                     new Device() {Index = indexDevices[0], Client = new WaClient(deviceId: indexDevices[0]), IsActive = false});
         }
+    }
+
+    private async void Preparation(object sender, RoutedEventArgs e)
+    {
+        if (_isBusy)
+            return;
+
+        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive))
+        {
+            MessageBox.Show("Запустите устройства");
+            return;
+        }
+
+        _isBusy = true;
+
+        try
+        {
+            ProgressValue = 100;
+
+            _activeTask = Task.Run(async () => await _preparation.Start());
+            await _activeTask;
+
+            MessageBox.Show("Настройка завершена");
+
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Произошла ошибка, лог создан на рабочем столе");
+            await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
+        }
+
+        ProgressValue = 0;
+        _isBusy = false;
     }
 
     /// <summary>

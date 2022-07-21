@@ -1,6 +1,6 @@
-﻿namespace WABot.WhatsApp;
+﻿namespace WABot.WhatsApp.Web;
 
-public class WaWebClient
+public class WAWClient
 {
     private readonly string _nameSession;
     private readonly Namespace _socket;
@@ -8,10 +8,7 @@ public class WaWebClient
     private readonly Dictionary<int, JObject> _taskFinished;
     private readonly Random _random;
 
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int nWidth, int nHeight, bool bRepaint);
-
-    public WaWebClient(string nameSession)
+    public WAWClient(string nameSession)
     {
         _nameSession = nameSession;
         _taskQueue = new List<int>();
@@ -45,14 +42,14 @@ public class WaWebClient
 
         _socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
-                {Type = "create", Values = new List<object>() {$"{_nameSession}@{id}"}}));
+            { Type = "create", Values = new List<object>() { $"{_nameSession}@{id}" } }));
 
         while (_taskQueue.Contains(id))
             await Task.Delay(100);
 
         var data = _taskFinished[id];
 
-        if ((int) (data["status"] ?? throw new InvalidOperationException()) != 200)
+        if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {data["value"]![1]}");
     }
 
@@ -64,14 +61,14 @@ public class WaWebClient
 
         _socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
-                {Type = "sendText", Values = new List<object>() {$"{_nameSession}@{id}", $"{number}@c.us", text}}));
+            { Type = "sendText", Values = new List<object>() { $"{_nameSession}@{id}", $"{number}@c.us", text } }));
 
         while (_taskQueue.Contains(id))
             await Task.Delay(100);
 
         var data = _taskFinished[id];
 
-        if ((int) (data["status"] ?? throw new InvalidOperationException()) != 200)
+        if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {data["value"]![1]}");
     }
 
@@ -83,14 +80,14 @@ public class WaWebClient
 
         _socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
-                {Type = "logout", Values = new List<object>() {$"{_nameSession}@{id}"}}));
+            { Type = "logout", Values = new List<object>() { $"{_nameSession}@{id}" } }));
 
         while (_taskQueue.Contains(id))
             await Task.Delay(100);
 
         var data = _taskFinished[id];
 
-        if ((int) (data["status"] ?? throw new InvalidOperationException()) != 200)
+        if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {data["value"]![1]}");
     }
 }

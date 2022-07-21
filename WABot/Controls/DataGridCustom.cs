@@ -21,6 +21,10 @@ public static class DataGridCustom
         if (sIndex >= 0)
         {
             var selected = dataGrid.GetContainerFromIndex<DataGridRow>(sIndex);
+
+            if (selected is null)
+                return null;
+
             if (selected.IsEditing) return selected;
         }
 

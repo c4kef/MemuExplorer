@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": "netcoreapp3.1",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    "netcoreapp3.1": {
+      "VirtualOutput/1.0.0": {
+        "runtime": {
+          "VirtualOutput.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "VirtualOutput/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

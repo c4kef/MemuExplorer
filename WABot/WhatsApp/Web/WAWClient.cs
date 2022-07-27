@@ -10,6 +10,9 @@ public class WAWClient
     private bool _disposedCamera;
     private Namespace _socket;
 
+    private static List<int> Queue;
+    private static List<int> QueueProcess;
+
     /// <summary>
     /// Инициализация сессии
     /// </summary>
@@ -24,6 +27,28 @@ public class WAWClient
         _taskId = _random.Next(1_000_000, 10_000_000);
 
         Task.Run(Camera);
+
+        Queue.Add(_taskId);
+    }
+
+    /// <summary>
+    /// Обработчик запросов на сканирование
+    /// </summary>
+    public static async Task QueueCameraHandler()
+    {
+        Queue = new List<int>();
+        QueueProcess = new List<int>();
+
+        while (true)
+        {
+            if (Queue.Count > 0 && QueueProcess.Count == 0)
+            {
+                QueueProcess.Add(Queue[0]);
+                Queue.RemoveAt(0);
+            }
+
+            await Task.Delay(500);
+        }
     }
 
     /// <summary>
@@ -72,6 +97,9 @@ public class WAWClient
             }
         }
 
+        if (File.Exists(@$"{Globals.Setup.PathToQRs}\{_taskId}.png"))
+            File.Delete(@$"{Globals.Setup.PathToQRs}\{_taskId}.png");
+
         Bitmap ConvertTo24Bpp(System.Drawing.Image img)
         {
             var bmp = new Bitmap(img.Width, img.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -88,6 +116,9 @@ public class WAWClient
     /// <exception cref="Exception">Ошибка сервера</exception>
     public async Task Init()
     {
+        while (!QueueProcess.Any(_id => _id == _taskId))
+            await Task.Delay(500);
+
         var socketIoClient = new SocketIOClient();
 
         _socket = socketIoClient.Connect("http://localhost:3000/");
@@ -108,6 +139,7 @@ public class WAWClient
         var data = _taskFinished[_taskId];
 
         _taskFinished.Remove(_taskId);
+        QueueProcess.Remove(_taskId);
 
         if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {data["value"]![1]}");

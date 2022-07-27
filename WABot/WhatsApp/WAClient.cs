@@ -146,32 +146,41 @@ public class WaClient
 
     public async Task LoginFile([Optional] string path, [Optional] string name)
     {
-        await _mem.Shell("pm clear com.whatsapp");
-        await _mem.RunApk("com.whatsapp");
-        await _mem.StopApk("com.whatsapp");
-        await _mem.Push($@"{(Account == string.Empty ? path : Account)}\com.whatsapp\.", @"/data/data/com.whatsapp");
-        await _mem.Shell("rm -r /data/data/com.whatsapp/databases");
-        await _mem.RunApk("com.whatsapp");
+        try
+        {
+            await _mem.Shell("pm clear com.whatsapp");
+            await _mem.RunApk("com.whatsapp");
+            await _mem.StopApk("com.whatsapp");
+            await _mem.Push($@"{(Account == string.Empty ? path : Account)}\com.whatsapp\.", @"/data/data/com.whatsapp");
+            await _mem.Shell("rm -r /data/data/com.whatsapp/databases");
+            await _mem.RunApk("com.whatsapp");
+            await _mem.StopApk("com.whatsapp");
+            await _mem.RunApk("com.whatsapp");
 
-        if (!await _mem.ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
-            goto s1;
+            if (!await _mem.ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
+                goto s1;
 
-        await _mem.Click("//node[@text='Выберите частоту резервного копирования']");
-        await _mem.Click("//node[@text='Никогда']");
-        await _mem.Click("//node[@text='ГОТОВО']");
-        await Task.Delay(2_000);
-        await _mem.StopApk("com.whatsapp");
-        await _mem.RunApk("com.whatsapp");
+            await _mem.Click("//node[@text='Выберите частоту резервного копирования']");
+            await _mem.Click("//node[@text='Никогда']");
+            await _mem.Click("//node[@text='ГОТОВО']");
+            await Task.Delay(2_000);
+            await _mem.StopApk("com.whatsapp");
+            await _mem.RunApk("com.whatsapp");
 
         s1:
-        if (!await _mem.ExistsElement("//node[@resource-id='com.whatsapp:id/registration_name']"))
-            return;
+            if (!await _mem.ExistsElement("//node[@resource-id='com.whatsapp:id/registration_name']"))
+                return;
 
-        await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
-        await _mem.Click("//node[@text='ДАЛЕЕ']");
-        await Task.Delay(2_000);
-        await _mem.StopApk("com.whatsapp");
-        await _mem.RunApk("com.whatsapp");
+            await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
+            await _mem.Click("//node[@text='ДАЛЕЕ']");
+            await Task.Delay(2_000);
+            await _mem.StopApk("com.whatsapp");
+            await _mem.RunApk("com.whatsapp");
+        }
+        catch(Exception ex)
+        {
+            Log.Write(ex.Message);
+        }
     }
 
     public async Task<bool> ImportContacts(string path)

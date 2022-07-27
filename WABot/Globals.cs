@@ -25,6 +25,7 @@ global using System.Drawing;
 global using System.Drawing.Imaging;
 global using VirtualCameraOutput;
 global using Image = System.Windows.Controls.Image;
+using WABot.WhatsApp.Web;
 
 namespace WABot;
 
@@ -35,13 +36,16 @@ public static class Globals
     public static Setup Setup { get; private set; } = null!;
     public static DirectoryInfo RemoveAccountsDirectory { get; private set; } = null!;
     public static DirectoryInfo TempDirectory { get; private set; } = null!;
+    
 
     public static async Task Init()
     {
         Devices = new List<Device>();
 
-        RemoveAccountsDirectory = Directory.CreateDirectory("RemoveAccounts");
+        _ = Task.Run(WAWClient.QueueCameraHandler);
+
         TempDirectory = Directory.CreateDirectory("Temp");
+        RemoveAccountsDirectory = Directory.CreateDirectory("RemovedAccounts");
 
         Setup = (File.Exists(NameSetupFile)
             ? JsonConvert.DeserializeObject<Setup>(await File.ReadAllTextAsync(NameSetupFile))

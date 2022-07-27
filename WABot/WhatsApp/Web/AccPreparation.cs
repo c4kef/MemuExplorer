@@ -76,7 +76,7 @@
 
             while (Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
             {
-                /*var result = await Globals.GetAccounts(_usedPhones.ToArray(), Globals.Setup.TrustLevelAccount);
+                var result = await Globals.GetAccounts(_usedPhones.ToArray(), Globals.Setup.TrustLevelAccount);
 
                 if (result.Length == 0)
                     break;
@@ -100,7 +100,7 @@
                             @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
 
                     continue;
-                }*///Условно мы успешно авторизовались и все в этом духе
+                }
 
                 await client.GetInstance().Click("//node[@content-desc='Ещё']");
                 await client.GetInstance().Click("//node[@text='Связанные устройства']");
@@ -108,9 +108,8 @@
                 if (await client.GetInstance().ExistsElement("//node[@text='OK']"))
                     await client.GetInstance().Click("//node[@text='OK']");
 
-                var wClient = new WAWClient("7736066737");
+                var wClient = new WAWClient(phone);
                 await wClient.Init(); 
-                await wClient.SendText("79772801086", "Hello world!");
                 await wClient.Free();
             }
 
@@ -118,6 +117,7 @@
             {
                 return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", false) && //To-Do
                        !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", false) && //To-Do
+                       !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", false) && //To-Do
                        !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']", false);
             }
         }

@@ -109,7 +109,7 @@
                     await client.GetInstance().Click("//node[@text='OK']");
 
                 var wClient = new WAWClient("7736066737");
-                await wClient.Init();
+                await wClient.Init(); 
                 await wClient.SendText("79772801086", "Hello world!");
                 await wClient.Free();
             }

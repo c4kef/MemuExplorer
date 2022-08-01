@@ -7,7 +7,6 @@ public class WAWClient
     private readonly Dictionary<int, JObject> _taskFinished;
     private readonly Random _random;
     private readonly int _taskId;
-    private bool _disposedCamera;
     private Namespace _socket;
 
     private static List<int> Queue;
@@ -23,10 +22,7 @@ public class WAWClient
         _taskQueue = new List<int>();
         _taskFinished = new Dictionary<int, JObject>();
         _random = new Random();
-        _disposedCamera = false;
         _taskId = _random.Next(1_000_000, 10_000_000);
-
-        Task.Run(Camera);
 
         Queue.Add(_taskId);
     }
@@ -70,43 +66,12 @@ public class WAWClient
     }
 
     /// <summary>
-    /// Обработчик камеры, передает информацию на виртуалку ввиде qr кода
+    /// Ждем своей очереди
     /// </summary>
-    /// <exception cref="InvalidOperationException">Неверное значение</exception>
-    /// <exception cref="Exception">Ошибка сервера</exception>
-    private async Task Camera()
+    public async Task WaitQueue()
     {
-        while (!_disposedCamera)
-        {
-            if (!File.Exists(@$"{Globals.Setup.PathToQRs}\{_taskId}.png"))
-                continue;
-
-            var qr = ConvertTo24Bpp(System.Drawing.Image.FromFile(@$"{Globals.Setup.PathToQRs}\{_taskId}.png"));
-            qr.Save($@"{Globals.TempDirectory.FullName}\{_taskId}.bmp", ImageFormat.Bmp);
-            var bmpQr = new Bitmap($@"{Globals.TempDirectory.FullName}\{_taskId}.bmp");
-
-            var virtualOutput = new VirtualOutput(bmpQr.Width, bmpQr.Height, 20, FourCC.FOURCC_24BG);
-            var converter = new ImageConverter();
-            var imageBytes = (byte[]) converter.ConvertTo(bmpQr, typeof(byte[]))!;
-            var countSended = 0;
-
-            while (countSended < 1_000 && !_disposedCamera)
-            {
-                virtualOutput.Send(imageBytes);
-                countSended++;
-            }
-        }
-
-        if (File.Exists(@$"{Globals.Setup.PathToQRs}\{_taskId}.png"))
-            File.Delete(@$"{Globals.Setup.PathToQRs}\{_taskId}.png");
-
-        Bitmap ConvertTo24Bpp(System.Drawing.Image img)
-        {
-            var bmp = new Bitmap(img.Width, img.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            var gr = Graphics.FromImage(bmp);
-            gr.DrawImage(img, new Rectangle(0, 0, img.Width, img.Height));
-            return bmp;
-        }
+        while (!QueueProcess.Any(_id => _id == _taskId))
+            await Task.Delay(500);
     }
 
     /// <summary>
@@ -116,9 +81,6 @@ public class WAWClient
     /// <exception cref="Exception">Ошибка сервера</exception>
     public async Task Init()
     {
-        while (!QueueProcess.Any(_id => _id == _taskId))
-            await Task.Delay(500);
-
         var socketIoClient = new SocketIOClient();
 
         _socket = socketIoClient.Connect("http://localhost:3000/");
@@ -133,16 +95,41 @@ public class WAWClient
             JsonConvert.SerializeObject(new ServerData()
             { Type = "create", Values = new List<object>() { $"{_nameSession}@{_taskId}" } }));
 
+        while (!File.Exists(@$"{Globals.Setup.PathToQRs}\{_taskId}.png"))
+            await Task.Delay(500);
+
+        Globals.QrCodeName = _taskId.ToString();
+
         while (_taskQueue.Contains(_taskId))
-            await Task.Delay(100);
+            await Task.Delay(500);
 
         var data = _taskFinished[_taskId];
 
+        Globals.QrCodeName = string.Empty;
+
+        while (!TryDeleteQR())
+            await Task.Delay(500);
+        
         _taskFinished.Remove(_taskId);
         QueueProcess.Remove(_taskId);
-
+        
         if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {data["value"]![1]}");
+
+        bool TryDeleteQR()
+        {
+            try
+            {
+                if (File.Exists(@$"{Globals.Setup.PathToQRs}\{_taskId}.png"))
+                    File.Delete(@$"{Globals.Setup.PathToQRs}\{_taskId}.png");
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 
     /// <summary>
@@ -164,7 +151,6 @@ public class WAWClient
             await Task.Delay(100);
 
         var data = _taskFinished[id];
-        _disposedCamera = true;//Dispose camera
         
         _taskFinished.Remove(id);
 
@@ -179,8 +165,6 @@ public class WAWClient
     /// <exception cref="Exception">Ошибка сервера</exception>
     public async Task Logout()
     {
-        _disposedCamera = true;
-
         var id = _random.Next(1_000_000, 10_000_000);
 
         _taskQueue.Add(id);
@@ -207,8 +191,6 @@ public class WAWClient
     /// <exception cref="Exception">Ошибка сервера</exception>
     public async Task Free()
     {
-        _disposedCamera = true;
-
         var id = _random.Next(1_000_000, 10_000_000);
 
         _taskQueue.Add(id);

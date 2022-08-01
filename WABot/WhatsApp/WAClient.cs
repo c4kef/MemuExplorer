@@ -8,6 +8,11 @@ public class WaClient
     public string Phone { private set; get; }
     public string Account { private set; get; }
     public AccountData AccountData;
+    public bool IsW4B;
+    private string _packageName
+    {
+        get => (IsW4B) ? "com.whatsapp.w4b"  : "com.whatsapp";
+    }
 
     public WaClient(string phone = "", string account = "", int deviceId = -1)
     {
@@ -39,9 +44,9 @@ public class WaClient
 
     public async Task<string> Register(string to, string name)
     {
-        await _mem.StopApk("com.whatsapp");
-        await _mem.Shell("pm clear com.whatsapp");
-        await _mem.RunApk("com.whatsapp");
+        await _mem.StopApk(_packageName);
+        await _mem.Shell($"pm clear {_packageName}");
+        await _mem.RunApk(_packageName);
 
 
         if (!await _mem.ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']"))
@@ -135,7 +140,7 @@ public class WaClient
                 return string.Empty;
         }
 
-        await _mem.Pull(to, "/data/data/com.whatsapp/");
+        await _mem.Pull(to, $"/data/data/{_packageName}/ ");
 
         Account = string.Empty;
 
@@ -148,14 +153,14 @@ public class WaClient
     {
         try
         {
-            await _mem.Shell("pm clear com.whatsapp");
-            await _mem.RunApk("com.whatsapp");
-            await _mem.StopApk("com.whatsapp");
-            await _mem.Push($@"{(Account == string.Empty ? path : Account)}\com.whatsapp\.", @"/data/data/com.whatsapp");
-            await _mem.Shell("rm -r /data/data/com.whatsapp/databases");
-            await _mem.RunApk("com.whatsapp");
-            await _mem.StopApk("com.whatsapp");
-            await _mem.RunApk("com.whatsapp");
+            await _mem.Shell($"pm clear {_packageName}");
+            await _mem.RunApk(_packageName);
+            await _mem.StopApk(_packageName);
+            await _mem.Push($@"{(Account == string.Empty ? path : Account)}\{_packageName}\.", @$"/data/data/{_packageName}");
+            await _mem.Shell($"rm -r /data/data/{_packageName}/databases");
+            await _mem.RunApk(_packageName);
+            await _mem.StopApk(_packageName);
+            await _mem.RunApk(_packageName);
 
             if (!await _mem.ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
                 goto s1;
@@ -164,8 +169,8 @@ public class WaClient
             await _mem.Click("//node[@text='Никогда']");
             await _mem.Click("//node[@text='ГОТОВО']");
             await Task.Delay(2_000);
-            await _mem.StopApk("com.whatsapp");
-            await _mem.RunApk("com.whatsapp");
+            await _mem.StopApk(_packageName);
+            await _mem.RunApk(_packageName);
 
         s1:
             if (!await _mem.ExistsElement("//node[@resource-id='com.whatsapp:id/registration_name']"))
@@ -174,8 +179,8 @@ public class WaClient
             await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
             await _mem.Click("//node[@text='ДАЛЕЕ']");
             await Task.Delay(2_000);
-            await _mem.StopApk("com.whatsapp");
-            await _mem.RunApk("com.whatsapp");
+            await _mem.StopApk(_packageName);
+            await _mem.RunApk(_packageName);
         }
         catch(Exception ex)
         {
@@ -193,8 +198,8 @@ public class WaClient
 
         await _mem.Click("//node[@text='ОК']");
 
-        await _mem.StopApk("com.whatsapp");
-        await _mem.RunApk("com.whatsapp");
+        await _mem.StopApk(_packageName);
+        await _mem.RunApk(_packageName);
 
         return true;
     }
@@ -206,7 +211,7 @@ public class WaClient
         var isSended = false;
 
         await File.WriteAllTextAsync(command.FullName,
-            $"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
+            $"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)} {_packageName}");//mb fix
 
         await _mem.Push(command.FullName, "/data/local/tmp");
         await _mem.Shell($@"sh /data/local/tmp/{to}.sh");
@@ -232,6 +237,8 @@ public class WaClient
 
     public async Task ReCreate([Optional] string? phone, [Optional] string? account, [Optional] int? deviceId)
     {
+        IsW4B = false;
+
         if (deviceId is not null)
         {
             await _mem.Stop();
@@ -241,6 +248,7 @@ public class WaClient
         if (account is not null)
         {
             Account = account;
+            IsW4B = Directory.Exists($@"{account}\com.whatsapp.w4b");
             AccountData =
                 JsonConvert.DeserializeObject<AccountData>(await File.ReadAllTextAsync($@"{account}\Data.json"))!;
         }

@@ -6,10 +6,9 @@
       "start": "node index.js"
    },
    "dependencies": {
-      "@wppconnect-team/wppconnect": "^1.12.7",
+      "@wppconnect-team/wppconnect": "^1.15.0",
       "qr-scanner": "^1.4.1",
       "qrcode": "^1.5.1",
-      "socket.io": "^0.9.19",
-      "venom-bot": "^4.0.7"
+      "socket.io": "^0.9.19"
    }
 }

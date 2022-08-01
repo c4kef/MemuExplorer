@@ -36,7 +36,8 @@ public static class Globals
     public static Setup Setup { get; private set; } = null!;
     public static DirectoryInfo RemoveAccountsDirectory { get; private set; } = null!;
     public static DirectoryInfo TempDirectory { get; private set; } = null!;
-    
+    public static VirtualOutput Camera { get; private set; } = null!;
+    public static string QrCodeName { get; set; } = string.Empty;
 
     public static async Task Init()
     {
@@ -54,16 +55,60 @@ public static class Globals
         if (!File.Exists(NameSetupFile))
             await SaveSetup();
 
+        Camera = new VirtualOutput(276, 276, 20, FourCC.FOURCC_24BG);
+
+        _ = Task.Run(OBSCamera);
+
         MemuLib.Globals.IsLog = true;
+    }
+
+    public static async Task OBSCamera()
+    {
+        while (true)
+        {
+            var fileName = File.Exists(@$"{Setup.PathToQRs}\{QrCodeName}.png") ? QrCodeName : "neutral";
+
+            var img = System.Drawing.Image.FromFile(@$"{Setup.PathToQRs}\{fileName}.png");
+            
+            var qr = ConvertTo24Bpp(img);
+            qr.Save($@"{TempDirectory.FullName}\{fileName}.bmp", ImageFormat.Bmp);
+            var bmpQr = new Bitmap($@"{TempDirectory.FullName}\{fileName}.bmp");
+
+            var converter = new ImageConverter();
+            var imageBytes = (byte[])converter.ConvertTo(bmpQr, typeof(byte[]))!;
+
+            var count = 0;
+
+            while (count < 40)
+            {
+                Camera.Send(imageBytes);
+                await Task.Delay(50);
+                count++;
+            }
+
+            qr.Dispose();
+            bmpQr.Dispose();
+            img.Dispose();
+
+            File.Delete($@"{TempDirectory.FullName}\{fileName}.bmp");
+        }
+
+        Bitmap ConvertTo24Bpp(System.Drawing.Image img)
+        {
+            var bmp = new Bitmap(img.Width, img.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            var gr = Graphics.FromImage(bmp);
+            gr.DrawImage(img, new Rectangle(0, 0, img.Width, img.Height));
+            return bmp;
+        }
     }
 
     public static async Task InitAccountsFolder()
     {
         foreach (var directory in Directory.GetDirectories(Setup.PathToDirectoryAccounts))
-            if (!File.Exists($@"{directory}\Data.json") && Directory.Exists($@"{directory}\com.whatsapp"))
+            if (!File.Exists($@"{directory}\Data.json") && (Directory.Exists($@"{directory}\com.whatsapp") || Directory.Exists($@"{directory}\com.whatsapp.w4b")))
                 await File.WriteAllTextAsync($@"{directory}\Data.json",
                     JsonConvert.SerializeObject(new AccountData()
-                        {LastActiveDialog = new Dictionary<string, DateTime>(), TrustLevelAccount = 0}));
+                    { LastActiveDialog = new Dictionary<string, DateTime>(), TrustLevelAccount = 0 }));
     }
 
     public static async Task SaveSetup()
@@ -106,8 +151,7 @@ public static class Globals
 
         foreach (var accountDirectory in Directory.GetDirectories(Setup.PathToDirectoryAccounts))
         {
-            if (!File.Exists($@"{accountDirectory}\Data.json") ||
-                !Directory.Exists($@"{accountDirectory}\com.whatsapp"))
+            if (!File.Exists($@"{accountDirectory}\Data.json"))
                 continue;
 
             var phone = new DirectoryInfo(accountDirectory).Name;
@@ -147,7 +191,7 @@ public class Setup
     /// Кол-во сообщений с аккаунта при рассылке
     /// </summary>
     public int CountMessageFromAccount = 2;
-    
+
     /// <summary>
     /// Индекс страны для регистрации
     /// </summary>
@@ -191,12 +235,12 @@ public class AccountData
     /// Уровень прогрева аккаунта для начала рассылки сообщений
     /// </summary>
     public int TrustLevelAccount = 0;
-    
+
     /// <summary>
     /// 
     /// </summary>
     public int CountMessages = 0;
-    
+
     /// <summary>
     /// Дата создания
     /// </summary>

@@ -104,12 +104,21 @@
 
                 await client.GetInstance().Click("//node[@content-desc='Ещё']");
                 await client.GetInstance().Click("//node[@text='Связанные устройства']");
-                await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
-                if (await client.GetInstance().ExistsElement("//node[@text='OK']"))
-                    await client.GetInstance().Click("//node[@text='OK']");
+
+                if (await client.GetInstance().ExistsElement("//node[@resource-id='android:id/button1']"))
+                    await client.GetInstance().Click("//node[@resource-id='android:id/button1']");
 
                 var wClient = new WAWClient(phone);
-                await wClient.Init(); 
+                
+                await wClient.WaitQueue();
+
+                await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
+                
+                if (await client.GetInstance().ExistsElement("//node[@text='OK']"))
+                    await client.GetInstance().Click("//node[@text='OK']");
+                
+                await wClient.Init();
+
                 await wClient.Free();
             }
 

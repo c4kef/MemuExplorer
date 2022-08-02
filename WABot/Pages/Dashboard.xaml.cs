@@ -13,7 +13,7 @@ public partial class Dashboard : INotifyPropertyChanged
         DataContext = this;
         _warm = new Warm();
         _register = new Register();
-        _newsletter = new Newsletter();
+        _newsletter = new WhatsApp.Web.Newsletter();
         _preparation = new AccPreparation();
 
         if (!_managerDevicesIsRuning)
@@ -45,7 +45,7 @@ public partial class Dashboard : INotifyPropertyChanged
     /// <summary>
     /// Рассылка сообщений
     /// </summary>
-    private readonly Newsletter _newsletter;
+    private readonly WhatsApp.Web.Newsletter _newsletter;
 
     /// <summary>
     /// Регистрация аккаунтов
@@ -244,9 +244,9 @@ public partial class Dashboard : INotifyPropertyChanged
         if (_isBusy)
             return;
 
-        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive) || Globals.Setup.EnableWarm)
+        if (Directory.GetFiles(Globals.Setup.PathToDirectoryAccountsWeb).Length <= 8 || Globals.Setup.EnableWarm)
         {
-            MessageBox.Show("Запустите устройства или отключите режим прогрева");
+            MessageBox.Show("Слишком мало аккаунтов для рассылки или включен режим прогрева");
             return;
         }
 

@@ -51,7 +51,7 @@
                               SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact" Minimum="0">
                     <ui:NumberBox.ToolTip>
                         <ToolTip>
-                            Укажите индекс старны через которую будут регистрироваться аккаунты
+                            Укажите индекс страны через которую будут регистрироваться аккаунты
                         </ToolTip>
                     </ui:NumberBox.ToolTip>
                 </ui:NumberBox>
@@ -80,12 +80,27 @@
                         </ToolTip>
                     </ui:NumberBox.ToolTip>
                 </ui:NumberBox>
-                <Button HorizontalAlignment="Center" Margin="0,10,0,0" ui:ControlHelper.CornerRadius="5"
-                        Content="Выберите аккаунты" BorderBrush="{Binding ColorPathToDirectoryAccounts}"
+                <Button HorizontalAlignment="Center"
+                        Margin="0,10,0,0"
+                        ui:ControlHelper.CornerRadius="5"
+                        Content="Аккаунты от W"
+                        BorderBrush="{Binding ColorPathToDirectoryAccounts}"
                         Click="SelectAccounts">
                     <Button.ToolTip>
                         <ToolTip>
                             Укажите путь на папку с аккаунтами от WhatsApp
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+                <Button HorizontalAlignment="Center"
+                        Margin="0,10,0,0"
+                        ui:ControlHelper.CornerRadius="5"
+                        Content="Аккаунты от WWeb"
+                        BorderBrush="{Binding ColorPathToDirectoryAccountsWeb}"
+                        Click="SelectAccountsWeb">
+                    <Button.ToolTip>
+                        <ToolTip>
+                            Укажите путь на папку с аккаунтами от WhatsApp Web
                         </ToolTip>
                     </Button.ToolTip>
                 </Button>

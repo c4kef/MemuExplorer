@@ -21,11 +21,25 @@
             <StackPanel HorizontalAlignment="Center">
                 <Label Content="Запуск действий" HorizontalAlignment="Center" />
                 <StackPanel Orientation="Horizontal" Margin="0,15,0,0" HorizontalAlignment="Center">
-                    <Button HorizontalAlignment="Center" Margin="0,0,0,0" ui:ControlHelper.CornerRadius="5"
-                            Content="Подготовка" Click="Preparation">
+                    <Button HorizontalAlignment="Center"
+                            Margin="0,0,0,0"
+                            ui:ControlHelper.CornerRadius="5"
+                            Content="Подготовка"
+                            Click="Preparation">
                         <Button.ToolTip>
                             <ToolTip>
                                 Начнет процесс подготовки аккаунтов к рассылке
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
+                    <Button HorizontalAlignment="Center"
+                            Margin="10,0,0,0"
+                            ui:ControlHelper.CornerRadius="5"
+                            Content="Рассылка"
+                            Click="Newsletter">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                Начнет процесс рассылки сообщений пользователям
                             </ToolTip>
                         </Button.ToolTip>
                     </Button>
@@ -34,14 +48,6 @@
                         <Button.ToolTip>
                             <ToolTip>
                                 Начнет процесс прогрева аккаунтов
-                            </ToolTip>
-                        </Button.ToolTip>
-                    </Button>
-                    <Button HorizontalAlignment="Center" Margin="10,0,0,0" ui:ControlHelper.CornerRadius="5"
-                            Content="Рассылка" Click="Newsletter">
-                        <Button.ToolTip>
-                            <ToolTip>
-                                Начнет процесс рассылки сообщений пользователям
                             </ToolTip>
                         </Button.ToolTip>
                     </Button>

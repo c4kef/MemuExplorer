@@ -104,6 +104,12 @@ public partial class Settings : INotifyPropertyChanged
             ? Brushes.Red
             : Brushes.GreenYellow;
 
+    public Brush ColorPathToDirectoryAccountsWeb =>
+    string.IsNullOrEmpty(Globals.Setup.PathToDirectoryAccountsWeb) ||
+    !Directory.Exists(Globals.Setup.PathToDirectoryAccountsWeb)
+        ? Brushes.Red
+        : Brushes.GreenYellow;
+
     #endregion
 
     private async void SelectQrCodes(object sender, RoutedEventArgs e)
@@ -138,6 +144,19 @@ public partial class Settings : INotifyPropertyChanged
         }
 
         OnPropertyChanged("ColorPathToDirectoryAccounts");
+    }
+
+    private async void SelectAccountsWeb(object sender, RoutedEventArgs e)
+    {
+        var dialog = new CommonOpenFileDialog();
+        dialog.IsFolderPicker = true;
+        if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+        {
+            Globals.Setup.PathToDirectoryAccountsWeb = dialog.FileName;
+            await Globals.SaveSetup();
+        }
+
+        OnPropertyChanged("ColorPathToDirectoryAccountsWeb");
     }
 
     private async void SelectNumbers(object sender, RoutedEventArgs e)

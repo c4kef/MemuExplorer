@@ -77,9 +77,11 @@ public class WAWClient
     /// <summary>
     /// Инициализировать
     /// </summary>
+    /// <param name="waitQr">мне следует ждать Qr код?</param>
+    /// <returns></returns>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>
-    public async Task Init()
+    public async Task Init(bool waitQr)
     {
         Globals.Socket.On("data", HandlerDataRequests);
 
@@ -89,18 +91,24 @@ public class WAWClient
             JsonConvert.SerializeObject(new ServerData()
             { Type = "create", Values = new List<object>() { $"{_nameSession}@{_taskId}" } }));
 
-        while (!File.Exists(@$"{Globals.Setup.PathToQRs}\{_taskId}.png"))
-            await Task.Delay(500);
+        if (waitQr)
+        {
+            while (!File.Exists(@$"{Globals.Setup.PathToQRs}\{_taskId}.png"))
+                await Task.Delay(500);
 
-        Globals.QrCodeName = _taskId.ToString();
+            Globals.QrCodeName = _taskId.ToString();
 
-        while (_taskQueue.Contains(_taskId))
-            await Task.Delay(500);
+            while (_taskQueue.Contains(_taskId))
+                await Task.Delay(500);
 
-        Globals.QrCodeName = string.Empty;
+            Globals.QrCodeName = string.Empty;
 
-        while (!TryDeleteQR())
-            await Task.Delay(500);
+            while (!TryDeleteQR())
+                await Task.Delay(500);
+        }
+        else
+            while (_taskQueue.Contains(_taskId))
+                await Task.Delay(500);
 
         var data = _taskFinished[_taskId];
         _taskFinished.Remove(_taskId);
@@ -134,25 +142,35 @@ public class WAWClient
     /// </summary>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>
-    public async Task SendText(string number, string text)
+    public async Task<bool> SendText(string number, string text)
     {
-        var id = _random.Next(1_000_000, 10_000_000);
+        try
+        {
+            var id = _random.Next(1_000_000, 10_000_000);
 
-        _taskQueue.Add(id);
+            _taskQueue.Add(id);
 
-        Globals.Socket.Emit("data",
-            JsonConvert.SerializeObject(new ServerData()
-            { Type = "sendText", Values = new List<object>() { $"{_nameSession}@{id}", $"{number}@c.us", text } }));
+            Globals.Socket.Emit("data",
+                JsonConvert.SerializeObject(new ServerData()
+                { Type = "sendText", Values = new List<object>() { $"{_nameSession}@{id}", $"{number.Replace("+", string.Empty)}@c.us", text } }));
 
-        while (_taskQueue.Contains(id))
-            await Task.Delay(100);
+            while (_taskQueue.Contains(id))
+                await Task.Delay(100);
 
-        var data = _taskFinished[id];
+            var data = _taskFinished[id];
 
-        _taskFinished.Remove(id);
+            _taskFinished.Remove(id);
 
-        if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
-            throw new Exception($"Error: {data["value"]![1]}");
+            if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
+                throw new Exception($"Error: {data["value"]![1]}");
+
+            return true;
+        }
+        catch(Exception ex)
+        {
+            Log.Write($"Ошибка отправки сообщения:\n{ex.Message}\n");
+            return false;
+        }
     }
 
     /// <summary>
@@ -184,7 +202,7 @@ public class WAWClient
     }
 
     /// <summary>
-    /// Освобождает все сессии
+    /// Освобождает текущею сессию из пула на сервере
     /// </summary>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>

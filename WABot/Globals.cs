@@ -207,9 +207,14 @@ public class Setup
     public bool EnableWarm = false;
 
     /// <summary>
-    /// Путь до директории с аккаунтами WhhatsApp
+    /// Путь до директории с аккаунтами WhatsApp
     /// </summary>
     public string PathToDirectoryAccounts = string.Empty;
+
+    /// <summary>
+    /// Путь до директории с аккаунтами WhatsApp Web
+    /// </summary>
+    public string PathToDirectoryAccountsWeb = string.Empty;
 
     /// <summary>
     /// Путь до файла с номерами пользователей для рассылки сообщений

@@ -90,6 +90,7 @@
 
                 await client.ReCreate($"+{phone}", path);
                 await client.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
+                loginAgain:
                 if (!await IsValid())
                 {
                     if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") &&
@@ -116,10 +117,40 @@
                 
                 if (await client.GetInstance().ExistsElement("//node[@text='OK']"))
                     await client.GetInstance().Click("//node[@text='OK']");
-                
-                await wClient.Init();
+
+                initAgain:
+                var initWithErrors = false;
+
+                try
+                {
+                    await wClient.Init();
+                }
+                catch 
+                {
+                    initWithErrors = true;
+                }
 
                 await wClient.Free();
+
+                if (await client.GetInstance().ExistsElement("//node[@text='OK']", false))
+                {
+                    await client.GetInstance().Click("//node[@text='OK']");
+                    goto initAgain;
+                }
+
+                if (initWithErrors)
+                    goto initAgain;
+
+                wClient.RemoveQueue();
+
+                /*if (!resultInit)
+                {
+                    await client.GetInstance().StopApk(client.PackageName);
+                    await client.GetInstance().RunApk(client.PackageName);
+
+                    await wClient.Logout();
+                    goto loginAgain;
+                }*/
             }
 
             async Task<bool> IsValid()

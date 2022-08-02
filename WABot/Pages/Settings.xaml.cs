@@ -181,7 +181,15 @@ public partial class Settings : INotifyPropertyChanged
 
     private async void ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
     {
-        await Globals.SaveSetup();
+        tryAgain:
+        try
+        {
+            await Globals.SaveSetup();
+        }
+        catch
+        {
+            goto tryAgain;
+        }
     }
 
     private async void EnableWarmClicked(object sender, RoutedEventArgs e)

@@ -7,7 +7,6 @@ public class WAWClient
     private readonly Dictionary<int, JObject> _taskFinished;
     private readonly Random _random;
     private readonly int _taskId;
-    private Namespace _socket;
 
     private static List<int> Queue;
     private static List<int> QueueProcess;
@@ -62,6 +61,7 @@ public class WAWClient
         var id = int.Parse(data["value"]![0]!.ToString());
 
         _taskFinished.Add(id, data);
+        
         _taskQueue.RemoveAll(task => task == id);
     }
 
@@ -81,17 +81,11 @@ public class WAWClient
     /// <exception cref="Exception">Ошибка сервера</exception>
     public async Task Init()
     {
-        var socketIoClient = new SocketIOClient();
-
-        _socket = socketIoClient.Connect("http://localhost:3000/");
-        _socket.On("data", HandlerDataRequests);
-
-        while (!socketIoClient.Connected)
-            await Task.Delay(100);
+        Globals.Socket.On("data", HandlerDataRequests);
 
         _taskQueue.Add(_taskId);
 
-        _socket.Emit("data",
+        Globals.Socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
             { Type = "create", Values = new List<object>() { $"{_nameSession}@{_taskId}" } }));
 
@@ -103,18 +97,16 @@ public class WAWClient
         while (_taskQueue.Contains(_taskId))
             await Task.Delay(500);
 
-        var data = _taskFinished[_taskId];
-
         Globals.QrCodeName = string.Empty;
 
         while (!TryDeleteQR())
             await Task.Delay(500);
-        
+
+        var data = _taskFinished[_taskId];
         _taskFinished.Remove(_taskId);
-        QueueProcess.Remove(_taskId);
-        
+
         if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
-            throw new Exception($"Error: {data["value"]![1]}");
+            throw new Exception($"Error: {(data["value"]?.Count() >= 2 ? data["value"]![1] : "undocumented error :(")}");
 
         bool TryDeleteQR()
         {
@@ -133,6 +125,11 @@ public class WAWClient
     }
 
     /// <summary>
+    /// Удаляем наш запрос из очереди
+    /// </summary>
+    public void RemoveQueue() => QueueProcess.Remove(_taskId);
+
+    /// <summary>
     /// Отправить сообщение
     /// </summary>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
@@ -143,7 +140,7 @@ public class WAWClient
 
         _taskQueue.Add(id);
 
-        _socket.Emit("data",
+        Globals.Socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
             { Type = "sendText", Values = new List<object>() { $"{_nameSession}@{id}", $"{number}@c.us", text } }));
 
@@ -151,7 +148,7 @@ public class WAWClient
             await Task.Delay(100);
 
         var data = _taskFinished[id];
-        
+
         _taskFinished.Remove(id);
 
         if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
@@ -169,9 +166,9 @@ public class WAWClient
 
         _taskQueue.Add(id);
 
-        _socket.Emit("data",
+        Globals.Socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
-                { Type = "logout", Values = new List<object>() { $"{_nameSession}@{id}" } }));
+            { Type = "logout", Values = new List<object>() { $"{_nameSession}@{id}" } }));
 
         while (_taskQueue.Contains(id))
             await Task.Delay(100);
@@ -179,13 +176,15 @@ public class WAWClient
         var data = _taskFinished[id];
 
         _taskFinished.Remove(id);
+        
+        Globals.Socket.RemoveListener("data", HandlerDataRequests);
 
         if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {data["value"]![1]}");
     }
 
     /// <summary>
-    /// Освобождает сессию, требуется вызывать как заканчиваем работать с текущей сессией
+    /// Освобождает все сессии
     /// </summary>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>
@@ -195,9 +194,9 @@ public class WAWClient
 
         _taskQueue.Add(id);
 
-        _socket.Emit("data",
+        Globals.Socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
-                { Type = "free", Values = new List<object>() { $"{_nameSession}@{id}" } }));
+            { Type = "free", Values = new List<object>() { $"{_nameSession}@{id}" } }));
 
         while (_taskQueue.Contains(id))
             await Task.Delay(100);
@@ -205,6 +204,8 @@ public class WAWClient
         var data = _taskFinished[id];
 
         _taskFinished.Remove(id);
+
+        Globals.Socket.RemoveListener("data", HandlerDataRequests);
 
         if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {data["value"]![1]}");

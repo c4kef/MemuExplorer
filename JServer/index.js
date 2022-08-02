@@ -22,10 +22,12 @@ io.sockets.on("connection", function (socket)
 
        switch (data["Type"]) {
            case "create":
+               console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"create\"");
                wppconnect
-                   .create(
-                       data["Values"][0].split('@')[0],
-                       (qrCode, asciiQR, attempt, urlCode) => {
+                   .create({
+                    session: data["Values"][0].split('@')[0], //Pass the name of the client you want to start the bot
+                    catchQR: (qrCode, asciiQR, attempt, urlCode) => 
+                    {
                         QRCode.toDataURL(urlCode, function (err, url) {
                            const matches = url.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/), response = {};
 
@@ -44,29 +46,35 @@ io.sockets.on("connection", function (socket)
                                'binary',
                                function (err) {
                                    if (err != null) {
-                                       backdata.status = 500;
-                                       socket.emit("data", JSON.stringify(backdata));
-                                       console.log(err);
-                                       return null;
+                                       //backdata.status = 500;
+                                       //socket.emit("data", JSON.stringify(backdata));
+                                       console.log("I fucked his mom: " + err);
+                                       //return null;
                                    }
                                });
                             });
-                       },
-                       null,
-                       {
-                           headless: false, // Headless chrome
-                           devtools: false, // Open devtools by default
-                           useChrome: true, // If false will use Chromium instance
-                           debug: false, // Opens a debug session
-                           logQR: false, // Logs QR automatically in terminal
-                           disableWelcome: false, // Will disable Spinnies animation, useful for containers (docker) for a better log
-                           updatesLog: false, // Logs info updates automatically in terminal
-                       },
-                       async (WABrowserId, WAToken1, WAToken2, WASecretBundle) => {
-                           console.log('Browser PID:', WABrowserId);
-                       }
-                   )
+                    },
+                    statusFind: (statusSession, session) => {
+                      //console.log('Status Session: ', statusSession); //return isLogged || notLogged || browserClose || qrReadSuccess || qrReadFail || autocloseCalled || desconnectedMobile || deleteToken
+                      //Create session wss return "serverClose" case server for close
+                      //console.log('Session name: ', session);
+                    },
+                    headless: false, // Headless chrome
+                    devtools: false, // Open devtools by default
+                    useChrome: true, // If false will use Chromium instance
+                    debug: false, // Opens a debug session
+                    logQR: false, // Logs QR automatically in terminal
+                    browserWS: '', // If u want to use browserWSEndpoint
+                    browserArgs: [''], // Parameters to be added into the chrome browser instance
+                    puppeteerOptions: {}, // Will be passed to puppeteer.launch
+                    disableWelcome: true, // Option to disable the welcoming message which appears in the beginning
+                    updatesLog: true, // Logs info updates automatically in terminal
+                    autoClose: 15000, // Automatically closes the wppconnect only when scanning the QR code (default 60 seconds, if you want to turn it off, assign 0 or false)
+                    tokenStore: 'file', // Define how work with tokens, that can be a custom interface
+                    folderNameToken: './tokens', //folder name when saving tokens
+                  })
                    .then((client) => {
+                       console.log("[" + data["Values"][0].split('@')[0] + "] - \"create\" sucessful created");
                        backdata.status = 200
                        sessions.push({name: data["Values"][0].split('@')[0], value: client});
                        socket.emit("data", JSON.stringify(backdata));
@@ -74,11 +82,13 @@ io.sockets.on("connection", function (socket)
                    .catch((erro) => {
                        backdata.status = 500;
                        backdata.value.push(erro);
+                       console.log("[" + data["Values"][0].split('@')[0] + "] - \"create\" not created with errors");
                        socket.emit("data", JSON.stringify(backdata));
                    });
                break;
 
            case "startEvents":
+            console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"startEvents\"");
                backdata.status = 200
 
                await getSession(data["Values"][0].split('@')[0]).onMessage(message => {
@@ -93,6 +103,7 @@ io.sockets.on("connection", function (socket)
                break;
 
            case "logout":
+            console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"logout\"");
                backdata.status = 200
                await getSession(data["Values"][0].split('@')[0]).logout();
                removeSession(data["Values"][0].split('@')[0]);
@@ -101,11 +112,13 @@ io.sockets.on("connection", function (socket)
 
             case "free":
                 backdata.status = 200
+                console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"free\"");
                 removeSession(data["Values"][0].split('@')[0]);
                 socket.emit("data", JSON.stringify(backdata));
                 break;
                
            case "sendText":
+            console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"sendText\"");
                await getSession(data["Values"][0].split('@')[0])
                    .sendText(data["Values"][1], data["Values"][2])
                    .then((result) => {
@@ -136,6 +149,10 @@ function getSession(name) {
 
 function removeSession(name) {
     const index = sessions.findIndex(session => session.name === name);
+    
+    if (index === -1)
+        return;
+    
     sessions[index].value.close();
     sessions.splice(index, 1);
 }

@@ -9,7 +9,7 @@ public class WaClient
     public string Account { private set; get; }
     public AccountData AccountData;
     public bool IsW4B;
-    private string _packageName
+    public string PackageName
     {
         get => (IsW4B) ? "com.whatsapp.w4b"  : "com.whatsapp";
     }
@@ -44,9 +44,9 @@ public class WaClient
 
     public async Task<string> Register(string to, string name)
     {
-        await _mem.StopApk(_packageName);
-        await _mem.Shell($"pm clear {_packageName}");
-        await _mem.RunApk(_packageName);
+        await _mem.StopApk(PackageName);
+        await _mem.Shell($"pm clear {PackageName}");
+        await _mem.RunApk(PackageName);
 
 
         if (!await _mem.ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']"))
@@ -140,7 +140,7 @@ public class WaClient
                 return string.Empty;
         }
 
-        await _mem.Pull(to, $"/data/data/{_packageName}/ ");
+        await _mem.Pull(to, $"/data/data/{PackageName}/ ");
 
         Account = string.Empty;
 
@@ -153,14 +153,14 @@ public class WaClient
     {
         try
         {
-            await _mem.Shell($"pm clear {_packageName}");
-            await _mem.RunApk(_packageName);
-            await _mem.StopApk(_packageName);
-            await _mem.Push($@"{(Account == string.Empty ? path : Account)}\{_packageName}\.", @$"/data/data/{_packageName}");
-            await _mem.Shell($"rm -r /data/data/{_packageName}/databases");
-            await _mem.RunApk(_packageName);
-            await _mem.StopApk(_packageName);
-            await _mem.RunApk(_packageName);
+            await _mem.Shell($"pm clear {PackageName}");
+            await _mem.RunApk(PackageName);
+            await _mem.StopApk(PackageName);
+            await _mem.Push($@"{(Account == string.Empty ? path : Account)}\{PackageName}\.", @$"/data/data/{PackageName}");
+            await _mem.Shell($"rm -r /data/data/{PackageName}/databases");
+            await _mem.RunApk(PackageName);
+            await _mem.StopApk(PackageName);
+            await _mem.RunApk(PackageName);
 
             if (!await _mem.ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
                 goto s1;
@@ -169,8 +169,8 @@ public class WaClient
             await _mem.Click("//node[@text='Никогда']");
             await _mem.Click("//node[@text='ГОТОВО']");
             await Task.Delay(2_000);
-            await _mem.StopApk(_packageName);
-            await _mem.RunApk(_packageName);
+            await _mem.StopApk(PackageName);
+            await _mem.RunApk(PackageName);
 
         s1:
             if (!await _mem.ExistsElement("//node[@resource-id='com.whatsapp:id/registration_name']"))
@@ -179,8 +179,8 @@ public class WaClient
             await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
             await _mem.Click("//node[@text='ДАЛЕЕ']");
             await Task.Delay(2_000);
-            await _mem.StopApk(_packageName);
-            await _mem.RunApk(_packageName);
+            await _mem.StopApk(PackageName);
+            await _mem.RunApk(PackageName);
         }
         catch(Exception ex)
         {
@@ -198,8 +198,8 @@ public class WaClient
 
         await _mem.Click("//node[@text='ОК']");
 
-        await _mem.StopApk(_packageName);
-        await _mem.RunApk(_packageName);
+        await _mem.StopApk(PackageName);
+        await _mem.RunApk(PackageName);
 
         return true;
     }
@@ -211,7 +211,7 @@ public class WaClient
         var isSended = false;
 
         await File.WriteAllTextAsync(command.FullName,
-            $"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)} {_packageName}");//mb fix
+            $"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)} {PackageName}");//mb fix
 
         await _mem.Push(command.FullName, "/data/local/tmp");
         await _mem.Shell($@"sh /data/local/tmp/{to}.sh");

@@ -6,14 +6,13 @@
         private readonly List<string> _usedPhones;
         private readonly List<string> _usedPhonesUsers;
 
-        private string[] _contacts;
         private string[] _names;
 
         public AccPreparation()
         {
             _tetheredDevices = new Dictionary<int, Device>();
             _usedPhonesUsers = _usedPhones = new List<string>();
-            _contacts = _names = new[] { "" };
+            _names = new[] { "" };
         }
 
         public async Task Start()
@@ -23,8 +22,6 @@
 
             _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames))
                 .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
-
-            _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
 
             var busyDevices = new List<int>();
 
@@ -90,7 +87,7 @@
 
                 await client.ReCreate($"+{phone}", path);
                 await client.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
-                loginAgain:
+
                 if (!await IsValid())
                 {
                     if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") &&
@@ -142,15 +139,6 @@
                     goto initAgain;
 
                 wClient.RemoveQueue();
-
-                /*if (!resultInit)
-                {
-                    await client.GetInstance().StopApk(client.PackageName);
-                    await client.GetInstance().RunApk(client.PackageName);
-
-                    await wClient.Logout();
-                    goto loginAgain;
-                }*/
             }
 
             async Task<bool> IsValid()

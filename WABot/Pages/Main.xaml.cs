@@ -12,17 +12,11 @@ public partial class Main
     /// </summary>
     private static Dashboard _dashboard = null!;
     
-    /// <summary>
-    /// Менеджер аккаунтов
-    /// </summary>
-    private static Manager _manager = null!;
-
     public Main()
     {
         InitializeComponent();
         _settings = new Settings();
         _dashboard = new Dashboard();
-        _manager = new Manager();
 
         RootFrame.Navigate(_dashboard);
     }
@@ -40,10 +34,5 @@ public partial class Main
     private void OpenDashboard(object sender, RoutedEventArgs e)
     {
         RootFrame.Navigate(_dashboard);
-    }
-    
-    private void OpenManager(object sender, RoutedEventArgs e)
-    {
-        RootFrame.Navigate(_manager);
     }
 }

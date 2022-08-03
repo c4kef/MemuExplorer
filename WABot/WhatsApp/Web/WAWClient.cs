@@ -98,8 +98,10 @@ public class WAWClient
 
             Globals.QrCodeName = _taskId.ToString();
 
-            while (_taskQueue.Contains(_taskId))
-                await Task.Delay(500);
+            Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 18_000);
+
+            if (_taskQueue.Contains(_taskId))
+                throw new Exception("Error: request is not accepted");
 
             Globals.QrCodeName = string.Empty;
 
@@ -107,14 +109,24 @@ public class WAWClient
                 await Task.Delay(500);
         }
         else
-            while (_taskQueue.Contains(_taskId))
-                await Task.Delay(500);
+        {
+            Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 18_000);
+
+            if (_taskQueue.Contains(_taskId))
+                throw new Exception("Error: request is not accepted");
+        }
 
         var data = _taskFinished[_taskId];
         _taskFinished.Remove(_taskId);
 
         if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {(data["value"]?.Count() >= 2 ? data["value"]![1] : "undocumented error :(")}");
+
+        async Task WaitRequest()
+        {
+            while (_taskQueue.Contains(_taskId))
+                await Task.Delay(500);
+        }
 
         bool TryDeleteQR()
         {

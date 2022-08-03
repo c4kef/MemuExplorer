@@ -32,7 +32,7 @@ public class Newsletter
 
         Log.Write($"Добро пожаловать в логи, текст рассылки:\n{text}\n\n", _logFile.FullName);
 
-        for (var i = 0; i < 8; i++)
+        for (var i = 0; i < Globals.Setup.CountThreadsChrome; i++)
         {
             var task = Handler(SelectWord(text));
             
@@ -92,6 +92,9 @@ public class Newsletter
             catch (Exception)//Скорее всего аккаунт уже не валидный
             {
                 await waw.Free();
+                if (File.Exists(@$"{result.FullName}"))
+                    File.Delete(@$"{result.FullName}");
+
                 continue;
             }
 
@@ -123,6 +126,14 @@ public class Newsletter
                     await waw.Free();
                     continue;
                 }
+            }
+            else
+            {
+                MessageBox.Show($"Кол-во сообщений: {MessagesSendedCount}");
+                await waw.Free();
+                if (File.Exists(@$"{result.FullName}"))
+                    File.Delete(@$"{result.FullName}");
+                continue;
             }
 
             goto recurseSendMessageToContact;

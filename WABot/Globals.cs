@@ -182,6 +182,11 @@ public class Setup
     public int CountMessage = 1;
 
     /// <summary>
+    /// Кол-во потоков хрома
+    /// </summary>
+    public int CountThreadsChrome = 1;
+
+    /// <summary>
     /// Задержка между отправкой сообщений между двумя пользователями (срабатывает по окончанию цикла)
     /// </summary>
     public int DelayBetweenUsers = 24000;

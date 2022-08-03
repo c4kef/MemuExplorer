@@ -30,6 +30,15 @@ public partial class Settings : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// Сколько раз блок текста должен быть продублирован в сообщение
+    /// </summary>
+    public int CountThreadsChrome
+    {
+        get => Globals.Setup.CountThreadsChrome;
+        set => Globals.Setup.CountThreadsChrome = value;
+    }
+
+    /// <summary>
     /// Сколько должно пройти времени с момента последней переписки с другим контактом. Время в формате 1 у.е = 1сек
     /// </summary>
     public int DelayBetweenUsers

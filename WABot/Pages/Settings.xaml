@@ -71,12 +71,31 @@
                         </ToolTip>
                     </ui:NumberBox.ToolTip>
                 </ui:NumberBox>
-                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding CountMessageFromAccount}"
-                              ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Кол-во сообщ."
-                              SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact">
+                <ui:NumberBox Margin="0,10,0,0"
+                              ValueChanged="ValueChanged"
+                              Value="{Binding CountMessageFromAccount}"
+                              ui:ControlHelper.CornerRadius="5"
+                              ui:ControlHelper.PlaceholderText="Кол-во сообщ."
+                              SmallChange="1"
+                              LargeChange="10"
+                              SpinButtonPlacementMode="Compact">
                     <ui:NumberBox.ToolTip>
                         <ToolTip>
                             Укажите кол-во сообщений от одного аккаунта
+                        </ToolTip>
+                    </ui:NumberBox.ToolTip>
+                </ui:NumberBox>
+                <ui:NumberBox Margin="0,10,0,0"
+                              ValueChanged="ValueChanged"
+                              Value="{Binding CountThreadsChrome}"
+                              ui:ControlHelper.CornerRadius="5"
+                              ui:ControlHelper.PlaceholderText="Кол-во потоков"
+                              SmallChange="1"
+                              LargeChange="10"
+                              SpinButtonPlacementMode="Compact">
+                    <ui:NumberBox.ToolTip>
+                        <ToolTip>
+                            Укажите кол-во потоков (окон) хрома
                         </ToolTip>
                     </ui:NumberBox.ToolTip>
                 </ui:NumberBox>

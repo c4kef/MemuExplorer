@@ -10,6 +10,7 @@ public class Newsletter
     private readonly List<string> _usedPhonesUsers;
     private readonly FileInfo _logFile;
 
+    private FileInfo _pathToContacts;
     private string[] _contacts;
     private string[] _names;
 
@@ -31,6 +32,17 @@ public class Newsletter
             .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
+
+        var cObjs = new List<CObj>();
+
+        foreach (var contact in _contacts)
+            cObjs.Add(new CObj(MemuLib.Globals.RandomString(rnd.Next(5_15)), $"{(contact[0] == '+' ? "" : "+")}{contact}"));
+
+        var pathToFileContacts = $@"{Globals.TempDirectory}\contact_{rnd.Next(10_000, 20_000)}.vcf";
+
+        await File.WriteAllTextAsync(pathToFileContacts, ContactManager.Export(cObjs));
+
+        _pathToContacts = new FileInfo(pathToFileContacts);
 
         Log.Write($"Добро пожаловать в логи, текст рассылки:\n{text}\n\n", _logFile.FullName);
 
@@ -97,6 +109,8 @@ public class Newsletter
     {
         var client = _tetheredDevices[idThread].Client;
         var clientIndex = _tetheredDevices[idThread].Index;
+
+        await client.ImportContacts(_pathToContacts.FullName);
 
         while (Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
         {
@@ -176,11 +190,12 @@ public class Newsletter
                 
                     if (++countMsg > Globals.Setup.CountMessageFromAccount)
                         continue;
+
                     break;
                 }
             }
 
-            await Task.Delay(500);
+            await Task.Delay(new Random().Next(30_000, 60_000));//Ждем 30-60 сек
 
             goto recurseSendMessageToContact;
         }
@@ -201,6 +216,7 @@ public class Newsletter
         {
             return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", false) && //To-Do
                    !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", false) && //To-Do
+                   !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", false) && //To-Do
                    !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']", false);
         }
     }

@@ -44,7 +44,7 @@ public static class Globals
     {
         Devices = new List<Device>();
 
-        _ = Task.Run(WAWClient.QueueCameraHandler);
+        //_ = Task.Run(WAWClient.QueueCameraHandler);
 
         TempDirectory = Directory.CreateDirectory("Temp");
         RemoveAccountsDirectory = Directory.CreateDirectory("RemovedAccounts");
@@ -56,12 +56,11 @@ public static class Globals
         if (!File.Exists(NameSetupFile))
             await SaveSetup();
 
+        //Socket = new SocketIOClient().Connect("http://localhost:3000/");
 
-        Socket = new SocketIOClient().Connect("http://localhost:3000/");
+        //Camera = new VirtualOutput(276, 276, 20, FourCC.FOURCC_24BG);
 
-        Camera = new VirtualOutput(276, 276, 20, FourCC.FOURCC_24BG);
-
-        _ = Task.Run(OBSCamera);
+        //_ = Task.Run(OBSCamera);
 
         MemuLib.Globals.IsLog = true;
     }

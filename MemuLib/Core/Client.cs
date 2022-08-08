@@ -218,7 +218,7 @@ public class Client
             if (isWait)
                 await Task.Delay(Settings.WaitingSecs);
 
-            var element = _adbClient.FindElement(_device, uiElement, (isWait) ? TimeSpan.FromSeconds(1.0f) : TimeSpan.FromSeconds(0.0f));
+            var element = _adbClient.FindElement(_device, uiElement, (isWait) ? TimeSpan.FromSeconds(.5f) : TimeSpan.FromSeconds(0.0f));
 
             return element is not null;
         }

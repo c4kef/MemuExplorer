@@ -13,7 +13,7 @@ public partial class Dashboard : INotifyPropertyChanged
         DataContext = this;
         _warm = new Warm();
         _register = new Register();
-        _newsletter = new WhatsApp.Web.Newsletter();
+        _newsletter = new WhatsApp.Newsletter();
         _preparation = new AccPreparation();
 
         if (!_managerDevicesIsRuning)
@@ -43,9 +43,14 @@ public partial class Dashboard : INotifyPropertyChanged
     private readonly AccPreparation _preparation;
 
     /// <summary>
+    /// Рассылка сообщений Web
+    /// </summary>
+    private readonly WhatsApp.Web.Newsletter _newsletterWeb;
+
+    /// <summary>
     /// Рассылка сообщений
     /// </summary>
-    private readonly WhatsApp.Web.Newsletter _newsletter;
+    private readonly WhatsApp.Newsletter _newsletter;
 
     /// <summary>
     /// Регистрация аккаунтов
@@ -244,15 +249,15 @@ public partial class Dashboard : INotifyPropertyChanged
         if (_isBusy)
             return;
 
-        if (Directory.GetFiles(Globals.Setup.PathToDirectoryAccountsWeb).Length <= 8 || Globals.Setup.EnableWarm)
+        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive) || Globals.Setup.EnableWarm)
         {
-            MessageBox.Show("Слишком мало аккаунтов для рассылки или включен режим прогрева");
+            MessageBox.Show("Запустите устройства или отключите режим прогрева");
             return;
         }
 
-        if (string.IsNullOrEmpty(TextMessage))
+        if (string.IsNullOrEmpty(TextMessage) || TextMessage.ToLower().Contains("https") || TextMessage.ToLower().Contains("http") || TextMessage.ToLower().Contains("www"))
         {
-            MessageBox.Show("Укажите текст сообщения");
+            MessageBox.Show("Укажите корректный текст сообщения");
             return;
         }
 

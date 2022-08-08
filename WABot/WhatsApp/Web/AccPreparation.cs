@@ -73,7 +73,7 @@ public class AccPreparation
 
         while (Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
         {
-            var result = await Globals.GetAccounts(_usedPhones.ToArray(), Globals.Setup.TrustLevelAccount);
+            /*var result = await Globals.GetAccounts(_usedPhones.ToArray(), Globals.Setup.TrustLevelAccount);
 
             if (result.Length == 0)
                 break;
@@ -99,14 +99,16 @@ public class AccPreparation
 
                 continue;
             }
-
+            */
             await client.GetInstance().Click("//node[@content-desc='Ещё']");
             await client.GetInstance().Click("//node[@text='Связанные устройства']");
 
             if (await client.GetInstance().ExistsElement("//node[@resource-id='android:id/button1']"))
                 await client.GetInstance().Click("//node[@resource-id='android:id/button1']");
 
-            var wClient = new WAWClient(phone);
+            int i = 1;
+            tryAg:
+            var wClient = new WAWClient(i.ToString());
 
             await wClient.WaitQueue();
 
@@ -139,6 +141,8 @@ public class AccPreparation
                 goto initAgain;
 
             wClient.RemoveQueue();
+            i++;
+            goto tryAg;
         }
 
         async Task<bool> IsValid()

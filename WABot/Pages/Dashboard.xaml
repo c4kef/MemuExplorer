@@ -21,7 +21,7 @@
             <StackPanel HorizontalAlignment="Center">
                 <Label Content="Запуск действий" HorizontalAlignment="Center" />
                 <StackPanel Orientation="Horizontal" Margin="0,15,0,0" HorizontalAlignment="Center">
-                    <Button HorizontalAlignment="Center"
+                    <!--<Button HorizontalAlignment="Center"
                             Margin="0,0,0,0"
                             ui:ControlHelper.CornerRadius="5"
                             Content="Подготовка"
@@ -31,9 +31,9 @@
                                 Начнет процесс подготовки аккаунтов к рассылке
                             </ToolTip>
                         </Button.ToolTip>
-                    </Button>
+                    </Button>-->
                     <Button HorizontalAlignment="Center"
-                            Margin="10,0,0,0"
+                            Margin="0,0,0,0"
                             ui:ControlHelper.CornerRadius="5"
                             Content="Рассылка"
                             Click="Newsletter">

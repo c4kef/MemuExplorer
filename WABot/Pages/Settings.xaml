@@ -95,7 +95,7 @@
                               SpinButtonPlacementMode="Compact">
                     <ui:NumberBox.ToolTip>
                         <ToolTip>
-                            Укажите кол-во потоков (окон) хрома
+                            Укажите кол-во потоков
                         </ToolTip>
                     </ui:NumberBox.ToolTip>
                 </ui:NumberBox>

@@ -150,6 +150,55 @@ public partial class Dashboard : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Запуск рассылки Web
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private async void NewsletterWeb(object sender, RoutedEventArgs e)
+    {
+        if (_isBusy)
+            return;
+
+        if (Directory.GetFiles(Globals.Setup.PathToDirectoryAccountsWeb).Length <= 8 || Globals.Setup.EnableWarm)
+        {
+            MessageBox.Show("Слишком мало аккаунтов для рассылки или включен режим прогрева");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(TextMessage))
+        {
+            MessageBox.Show("Укажите текст сообщения");
+            return;
+        }
+
+        _isBusy = true;
+
+        try
+        {
+            ProgressValue = 100;
+
+            _activeTask = Task.Run(() => _newsletterWeb.Start(TextMessage));
+            await _activeTask;
+
+            MessageBox.Show("Рассылка завершена");
+
+            ProgressValue = 0;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Произошла ошибка, лог создан на рабочем столе");
+            await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
+        }
+
+        _isBusy = false;
+    }
+
+    /// <summary>
+    /// Подготовка аккаунтов к рассылке в Web
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private async void Preparation(object sender, RoutedEventArgs e)
     {
         if (_isBusy)

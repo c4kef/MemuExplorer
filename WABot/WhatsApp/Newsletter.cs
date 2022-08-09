@@ -10,7 +10,7 @@ public class Newsletter
     private readonly List<string> _usedPhonesUsers;
     private readonly FileInfo _logFile;
 
-    private FileInfo _pathToContacts;
+    private FileInfo _pathToContacts = null!;
     private string[] _contacts;
     private string[] _names;
 
@@ -19,7 +19,7 @@ public class Newsletter
         _sendedMessagesCountFromAccount = new Dictionary<string, int>();
         _tetheredDevices = new Dictionary<int, Device>();
         _usedPhonesUsers = _usedPhones = new List<string>();
-        _contacts = _names = new[] {""};
+        _contacts = _names = new[] { "" };
         _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_log.txt");
     }
 
@@ -49,7 +49,7 @@ public class Newsletter
         var busyDevices = new List<int>();
 
         await Globals.InitAccountsFolder();
-        
+
         while (true)
         {
             var devices = Globals.Devices.Where(device => !busyDevices.Contains(device.Index) && device.IsActive)
@@ -57,11 +57,11 @@ public class Newsletter
 
             if (devices.Length != 1)
                 break;
-            
+
             var id = rnd.Next(0, 10_000);
 
             devices[0].InUsage = true;
-            
+
             _tetheredDevices[id] = devices[0];
             await devices[0].Client.Start();
 
@@ -72,7 +72,7 @@ public class Newsletter
 
             busyDevices.Add(devices[0].Index);
         }
-        
+
         Task.WaitAll(tasks.ToArray(), -1);
 
         foreach (var device in Globals.Devices)
@@ -87,12 +87,12 @@ public class Newsletter
         Log.Write($"\nОтлетело: {_sendedMessagesCountFromAccount.Count(account => account.Value == 0)}\n", _logFile.FullName);
         busyDevices.Clear();
         Stop();
-        
+
         string SelectWord(string value)
         {
             var backValue = value;
             foreach (var match in new Regex(@"(\w+)\|\|(\w+)", RegexOptions.Multiline).Matches(backValue))
-                backValue = backValue.Replace(match.ToString()!,  match.ToString()!.Split("||")[new Random().Next(0, 100) >= 50 ? 1 : 0]);
+                backValue = backValue.Replace(match.ToString()!, match.ToString()!.Split("||")[new Random().Next(0, 100) >= 50 ? 1 : 0]);
 
             return backValue;
         }
@@ -127,7 +127,7 @@ public class Newsletter
             _usedPhones.Add(phone);
 
             var logAccount = new FileInfo($@"{path}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_log.txt");
-            
+
             _sendedMessagesCountFromAccount[phone] = 0;
 
             await client.ReCreate($"+{phone}", path);
@@ -146,7 +146,7 @@ public class Newsletter
 
             var countMsg = 0;
 
-            recurseSendMessageToContact:
+        recurseSendMessageToContact:
 
             if (!Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
                 break;
@@ -169,30 +169,30 @@ public class Newsletter
             }
 
             var messageSended = await client.SendMessage(contact, text);
-            
+
             switch (messageSended)
             {
                 case false when await client.GetInstance().ExistsElement("//node[@text='OK']", false):
                     await client.GetInstance().Click("//node[@text='OK']");
                     break;
                 case true:
-                {
-                    ++_sendedMessagesCountFromAccount[phone];
-                    ++MessagesSendedCount;
-                
-                    Log.Write(
-                        $"Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
-                        _logFile.FullName);
+                    {
+                        ++_sendedMessagesCountFromAccount[phone];
+                        ++MessagesSendedCount;
 
-                    Log.Write(
-                        $"[{_sendedMessagesCountFromAccount[phone]}] - Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
-                        logAccount.FullName);
-                
-                    if (++countMsg > Globals.Setup.CountMessageFromAccount)
-                        continue;
+                        Log.Write(
+                            $"Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
+                            _logFile.FullName);
 
-                    break;
-                }
+                        Log.Write(
+                            $"[{_sendedMessagesCountFromAccount[phone]}] - Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
+                            logAccount.FullName);
+
+                        if (++countMsg > Globals.Setup.CountMessageFromAccount)
+                            continue;
+
+                        break;
+                    }
             }
 
             await Task.Delay(new Random().Next(30_000, 60_000));//Ждем 30-60 сек

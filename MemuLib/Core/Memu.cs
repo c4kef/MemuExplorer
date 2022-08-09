@@ -234,11 +234,11 @@ public static class Memu
         await MemuCmd.ExecMemuc($"setconfigex -i {index} operator_iso {deviceInfoGenerated.MccMnc.Iso}");
         await MemuCmd.ExecMemuc($"setconfigex -i {index} simserial {deviceInfoGenerated.Simserial}");
         await MemuCmd.ExecMemuc($"setconfigex -i {index} manual_disk_size {deviceInfoGenerated.ManualDiskSize}");
-        await MemuCmd.ExecMemuc($"setconfigex -i {index} resolution_height {deviceInfoGenerated.Resolution.Height}");
-        await MemuCmd.ExecMemuc($"setconfigex -i {index} resolution_width {deviceInfoGenerated.Resolution.Width}");
+        //await MemuCmd.ExecMemuc($"setconfigex -i {index} resolution_height {deviceInfoGenerated.Resolution.Height}");
+        //await MemuCmd.ExecMemuc($"setconfigex -i {index} resolution_width {deviceInfoGenerated.Resolution.Width}");
         await MemuCmd.ExecMemuc($"setconfigex -i {index} vbox_dpi {deviceInfoGenerated.Resolution.Dpi}");
         await MemuCmd.ExecMemuc($"setconfigex -i {index} linenum null");
-        await MemuCmd.ExecMemuc($"setconfigex -i {index} fps 20");
+        //await MemuCmd.ExecMemuc($"setconfigex -i {index} fps 20");
         
         //setprop
         await MemuCmd.ExecMemuc($"-i {index} execcmd \"setprop persist.sys.timezone {deviceInfoGenerated.TimeZone}\"");

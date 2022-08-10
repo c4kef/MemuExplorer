@@ -136,6 +136,8 @@ public class Newsletter
                 continue;
             }
 
+            await Task.Delay(new Random().Next(30_000, 60_000));//Ждем 30-60 сек
+
             goto recurseSendMessageToContact;
         }
 

@@ -15,6 +15,7 @@ public partial class Dashboard : INotifyPropertyChanged
         _register = new Register();
         _newsletter = new WhatsApp.Newsletter();
         _preparation = new AccPreparation();
+        _newsletterWeb = new WhatsApp.Web.Newsletter();
 
         if (!_managerDevicesIsRuning)
             _ = Task.Run(ManagerDevices);
@@ -160,7 +161,7 @@ public partial class Dashboard : INotifyPropertyChanged
         if (_isBusy)
             return;
 
-        if (Directory.GetFiles(Globals.Setup.PathToDirectoryAccountsWeb).Length <= 8 || Globals.Setup.EnableWarm)
+        if (Directory.GetFiles(Globals.Setup.PathToDirectoryAccountsWeb).Length < Globals.Setup.CountThreadsChrome || Globals.Setup.EnableWarm)
         {
             MessageBox.Show("Слишком мало аккаунтов для рассылки или включен режим прогрева");
             return;
@@ -222,7 +223,7 @@ public partial class Dashboard : INotifyPropertyChanged
         {
             ProgressValue = 100;
 
-            _activeTask = Task.Run(async () => await _preparation.Start());
+            _activeTask = Task.Run(async () => await _preparation.Start(TextMessage));
             await _activeTask;
 
             MessageBox.Show("Настройка завершена");

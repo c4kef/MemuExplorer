@@ -140,7 +140,7 @@ public class WaClient
                 return string.Empty;
         }
 
-        await _mem.Pull(to, $"/data/data/{PackageName}/ ");
+        await _mem.Pull(to, $"/data/data/{PackageName}/");
 
         Account = string.Empty;
 

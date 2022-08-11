@@ -240,4 +240,40 @@ public class WAWClient
         if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {data["value"]![1]}");
     }
+
+    /// <summary>
+    /// Проверяет контакт на наличие Whatsapp
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Неверное значение</exception>
+    /// <exception cref="Exception">Ошибка сервера</exception>
+    public async Task<bool> CheckValidPhone(string phone)
+    {
+        try
+        {
+            var id = _random.Next(1_000_000, 10_000_000);
+
+            _taskQueue.Add(id);
+
+            Globals.Socket.Emit("data",
+                JsonConvert.SerializeObject(new ServerData()
+                { Type = "checkValidPhone", Values = new List<object>() { $"{_nameSession}@{id}", phone } }));
+
+            while (_taskQueue.Contains(id))
+                await Task.Delay(100);
+
+            var data = _taskFinished[id];
+
+            _taskFinished.Remove(id);
+
+            if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
+                throw new Exception($"Error: {data["value"]![1]}");
+
+            return (bool)(data["value"]![1] ?? false);
+        }
+        catch (Exception ex)
+        {
+            Log.Write($"Ошибка проверки номера:\n{ex.Message}\n");
+            return false;
+        }
+    }
 }

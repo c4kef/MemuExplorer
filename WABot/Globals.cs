@@ -56,13 +56,33 @@ public static class Globals
         if (!File.Exists(NameSetupFile))
             await SaveSetup();
 
-        Socket = new SocketIOClient().Connect("http://localhost:3000/");
+        var tmpCheckConnection = new SocketIOClient();
+        Socket = tmpCheckConnection.Connect("http://localhost:3000/");
+
+        var countTryConnect = 0;
+
+        while(!tmpCheckConnection.Connected && countTryConnect < 3)
+        {
+            countTryConnect++;
+            await Task.Delay(500);
+        }
+
+        if (countTryConnect >= 3)
+        {
+            MessageBox.Show("Подключение не было выполнено");
+            Environment.Exit(0);
+        }
 
         Camera = new VirtualOutput(276, 276, 20, FourCC.FOURCC_24BG);
 
         _ = Task.Run(OBSCamera);
 
         MemuLib.Globals.IsLog = true;
+
+        var waw = new WAWClient("17789020852");
+        await waw.Init(false);
+        MessageBox.Show($"{await waw.CheckValidPhone("79772801086")}");
+        MessageBox.Show($"{await waw.CheckValidPhone("79856989500")}");
     }
 
     public static async Task OBSCamera()

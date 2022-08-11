@@ -103,7 +103,7 @@ io.sockets.on("connection", function (socket)
                break;
 
            case "logout":
-            console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"logout\"");
+               console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"logout\"");
                backdata.status = 200
                await getSession(data["Values"][0].split('@')[0]).logout();
                removeSession(data["Values"][0].split('@')[0]);
@@ -116,9 +116,25 @@ io.sockets.on("connection", function (socket)
                 removeSession(data["Values"][0].split('@')[0]);
                 socket.emit("data", JSON.stringify(backdata));
                 break;
+            
+            case "checkValidPhone":
+                console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"checkValidPhone\"");
+                await getSession(data["Values"][0].split('@')[0])
+                .checkNumberStatus(data["Values"][1])
+                .then((result) => {
+                    backdata.status = 200
+                    backdata.value.push(result["numberExists"]);
+                    socket.emit("data", JSON.stringify(backdata));
+                })
+                .catch((erro) => {
+                    backdata.status = 500
+                    backdata.value.push(erro);
+                    socket.emit("data", JSON.stringify(backdata));
+                });
+                break;
                
            case "sendText":
-            console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"sendText\"");
+               console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"sendText\"");
                await getSession(data["Values"][0].split('@')[0])
                    .sendText(data["Values"][1], data["Values"][2])
                    .then((result) => {

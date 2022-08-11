@@ -78,11 +78,6 @@ public static class Globals
         _ = Task.Run(OBSCamera);
 
         MemuLib.Globals.IsLog = true;
-
-        var waw = new WAWClient("17789020852");
-        await waw.Init(false);
-        MessageBox.Show($"{await waw.CheckValidPhone("79772801086")}");
-        MessageBox.Show($"{await waw.CheckValidPhone("79856989500")}");
     }
 
     public static async Task OBSCamera()

@@ -252,7 +252,18 @@ public class AccPreparation
                 await client.GetInstance().Click("//node[@text='НЕ СЕЙЧАС']");
                 await Task.Delay(500);
             }
-            
+
+            if (await client.GetInstance().ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
+            {
+
+                await client.GetInstance().Click("//node[@text='Выберите частоту резервного копирования']");
+                await client.GetInstance().Click("//node[@text='Никогда']");
+                await client.GetInstance().Click("//node[@text='ГОТОВО']");
+                await Task.Delay(2_000);
+                await client.GetInstance().StopApk(client.PackageName);
+                await client.GetInstance().RunApk(client.PackageName);
+            }
+
             await client.GetInstance().Click("//node[@content-desc='Ещё']");
             await client.GetInstance().Click("//node[@text='Связанные устройства']");
 
@@ -312,7 +323,8 @@ public class AccPreparation
             if (initWithErrors)
             {
                 i++;
-                await Task.Delay(1_500);
+                Globals.QrCodeName = string.Empty;
+                await Task.Delay(2_000);
                 goto initAgain;
             }
 

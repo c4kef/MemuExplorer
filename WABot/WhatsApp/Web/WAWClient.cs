@@ -98,7 +98,7 @@ public class WAWClient
 
             Globals.QrCodeName = _taskId.ToString();
 
-            Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 18_000);
+            Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 20_000);
 
             if (_taskQueue.Contains(_taskId))
                 throw new Exception("Error: request is not accepted");
@@ -110,7 +110,7 @@ public class WAWClient
         }
         else
         {
-            Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 18_000);
+            Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 20_000);
 
             if (_taskQueue.Contains(_taskId))
                 throw new Exception("Error: request is not accepted");

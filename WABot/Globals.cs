@@ -231,6 +231,11 @@ public class Setup
     public string PathToDirectoryAccounts = string.Empty;
 
     /// <summary>
+    /// Путь до файла с текстом прогрева
+    /// </summary>
+    public string PathToTextForWarm = string.Empty;
+
+    /// <summary>
     /// Путь до директории с аккаунтами WhatsApp Web
     /// </summary>
     public string PathToDirectoryAccountsWeb = string.Empty;

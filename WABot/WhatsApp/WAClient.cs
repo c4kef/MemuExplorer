@@ -156,8 +156,7 @@ public class WaClient
             await _mem.Shell($"pm clear {PackageName}");
             await _mem.RunApk(PackageName);
             await _mem.StopApk(PackageName);
-            await _mem.Push($@"{(Account == string.Empty ? path : Account)}\{PackageName}\.", @$"/data/data/{PackageName}");
-            await _mem.Shell($"rm -r /data/data/{PackageName}/databases");
+            await _mem.Push($@"{(Account == string.Empty ? path : Account)}\{PackageName}\.", @$"/data/data/{PackageName}/");
             await _mem.RunApk(PackageName);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);

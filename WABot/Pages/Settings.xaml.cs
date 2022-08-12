@@ -89,6 +89,12 @@ public partial class Settings : INotifyPropertyChanged
             ? Brushes.Red
             : Brushes.GreenYellow;
 
+    public Brush ColorPathToTextForWarm =>
+    string.IsNullOrEmpty(Globals.Setup.PathToTextForWarm) ||
+    !File.Exists(Globals.Setup.PathToTextForWarm)
+        ? Brushes.Red
+        : Brushes.GreenYellow;
+
     public Brush ColorPathToPhonesUsers =>
         string.IsNullOrEmpty(Globals.Setup.PathToPhonesUsers) ||
         !File.Exists(Globals.Setup.PathToPhonesUsers)
@@ -226,5 +232,18 @@ public partial class Settings : INotifyPropertyChanged
         OnPropertyChanged("EnableWarm");
 
         await Globals.SaveSetup();
+    }
+
+    private async void SelectFileTextForWarm(object sender, RoutedEventArgs e)
+    {
+        var dialog = new CommonOpenFileDialog();
+        dialog.Filters.Add(new CommonFileDialogFilter("Текст прогрева", ".txt"));
+        if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+        {
+            Globals.Setup.PathToTextForWarm = dialog.FileName;
+            await Globals.SaveSetup();
+        }
+
+        OnPropertyChanged("ColorPathToTextForWarm");
     }
 }

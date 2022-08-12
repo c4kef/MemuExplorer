@@ -110,7 +110,7 @@ public class Newsletter
                 break;
             }
 
-            var messageSended = await waw.SendText(contact, text);
+            var messageSended = await waw.SendText(contact, SelectWord(text));
 
             if (messageSended)
             {
@@ -139,6 +139,15 @@ public class Newsletter
             await Task.Delay(new Random().Next(30_000, 60_000));//Ждем 30-60 сек
 
             goto recurseSendMessageToContact;
+        }
+
+        string SelectWord(string value)
+        {
+            var backValue = value;
+            foreach (var match in new Regex(@"(\w+)\|\|(\w+)", RegexOptions.Multiline).Matches(backValue))
+                backValue = backValue.Replace(match.ToString()!, match.ToString()!.Split("||")[new Random().Next(0, 100) >= 50 ? 1 : 0]);
+
+            return backValue;
         }
 
         string GetFreeNumberUser()

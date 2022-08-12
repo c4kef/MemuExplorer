@@ -55,6 +55,18 @@
                         </ToolTip>
                     </ui:NumberBox.ToolTip>
                 </ui:NumberBox>
+                <Button HorizontalAlignment="Center"
+                        Margin="0,10,0,0"
+                        ui:ControlHelper.CornerRadius="5"
+                        Content="Текст прогрева"
+                        BorderBrush="{Binding ColorPathToTextForWarm}"
+                        Click="SelectFileTextForWarm">
+                    <Button.ToolTip>
+                        <ToolTip>
+                            Укажите путь на файл с текстом для прогрева
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
             </StackPanel>
         </Border>
 

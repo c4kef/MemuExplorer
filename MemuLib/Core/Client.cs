@@ -141,9 +141,9 @@ public class Client
             return;
         }
 
-        await Shell("pm clear com.android.providers.contacts");
+        var result = await MemuCmd.ExecMemuc($@"-i {_index} execcmd pm clear com.android.providers.contacts");
 
-        Log.Write($"[{_index}] -> contacts cleaned");
+        Log.Write($"[{_index}] -> contacts cleaned with results: {result}");
     }
 
     /// <summary>
@@ -242,7 +242,7 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(1.5f));
+        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(0.5f));
         
         if (element is null)
             throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
@@ -267,7 +267,7 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(1.5f));
+        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(0.5f));
        
         if (element is null)
             throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
@@ -291,7 +291,7 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(1.5f));
+        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(0.5f));
        
         if (element is null)
             throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
@@ -355,7 +355,7 @@ public class Client
 
         Log.Write($"[{_index}] -> files pulled");
     }
-    
+
     /// <summary>
     /// Выполнение команды в консоли андроида
     /// </summary>
@@ -371,6 +371,25 @@ public class Client
         var result = await MemuCmd.ExecMemuc($"-i {_index} adb shell {cmd}");
 
         Log.Write($"[{_index}] -> shell be called");
+
+        return result;
+    }
+
+    /// <summary>
+    /// Выполнение команды execcmd
+    /// </summary>
+    /// <param name="cmd">команда</param>
+    public async Task<string> ShellCmd(string cmd)
+    {
+        if (!await Memu.Exists(_index))
+        {
+            Log.Write($"[{_index}] -> VM not found");
+            return string.Empty;
+        }
+
+        var result = await MemuCmd.ExecMemuc($"-i {_index} execcmd {cmd}");
+
+        Log.Write($"[{_index}] -> shellCmd be called");
 
         return result;
     }

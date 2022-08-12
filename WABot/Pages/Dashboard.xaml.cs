@@ -217,13 +217,19 @@ public partial class Dashboard : INotifyPropertyChanged
             return;
         }
 
+        if (string.IsNullOrEmpty(TextMessage) && !File.Exists(Globals.Setup.PathToTextForWarm))
+        {
+            MessageBox.Show("Укажите текст прогрева или укажите путь до файла с этим текстом");
+            return;
+        }
+
         _isBusy = true;
 
         try
         {
             ProgressValue = 100;
 
-            _activeTask = Task.Run(async () => await _preparation.Start(TextMessage));
+            _activeTask = Task.Run(async () => await _preparation.Start(string.IsNullOrEmpty(TextMessage) ? await File.ReadAllTextAsync(Globals.Setup.PathToTextForWarm) : TextMessage));
             await _activeTask;
 
             MessageBox.Show("Настройка завершена");

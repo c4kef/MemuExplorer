@@ -5,14 +5,21 @@ public class AccPreparation
     private readonly Dictionary<int, Device[]> _tetheredDevices;
     private readonly List<string> _usedPhones;
     private readonly List<string> _usedPhonesUsers;
+    private readonly FileInfo _logFile;
 
     private string[] _names;
+    private int _removedAccounts;
+    private int _alivesAccounts;
 
     public AccPreparation()
     {
         _tetheredDevices = new Dictionary<int, Device[]>();
         _usedPhonesUsers = _usedPhones = new List<string>();
         _names = new[] { "" };
+
+        _removedAccounts = _alivesAccounts = 0;
+
+        _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_prep_log.txt");
     }
 
     public async Task Start(string message)
@@ -26,6 +33,8 @@ public class AccPreparation
         var busyDevices = new List<int>();
 
         await Globals.InitAccountsFolder();
+
+        Log.Write($"Добро пожаловать в логи подготовки аккаунтов, сегодняшний текст:\n{message}\n\n", _logFile.FullName);
 
         while (true)
         {
@@ -59,6 +68,10 @@ public class AccPreparation
         foreach (var device in Globals.Devices)
             device.InUsage = false;
 
+        Log.Write($"Завершено\n", _logFile.FullName);
+        Log.Write($"Проебов: {_removedAccounts}\n", _logFile.FullName);
+        Log.Write($"Живых: {_alivesAccounts}\n", _logFile.FullName);
+
         busyDevices.Clear();
         Stop();
     }
@@ -78,6 +91,8 @@ public class AccPreparation
         var c1Auth = false;
         var c2Auth = false;
 
+        Log.Write($"Поток {idThread} запущен\n", _logFile.FullName);
+
         while (Globals.Devices.Where(device => device.Index == c1Index).ToArray()[0].IsActive &&
                Globals.Devices.Where(device => device.Index == c2Index).ToArray()[0].IsActive)
         {
@@ -96,14 +111,24 @@ public class AccPreparation
             if (!c1Auth)
             {
                 c1Auth = await TryLogin(c1, phone, path);
+
+                if (!c1Auth)
+                    _removedAccounts++;
+
+                Log.Write($"[{phone}] - {(c1Auth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
                 continue;
             }
 
             if (!c2Auth)
             {
                 c2Auth = await TryLogin(c2, phone, path);
+                Log.Write($"[{phone}] - {(c2Auth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
+
                 if (!c2Auth)
+                {
+                    _removedAccounts++;
                     continue;
+                }
             }
 
             await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf", ContactManager.Export(
@@ -120,7 +145,7 @@ public class AccPreparation
 
             File.Delete($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf");
 
-            var countMessages = new Random().Next(2, 5);
+            var countMessages = new Random().Next(5, 10);
 
             var rnd = new Random();
 
@@ -129,12 +154,14 @@ public class AccPreparation
                 if (!await IsValid(c1))
                 {
                     c1Auth = false;
+                    _removedAccounts++;
                     break;
                 }
 
                 if (!await IsValid(c2))
                 {
                     c2Auth = false;
+                    _removedAccounts++;
                     break;
                 }
 
@@ -156,14 +183,14 @@ public class AccPreparation
                 }
                 else
                 {
-                    var mc1 = rnd.Next(1, 4);
-                    var mc2 = rnd.Next(1, 4);
-                    
+                    var mc1 = rnd.Next(2, 4);
+                    var mc2 = rnd.Next(2, 4);
+
                     for (var mcc = 0; mcc < mc1; mcc++)
                         await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]);
 
                     await Task.Delay(500);
-                    
+
                     for (var mcc = 0; mcc < mc2; mcc++)
                         await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]);
 
@@ -182,10 +209,13 @@ public class AccPreparation
             if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1)))
             {
                 c2Auth = false;
+                _removedAccounts++;
                 continue;
             }
 
             await TryLoginWeb(c1, c1.Phone.Remove(0, 1));
+
+            _alivesAccounts += 2;
 
             c1Auth = c2Auth = false;
         }
@@ -217,6 +247,12 @@ public class AccPreparation
 
         async Task<bool> TryLoginWeb(WaClient client, string phone)
         {
+            if (await client.GetInstance().ExistsElement("//node[@text='НЕ СЕЙЧАС']", false))
+            {
+                await client.GetInstance().Click("//node[@text='НЕ СЕЙЧАС']");
+                await Task.Delay(500);
+            }
+            
             await client.GetInstance().Click("//node[@content-desc='Ещё']");
             await client.GetInstance().Click("//node[@text='Связанные устройства']");
 
@@ -237,7 +273,10 @@ public class AccPreparation
             var initWithErrors = false;
 
             if (!await IsValidCheck(client) || i > 3)
+            {
+                wClient.RemoveQueue();
                 return false;
+            }
 
             try
             {
@@ -259,14 +298,21 @@ public class AccPreparation
                 i++;
 
                 if (await client.GetInstance().ExistsElement("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']"))
+                {
+                    while (!string.IsNullOrEmpty(Globals.QrCodeName))
+                        await Task.Delay(100);
+
+                    await Task.Delay(1_000);
                     await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
-                
+                }
+
                 goto initAgain;
             }
 
             if (initWithErrors)
             {
                 i++;
+                await Task.Delay(1_500);
                 goto initAgain;
             }
 
@@ -278,11 +324,13 @@ public class AccPreparation
                 Directory.Move(client.Account,
                     @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
 
+            Log.Write($"[{phone}] - Пара пошла со счетом проебов {_removedAccounts} и живых {_alivesAccounts}\n", _logFile.FullName);
             return true;
         }
 
         async Task<bool> IsValid(WaClient client)
         {
+            await Task.Delay(500);
             return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", false) && //To-Do
                    !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", false) && //To-Do
                    !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", false) &&

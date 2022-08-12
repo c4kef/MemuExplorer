@@ -10,7 +10,7 @@ public static class Settings
     /// <summary>
     /// Путь до папки с данными
     /// </summary>
-    public const string DatasDir = @"C:\Users\artem\source\repos\MVP\MemuExplorer\Data";
+    public const string DatasDir = @"D:\C4ke\Whatsapp\MemuExplorer\Data\Accounts";//D:\C4ke\Whatsapp\MemuExplorer\Data\Accounts//C:\Users\artem\source\repos\MVP\MemuExplorer\Data
 
     /// <summary>
     /// API ключ от сервиса 5SIM

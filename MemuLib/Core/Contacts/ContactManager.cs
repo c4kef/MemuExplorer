@@ -23,7 +23,6 @@ public class ContactManager
     /// <param name="pathToContacts">путь до файла с контактами</param>
     public static async Task Import(int index, string pathToContacts)
     {
-        await MemuCmd.ExecMemuc($@"-i {index} execcmd pm clear com.android.providers.contacts");
         await MemuCmd.ExecMemuc($@"-i {index} adb push {pathToContacts} /storage/emulated/0/contact.vcf");
         await MemuCmd.ExecMemuc(
             $"-i {index} adb shell am start -t \"text/x-vcard\" -d \"file:///storage/emulated/0/contact.vcf\" -a android.intent.action.VIEW cz.psencik.com.android.contacts");//com.android.contacts");

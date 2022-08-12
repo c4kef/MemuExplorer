@@ -283,6 +283,12 @@ public class AccPreparation
         initAgain:
             var initWithErrors = false;
 
+            if (Directory.GetFiles(Globals.Setup.PathToDirectoryAccountsWeb).Any(_phone => _phone == phone))
+            {
+                wClient.RemoveQueue();
+                return true;
+            }
+
             if (!await IsValidCheck(client) || i > 3)
             {
                 wClient.RemoveQueue();

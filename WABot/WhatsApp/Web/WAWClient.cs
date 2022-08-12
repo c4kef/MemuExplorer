@@ -6,10 +6,10 @@ public class WAWClient
     private readonly List<int> _taskQueue;
     private readonly Dictionary<int, JObject> _taskFinished;
     private readonly Random _random;
-    private readonly int _taskId;
 
     private static List<int> Queue;
     private static List<int> QueueProcess;
+    public readonly int TaskId;
 
     /// <summary>
     /// Инициализация сессии
@@ -21,9 +21,9 @@ public class WAWClient
         _taskQueue = new List<int>();
         _taskFinished = new Dictionary<int, JObject>();
         _random = new Random();
-        _taskId = _random.Next(1_000_000, 10_000_000);
+        TaskId = _random.Next(1_000_000, 10_000_000);
 
-        Queue.Add(_taskId);
+        Queue.Add(TaskId);
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ public class WAWClient
     /// </summary>
     public async Task WaitQueue()
     {
-        while (!QueueProcess.Any(_id => _id == _taskId))
+        while (!QueueProcess.Any(_id => _id == TaskId))
             await Task.Delay(500);
     }
 
@@ -85,21 +85,21 @@ public class WAWClient
     {
         Globals.Socket.On("data", HandlerDataRequests);
 
-        _taskQueue.Add(_taskId);
+        _taskQueue.Add(TaskId);
 
         Globals.Socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
-            { Type = "create", Values = new List<object>() { $"{_nameSession}@{_taskId}" } }));
+            { Type = "create", Values = new List<object>() { $"{_nameSession}@{TaskId}" } }));
 
         if (waitQr)
         {
             Task.WaitAll(new Task[] { Task.Run(WaitQr) }, 10_000);
 
-            Globals.QrCodeName = _taskId.ToString();
+            Globals.QrCodeName = TaskId.ToString();
 
             Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 15_000);
 
-            if (_taskQueue.Contains(_taskId))
+            if (_taskQueue.Contains(TaskId))
                 throw new Exception("Error: request is not accepted");
 
             Globals.QrCodeName = string.Empty;
@@ -111,25 +111,25 @@ public class WAWClient
         {
             Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 15_000);
 
-            if (_taskQueue.Contains(_taskId))
+            if (_taskQueue.Contains(TaskId))
                 throw new Exception("Error: request is not accepted");
         }
 
-        var data = _taskFinished[_taskId];
-        _taskFinished.Remove(_taskId);
+        var data = _taskFinished[TaskId];
+        _taskFinished.Remove(TaskId);
 
         if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {(data["value"]?.Count() >= 2 ? data["value"]![1] : "undocumented error :(")}");
 
         async Task WaitRequest()
         {
-            while (_taskQueue.Contains(_taskId))
+            while (_taskQueue.Contains(TaskId))
                 await Task.Delay(500);
         }
 
         async Task WaitQr()
         {
-            while (!File.Exists(@$"{Globals.Setup.PathToQRs}\{_taskId}.png"))
+            while (!File.Exists(@$"{Globals.Setup.PathToQRs}\{TaskId}.png"))
                 await Task.Delay(500);
         }
 
@@ -137,8 +137,8 @@ public class WAWClient
         {
             try
             {
-                if (File.Exists(@$"{Globals.Setup.PathToQRs}\{_taskId}.png"))
-                    File.Delete(@$"{Globals.Setup.PathToQRs}\{_taskId}.png");
+                if (File.Exists(@$"{Globals.Setup.PathToQRs}\{TaskId}.png"))
+                    File.Delete(@$"{Globals.Setup.PathToQRs}\{TaskId}.png");
 
                 return true;
             }
@@ -152,7 +152,7 @@ public class WAWClient
     /// <summary>
     /// Удаляем наш запрос из очереди
     /// </summary>
-    public void RemoveQueue() => QueueProcess.Remove(_taskId);
+    public void RemoveQueue() => QueueProcess.Remove(TaskId);
 
     /// <summary>
     /// Отправить сообщение

@@ -34,7 +34,7 @@ public class AccPreparation
 
         await Globals.InitAccountsFolder();
 
-        Log.Write($"Добро пожаловать в логи подготовки аккаунтов, сегодняшний текст:\n{message}\n\n", _logFile.FullName);
+        Log.Write($"Добро пожаловать в логи подготовки аккаунтов\n", _logFile.FullName);
 
         while (true)
         {
@@ -307,14 +307,18 @@ public class AccPreparation
                 return false;
             }
 
+            initWithErrors = true;
+
+            Task.WaitAll(new Task[] { Task.Run(async () =>
+            {
             try
             {
                 await wClient.Init(true);
+                initWithErrors = false;
             }
-            catch
-            {
-                initWithErrors = true;
-            }
+            catch{}
+            })}, 25_000);
+            
 
             await wClient.Free();
 
@@ -328,8 +332,8 @@ public class AccPreparation
 
                 if (await client.GetInstance().ExistsElement("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']"))
                 {
-                    while (!string.IsNullOrEmpty(Globals.QrCodeName))
-                        await Task.Delay(100);
+                    //while (!string.IsNullOrEmpty(Globals.QrCodeName))
+                        //await Task.Delay(100);
 
                     await Task.Delay(1_000);
                     await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
@@ -342,7 +346,10 @@ public class AccPreparation
             {
                 i++;
                 Globals.QrCodeName = string.Empty;
-                await Task.Delay(2_000);
+
+                while (!TryDeleteQR(wClient.TaskId))
+                    await Task.Delay(500);
+
                 goto initAgain;
             }
 
@@ -363,6 +370,21 @@ public class AccPreparation
 
             Log.Write($"[{phone}] - Пара пошла со счетом проебов {_removedAccounts} и живых {_alivesAccounts}\n", _logFile.FullName);
             return true;
+        }
+
+        bool TryDeleteQR(int taskId)
+        {
+            try
+            {
+                if (File.Exists(@$"{Globals.Setup.PathToQRs}\{taskId}.png"))
+                    File.Delete(@$"{Globals.Setup.PathToQRs}\{taskId}.png");
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         async Task<bool> IsValid(WaClient client)

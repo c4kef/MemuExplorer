@@ -206,14 +206,14 @@ public class AccPreparation
             if (!c1Auth || !c2Auth)
                 continue;
 
-            if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1)))
+            if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1), false))
             {
                 c2Auth = false;
                 _removedAccounts++;
                 continue;
             }
 
-            await TryLoginWeb(c1, c1.Phone.Remove(0, 1));
+            await TryLoginWeb(c1, c1.Phone.Remove(0, 1), true);
 
             _alivesAccounts += 2;
 
@@ -245,7 +245,7 @@ public class AccPreparation
             return true;
         }
 
-        async Task<bool> TryLoginWeb(WaClient client, string phone)
+        async Task<bool> TryLoginWeb(WaClient client, string phone, bool firstMsg)
         {
             if (await client.GetInstance().ExistsElement("//node[@text='НЕ СЕЙЧАС']", false))
             {
@@ -283,15 +283,27 @@ public class AccPreparation
         initAgain:
             var initWithErrors = false;
 
-            if (Directory.GetFiles(Globals.Setup.PathToDirectoryAccountsWeb).Any(_phone => _phone == phone))
+            if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}").Any(_phone => _phone == phone))
             {
-                wClient.RemoveQueue();
+                try
+                {
+                    wClient.RemoveQueue();
+                }
+                catch
+                {
+                }
                 return true;
             }
 
             if (!await IsValidCheck(client) || i > 3)
             {
-                wClient.RemoveQueue();
+                try
+                {
+                    wClient.RemoveQueue();
+                }
+                catch
+                {
+                }
                 return false;
             }
 
@@ -341,6 +353,13 @@ public class AccPreparation
             else if (Directory.Exists(client.Account))
                 Directory.Move(client.Account,
                     @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+            //$@"{Globals.Setup.PathToDirectoryAccountsWeb}\First"
+
+            if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}") && File.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json"))
+            {
+                Directory.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}");
+                File.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}.data.json");
+            }
 
             Log.Write($"[{phone}] - Пара пошла со счетом проебов {_removedAccounts} и живых {_alivesAccounts}\n", _logFile.FullName);
             return true;

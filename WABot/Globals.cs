@@ -122,6 +122,12 @@ public static class Globals
 
     public static async Task InitAccountsFolder()
     {
+        if (!string.IsNullOrEmpty(Setup.PathToDirectoryAccountsWeb))
+        {
+            Directory.CreateDirectory($@"{Setup.PathToDirectoryAccountsWeb}\First");
+            Directory.CreateDirectory($@"{Setup.PathToDirectoryAccountsWeb}\Second");
+        }
+
         foreach (var directory in Directory.GetDirectories(Setup.PathToDirectoryAccounts))
             if (!File.Exists($@"{directory}\Data.json") && (Directory.Exists($@"{directory}\com.whatsapp") || Directory.Exists($@"{directory}\com.whatsapp.w4b")))
                 await File.WriteAllTextAsync($@"{directory}\Data.json",

@@ -93,12 +93,11 @@ public class WAWClient
 
         if (waitQr)
         {
-            while (!File.Exists(@$"{Globals.Setup.PathToQRs}\{_taskId}.png"))
-                await Task.Delay(500);
+            Task.WaitAll(new Task[] { Task.Run(WaitQr) }, 10_000);
 
             Globals.QrCodeName = _taskId.ToString();
 
-            Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 25_000);
+            Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 15_000);
 
             if (_taskQueue.Contains(_taskId))
                 throw new Exception("Error: request is not accepted");
@@ -110,7 +109,7 @@ public class WAWClient
         }
         else
         {
-            Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 25_000);
+            Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 15_000);
 
             if (_taskQueue.Contains(_taskId))
                 throw new Exception("Error: request is not accepted");
@@ -125,6 +124,12 @@ public class WAWClient
         async Task WaitRequest()
         {
             while (_taskQueue.Contains(_taskId))
+                await Task.Delay(500);
+        }
+
+        async Task WaitQr()
+        {
+            while (!File.Exists(@$"{Globals.Setup.PathToQRs}\{_taskId}.png"))
                 await Task.Delay(500);
         }
 

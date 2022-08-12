@@ -10,6 +10,8 @@ public class Newsletter
     private readonly FileInfo _logFile;
     private string[] _contacts;
 
+    private bool _readyOtherThreads;
+
     public Newsletter()
     {
         _sendedMessagesCountFromAccount = new Dictionary<string, int>();
@@ -17,6 +19,7 @@ public class Newsletter
         _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_log.txt");
         _accounts = new List<FileInfo>();
 
+        _readyOtherThreads = false;
         _contacts = new[] { "" };
     }
 
@@ -27,7 +30,7 @@ public class Newsletter
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
 
-        foreach (var account in Directory.GetFiles(Globals.Setup.PathToDirectoryAccountsWeb))
+        foreach (var account in Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First"))
             _accounts.Add(new FileInfo(account));
 
         Log.Write($"Добро пожаловать в логи, текст рассылки:\n{text}\n\n", _logFile.FullName);
@@ -41,7 +44,11 @@ public class Newsletter
             tasks.Add(task);
         }
 
+        _readyOtherThreads = true;
+
         _ = Task.WaitAll(tasks.ToArray(), -1);
+
+        _readyOtherThreads = false;
 
         Log.Write("\n\nКол-во сообщений с аккаунта:\n", _logFile.FullName);
 
@@ -73,6 +80,12 @@ public class Newsletter
         while (_accounts.Count > 0)
         {
             var result = _accounts[0];
+
+            if (Directory.Exists($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}"))
+                Directory.Move($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}");
+            
+            result.MoveTo($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name}", true);
+
             var phone = result.Name.Split('.')[0];
 
             if (_usedPhones.Contains(phone))
@@ -95,8 +108,12 @@ public class Newsletter
                 if (File.Exists(@$"{result.FullName}"))
                     File.Delete(@$"{result.FullName}");
 
+                waw.RemoveQueue();
                 continue;
             }
+
+            while (!_readyOtherThreads)
+                await Task.Delay(500);
 
             var countMsg = 0;
 
@@ -130,9 +147,11 @@ public class Newsletter
             else
             {
                 MessageBox.Show($"Кол-во сообщений: {MessagesSendedCount}");
+                
                 await waw.Free();
                 if (File.Exists(@$"{result.FullName}"))
                     File.Delete(@$"{result.FullName}");
+                
                 continue;
             }
 

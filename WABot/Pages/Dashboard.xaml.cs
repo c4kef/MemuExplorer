@@ -161,7 +161,7 @@ public partial class Dashboard : INotifyPropertyChanged
         if (_isBusy)
             return;
 
-        if (Directory.GetFiles(Globals.Setup.PathToDirectoryAccountsWeb).Length < Globals.Setup.CountThreadsChrome || Globals.Setup.EnableWarm)
+        if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First").Length < Globals.Setup.CountThreadsChrome || Globals.Setup.EnableWarm)
         {
             MessageBox.Show("Слишком мало аккаунтов для рассылки или включен режим прогрева");
             return;

@@ -6,7 +6,9 @@ public class WAWClient
     private readonly List<int> _taskQueue;
     private readonly Dictionary<int, JObject> _taskFinished;
     private readonly Random _random;
-
+    
+    private Namespace _socket;
+    private SocketIOClient _socketClient;
     private static List<int> Queue;
     private static List<int> QueueProcess;
     public readonly int TaskId;
@@ -116,11 +118,27 @@ public class WAWClient
     /// <exception cref="Exception">Ошибка сервера</exception>
     public async Task Init(bool waitQr)
     {
-        Globals.Socket.On("data", HandlerDataRequests);
+        _socketClient = new SocketIOClient();
+        _socket = _socketClient.Connect("http://localhost:3000/");
+
+        var isConnected = false;
+
+        Task.WaitAll(new Task[] { Task.Run(async() =>
+        {
+            while (!_socketClient.Connected)
+                await Task.Delay(500);
+
+            isConnected = true;
+        }) }, 3_000);
+
+        if (!isConnected)
+            throw new Exception("Cant connect to server");
+
+        _socket.On("data", HandlerDataRequests);
 
         _taskQueue.Add(TaskId);
 
-        Globals.Socket.Emit("data",
+        _socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
             { Type = "create", Values = new List<object>() { $"{_nameSession}@{TaskId}" } }));
 
@@ -200,7 +218,7 @@ public class WAWClient
 
             _taskQueue.Add(id);
 
-            Globals.Socket.Emit("data",
+            _socket.Emit("data",
                 JsonConvert.SerializeObject(new ServerData()
                 { Type = "sendText", Values = new List<object>() { $"{_nameSession}@{id}", $"{number.Replace("+", string.Empty)}@c.us", text } }));
 
@@ -244,7 +262,7 @@ public class WAWClient
 
         _taskQueue.Add(id);
 
-        Globals.Socket.Emit("data",
+        _socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
             { Type = "logout", Values = new List<object>() { $"{_nameSession}@{id}" } }));
 
@@ -265,7 +283,9 @@ public class WAWClient
 
         _taskFinished.Remove(id);
         
-        Globals.Socket.RemoveListener("data", HandlerDataRequests);
+        _socket.RemoveListener("data", HandlerDataRequests);
+
+        _socketClient.Disconnect();
 
         if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {data["value"]![1]}");
@@ -282,7 +302,7 @@ public class WAWClient
 
         _taskQueue.Add(id);
 
-        Globals.Socket.Emit("data",
+        _socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
             { Type = "free", Values = new List<object>() { $"{_nameSession}@{id}" } }));
 
@@ -303,7 +323,9 @@ public class WAWClient
 
         _taskFinished.Remove(id);
 
-        Globals.Socket.RemoveListener("data", HandlerDataRequests);
+        _socket.RemoveListener("data", HandlerDataRequests);
+
+        _socketClient.Disconnect();
 
         if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {data["value"]![1]}");
@@ -322,7 +344,7 @@ public class WAWClient
 
             _taskQueue.Add(id);
 
-            Globals.Socket.Emit("data",
+            _socket.Emit("data",
                 JsonConvert.SerializeObject(new ServerData()
                 { Type = "checkValidPhone", Values = new List<object>() { $"{_nameSession}@{id}", phone } }));
 

@@ -38,7 +38,6 @@ public static class Globals
     public static DirectoryInfo TempDirectory { get; private set; } = null!;
     public static VirtualOutput Camera { get; private set; } = null!;
     public static string QrCodeName { get; set; } = string.Empty;
-    public static Namespace Socket { get; private set; } = null!;
 
     public static async Task Init()
     {
@@ -55,23 +54,6 @@ public static class Globals
 
         if (!File.Exists(NameSetupFile))
             await SaveSetup();
-
-        var tmpCheckConnection = new SocketIOClient();
-        Socket = tmpCheckConnection.Connect("http://localhost:3000/");
-
-        var countTryConnect = 0;
-
-        while(!tmpCheckConnection.Connected && countTryConnect < 3)
-        {
-            countTryConnect++;
-            await Task.Delay(500);
-        }
-
-        if (countTryConnect >= 3)
-        {
-            MessageBox.Show("Подключение не было выполнено");
-            Environment.Exit(0);
-        }
 
         Camera = new VirtualOutput(276, 276, 20, FourCC.FOURCC_24BG);
 

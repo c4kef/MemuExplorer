@@ -12,6 +12,7 @@ io.configure('development', function()
 
 io.sockets.on("connection", function (socket)
 {
+    console.log("Detect new connection");
    socket.on("data", async function (ndata) {
 
     const data = JSON.parse(ndata);

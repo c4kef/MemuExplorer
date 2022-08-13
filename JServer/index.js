@@ -3,6 +3,8 @@ const wppconnect = require('@wppconnect-team/wppconnect');
 const sessions = [];
 const QRCode = require('qrcode');
 
+require('events').EventEmitter.defaultMaxListeners = 0;
+
 io.configure('development', function()
 {
    io.set('log level', 1);

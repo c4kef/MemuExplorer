@@ -330,6 +330,9 @@ public class AccPreparation
 
             initWithErrors = true;
 
+            if (await client.GetInstance().ExistsElement("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']"))
+                await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
+
             Task.WaitAll(new Task[] { Task.Run(async () =>
             {
             try

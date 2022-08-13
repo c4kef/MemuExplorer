@@ -34,12 +34,35 @@ public class WAWClient
         Queue = new List<int>();
         QueueProcess = new List<int>();
 
+        var lastId = 0;
+        var aliveLastId = 0;
+
         while (true)
         {
             if (Queue.Count > 0 && QueueProcess.Count == 0)
             {
                 QueueProcess.Add(Queue[0]);
                 Queue.RemoveAt(0);
+            }
+
+            if (QueueProcess.Count > 0)
+            {
+                if (lastId == 0 || lastId != QueueProcess[0])
+                {
+                    lastId = QueueProcess[0];
+                    aliveLastId = 0;
+                }
+                else if (lastId == QueueProcess[0])
+                {
+                    //124 = 1 minute - 60 sec
+                    //2 = 1 sec
+                    if (aliveLastId++ > 372)//3 minute wait
+                    {
+                        QueueProcess.RemoveAt(0);
+                        lastId = 0;
+                        aliveLastId = 0;
+                    }
+                }
             }
 
             await Task.Delay(500);
@@ -68,10 +91,20 @@ public class WAWClient
     /// <summary>
     /// Ждем своей очереди
     /// </summary>
-    public async Task WaitQueue()
+    /// <returns>false - если очередь не удалось дождаться и true - если мы смогли дождаться</returns>
+    public bool WaitQueue()
     {
-        while (!QueueProcess.Any(_id => _id == TaskId))
-            await Task.Delay(500);
+        var succesful = false;
+
+        Task.WaitAll(new Task[] { Task.Run(async() =>
+        {
+            while (!QueueProcess.Any(_id => _id == TaskId))
+                await Task.Delay(500);
+
+            succesful = true;
+        }) }, 190_000);
+
+        return succesful;
     }
 
     /// <summary>

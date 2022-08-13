@@ -151,6 +151,9 @@ public class AccPreparation
 
             for (var i = 0; i < countMessages; i++)
             {
+                if (!c1Auth || !c2Auth)
+                    break;
+
                 if (!await IsValid(c1))
                 {
                     c1Auth = false;
@@ -187,13 +190,30 @@ public class AccPreparation
                     var mc2 = rnd.Next(2, 4);
 
                     for (var mcc = 0; mcc < mc1; mcc++)
+                    {
                         await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]);
+
+                        if (!await IsValid(c1))
+                        {
+                            c1Auth = false;
+                            _removedAccounts++;
+                            break;
+                        }
+                    }
 
                     await Task.Delay(500);
 
                     for (var mcc = 0; mcc < mc2; mcc++)
+                    {
                         await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]);
 
+                        if (!await IsValid(c2))
+                        {
+                            c2Auth = false;
+                            _removedAccounts++;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -272,7 +292,8 @@ public class AccPreparation
 
             var wClient = new WAWClient(phone);
 
-            await wClient.WaitQueue();
+            if (!wClient.WaitQueue())
+                return false;
 
             await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
 
@@ -334,7 +355,7 @@ public class AccPreparation
                 {
                     //while (!string.IsNullOrEmpty(Globals.QrCodeName))
                         //await Task.Delay(100);
-
+                    await SetZero(wClient);
                     await Task.Delay(1_000);
                     await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
                 }
@@ -345,10 +366,7 @@ public class AccPreparation
             if (initWithErrors)
             {
                 i++;
-                Globals.QrCodeName = string.Empty;
-
-                while (!TryDeleteQR(wClient.TaskId))
-                    await Task.Delay(500);
+                await SetZero(wClient);
 
                 goto initAgain;
             }
@@ -370,6 +388,14 @@ public class AccPreparation
 
             Log.Write($"[{phone}] - Пара пошла со счетом проебов {_removedAccounts} и живых {_alivesAccounts}\n", _logFile.FullName);
             return true;
+
+            async Task SetZero(WAWClient wClient)
+            {
+                Globals.QrCodeName = string.Empty;
+
+                while (!TryDeleteQR(wClient.TaskId))
+                    await Task.Delay(500);
+            }
         }
 
         bool TryDeleteQR(int taskId)
@@ -390,9 +416,17 @@ public class AccPreparation
         async Task<bool> IsValid(WaClient client)
         {
             await Task.Delay(500);
+
+            if (await client.GetInstance().ExistsElement("//node[@text='Перезапустить приложение']"))
+                await client.GetInstance().Click("//node[@text='Перезапустить приложение']");
+
+            if (await client.GetInstance().ExistsElement("//node[@text='ОК']"))
+                await client.GetInstance().Click("//node[@text='ОК']");
+
             return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", false) && //To-Do
                    !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", false) && //To-Do
                    !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", false) &&
+                   !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/progress']", false) &&
                    !await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", false);
             //!await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']", false);
         }

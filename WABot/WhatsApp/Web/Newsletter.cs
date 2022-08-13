@@ -83,7 +83,7 @@ public class Newsletter
 
             if (Directory.Exists($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}"))
                 Directory.Move($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}");
-            
+
             result.MoveTo($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name}", true);
 
             var phone = result.Name.Split('.')[0];
@@ -112,14 +112,14 @@ public class Newsletter
                 continue;
             }
 
-            while (!_readyOtherThreads)
-                await Task.Delay(500);
-
             var countMsg = 0;
 
         recurseSendMessageToContact:
 
             var contact = GetFreeNumberUser();
+
+            while (!_readyOtherThreads)
+                await Task.Delay(500);
 
             if (string.IsNullOrEmpty(contact))
             {
@@ -146,12 +146,15 @@ public class Newsletter
             }
             else
             {
-                MessageBox.Show($"Кол-во сообщений: {MessagesSendedCount}");
-                
+                Log.Write(
+                     $"[{phone}] Перед блокировкой было разослано {MessagesSendedCount} сообщений\n",
+                     _logFile.FullName);
+
                 await waw.Free();
+
                 if (File.Exists(@$"{result.FullName}"))
                     File.Delete(@$"{result.FullName}");
-                
+
                 continue;
             }
 

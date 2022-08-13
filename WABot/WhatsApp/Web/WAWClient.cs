@@ -60,7 +60,7 @@ public class WAWClient
                     //2 = 1 sec
                     if (aliveLastId++ > 372)//3 minute wait
                     {
-                        QueueProcess.RemoveAt(0);
+                        QueueProcess.Clear();
                         lastId = 0;
                         aliveLastId = 0;
                     }

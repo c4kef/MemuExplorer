@@ -275,7 +275,6 @@ public class AccPreparation
 
             if (await client.GetInstance().ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
             {
-
                 await client.GetInstance().Click("//node[@text='Выберите частоту резервного копирования']");
                 await client.GetInstance().Click("//node[@text='Никогда']");
                 await client.GetInstance().Click("//node[@text='ГОТОВО']");

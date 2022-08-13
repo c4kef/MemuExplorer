@@ -10,7 +10,6 @@ public class Newsletter
     private readonly FileInfo _logFile;
     private string[] _contacts;
 
-    private bool _readyOtherThreads;
     private int _diedAccounts;
 
     public Newsletter()
@@ -21,7 +20,6 @@ public class Newsletter
         _accounts = new List<FileInfo>();
 
         _diedAccounts = 0;
-        _readyOtherThreads = false;
         _contacts = new[] { "" };
     }
 
@@ -46,11 +44,7 @@ public class Newsletter
             tasks.Add(task);
         }
 
-        _readyOtherThreads = true;
-
         _ = Task.WaitAll(tasks.ToArray(), -1);
-
-        _readyOtherThreads = false;
 
         Log.Write("\n\nКол-во сообщений с аккаунта:\n", _logFile.FullName);
 
@@ -120,14 +114,14 @@ public class Newsletter
 
             var contact = GetFreeNumberUser();
 
-            while (!_readyOtherThreads)
-                await Task.Delay(500);
-
             if (string.IsNullOrEmpty(contact))
             {
                 await waw.Free();
                 break;
             }
+
+            if (!await waw.CheckValidPhone(contact))
+                goto recurseSendMessageToContact;
 
             var messageSended = await waw.SendText(contact, SelectWord(text));
 

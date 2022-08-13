@@ -11,6 +11,7 @@ public class Newsletter
     private string[] _contacts;
 
     private int _diedAccounts;
+    private bool _checkReadyThreads;
 
     public Newsletter()
     {
@@ -21,6 +22,7 @@ public class Newsletter
 
         _diedAccounts = 0;
         _contacts = new[] { "" };
+        _checkReadyThreads = false;
     }
 
     public async Task Start(string text)
@@ -44,7 +46,11 @@ public class Newsletter
             tasks.Add(task);
         }
 
+        _checkReadyThreads = true;
+
         _ = Task.WaitAll(tasks.ToArray(), -1);
+
+        _checkReadyThreads = false;
 
         Log.Write("\n\nКол-во сообщений с аккаунта:\n", _logFile.FullName);
 
@@ -77,15 +83,15 @@ public class Newsletter
         {
             var result = _accounts[0];
 
-            if (Directory.Exists($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}"))
-                Directory.Move($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}");
-
-            result.MoveTo($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name}", true);
-
             var phone = result.Name.Split('.')[0];
 
             if (_usedPhones.Contains(phone))
                 continue;
+
+            if (Directory.Exists($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}"))
+                Directory.Move($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}");
+
+            result.MoveTo($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name}", true);
 
             _usedPhones.Add(phone);
             _accounts.RemoveAt(0);
@@ -114,14 +120,17 @@ public class Newsletter
 
             var contact = GetFreeNumberUser();
 
+            while (!_checkReadyThreads)
+                await Task.Delay(500);
+
             if (string.IsNullOrEmpty(contact))
             {
                 await waw.Free();
                 break;
             }
 
-            if (!await waw.CheckValidPhone(contact))
-                goto recurseSendMessageToContact;
+            /*if (!await waw.CheckValidPhone(contact))
+                goto recurseSendMessageToContact;*/
 
             var messageSended = await waw.SendText(contact, SelectWord(text));
 

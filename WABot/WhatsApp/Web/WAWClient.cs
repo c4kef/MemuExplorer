@@ -204,8 +204,18 @@ public class WAWClient
                 JsonConvert.SerializeObject(new ServerData()
                 { Type = "sendText", Values = new List<object>() { $"{_nameSession}@{id}", $"{number.Replace("+", string.Empty)}@c.us", text } }));
 
-            while (_taskQueue.Contains(id))
-                await Task.Delay(100);
+            var result = false;
+
+            Task.WaitAll(new Task[] { Task.Run(async() =>
+            {
+                while (_taskQueue.Contains(id))
+                    await Task.Delay(100);
+
+                result = true;
+            }) }, 20_000);
+
+            if (!result)
+                return false;
 
             var data = _taskFinished[id];
 
@@ -238,8 +248,18 @@ public class WAWClient
             JsonConvert.SerializeObject(new ServerData()
             { Type = "logout", Values = new List<object>() { $"{_nameSession}@{id}" } }));
 
-        while (_taskQueue.Contains(id))
-            await Task.Delay(100);
+        var result = false;
+
+        Task.WaitAll(new Task[] { Task.Run(async() =>
+            {
+                while (_taskQueue.Contains(id))
+                    await Task.Delay(100);
+
+                result = true;
+            }) }, 20_000);
+
+        if (!result)
+            throw new Exception("cant wait end operation");
 
         var data = _taskFinished[id];
 
@@ -266,8 +286,18 @@ public class WAWClient
             JsonConvert.SerializeObject(new ServerData()
             { Type = "free", Values = new List<object>() { $"{_nameSession}@{id}" } }));
 
-        while (_taskQueue.Contains(id))
-            await Task.Delay(100);
+        var result = false;
+
+        Task.WaitAll(new Task[] { Task.Run(async() =>
+            {
+                while (_taskQueue.Contains(id))
+                    await Task.Delay(100);
+
+                result = true;
+            }) }, 20_000);
+
+        if (!result)
+            throw new Exception("cant wait end operation");
 
         var data = _taskFinished[id];
 
@@ -296,8 +326,18 @@ public class WAWClient
                 JsonConvert.SerializeObject(new ServerData()
                 { Type = "checkValidPhone", Values = new List<object>() { $"{_nameSession}@{id}", phone } }));
 
-            while (_taskQueue.Contains(id))
-                await Task.Delay(100);
+            var result = false;
+
+            Task.WaitAll(new Task[] { Task.Run(async() =>
+            {
+                while (_taskQueue.Contains(id))
+                    await Task.Delay(100);
+
+                result = true;
+            }) }, 20_000);
+
+            if (!result)
+                return false;
 
             var data = _taskFinished[id];
 

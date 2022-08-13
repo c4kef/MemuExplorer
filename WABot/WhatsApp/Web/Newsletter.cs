@@ -11,6 +11,7 @@ public class Newsletter
     private string[] _contacts;
 
     private bool _readyOtherThreads;
+    private int _diedAccounts;
 
     public Newsletter()
     {
@@ -19,6 +20,7 @@ public class Newsletter
         _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_log.txt");
         _accounts = new List<FileInfo>();
 
+        _diedAccounts = 0;
         _readyOtherThreads = false;
         _contacts = new[] { "" };
     }
@@ -56,7 +58,7 @@ public class Newsletter
             Log.Write($"{account.Key} - {account.Value}\n", _logFile.FullName);
 
         Log.Write($"\nОбщее количество отправленных сообщений: {MessagesSendedCount}\n", _logFile.FullName);
-        Log.Write($"\nОтлетело: {_sendedMessagesCountFromAccount.Count(account => account.Value == 0)}\n", _logFile.FullName);
+        Log.Write($"\nОтлетело: {_diedAccounts}\n", _logFile.FullName);
         Stop();
 
         string SelectWord(string value)
@@ -151,6 +153,8 @@ public class Newsletter
                      _logFile.FullName);
 
                 await waw.Free();
+
+                _diedAccounts++;
 
                 if (File.Exists(@$"{result.FullName}"))
                     File.Delete(@$"{result.FullName}");

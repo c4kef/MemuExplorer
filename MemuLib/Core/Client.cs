@@ -195,7 +195,7 @@ public class Client
             return;
         }
 
-        await Task.Delay(500);
+        await Task.Delay(100);
         await MemuCmd.ExecMemuc($"-i {_index} adb shell input tap {x} {y}");
 
         Log.Write($"[{_index}] -> input tap {x} {y}");
@@ -218,7 +218,7 @@ public class Client
             if (isWait)
                 await Task.Delay(Settings.WaitingSecs);
 
-            var element = _adbClient.FindElement(_device, uiElement, (isWait) ? TimeSpan.FromSeconds(.5f) : TimeSpan.FromSeconds(0.0f));
+            var element = _adbClient.FindElement(_device, uiElement, (isWait) ? TimeSpan.FromMilliseconds(Settings.WaitingSecs) : TimeSpan.Zero);
 
             return element is not null;
         }
@@ -242,7 +242,7 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(0.5f));
+        var element = _adbClient.FindElement(_device, uiElement);
         
         if (element is null)
             throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
@@ -267,7 +267,7 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(0.5f));
+        var element = _adbClient.FindElement(_device, uiElement);
        
         if (element is null)
             throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
@@ -291,7 +291,7 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromSeconds(0.5f));
+        var element = _adbClient.FindElement(_device, uiElement);
        
         if (element is null)
             throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");

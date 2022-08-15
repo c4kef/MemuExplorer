@@ -113,7 +113,7 @@ public class WaClient
         await _mem.Input(code); //Костыль, иначе не придумал как можно
 
         if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
-            return string.Empty; //To-Do
+            return string.Empty;
 
         if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
         {

@@ -196,8 +196,8 @@ public class Warm
 
         async Task<bool> IsValid(WaClient client, bool isWait = true)
         {
-            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", isWait) && //To-Do
-                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", isWait) && //To-Do
+            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", isWait) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", isWait) &&
                    !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']", isWait);
         }
     }

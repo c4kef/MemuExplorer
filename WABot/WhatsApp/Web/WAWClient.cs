@@ -2,16 +2,16 @@
 
 public class WAWClient
 {
-    private readonly string _nameSession;
     private readonly List<int> _taskQueue;
     private readonly Dictionary<int, JObject> _taskFinished;
     private readonly Random _random;
-    
-    private Namespace _socket;
-    private SocketIOClient _socketClient;
-    private static List<int> Queue;
-    private static List<int> QueueProcess;
+
+    private Namespace _socket = null!;
+    private SocketIOClient _socketClient = null!;
+    private static List<int> Queue = null!;
+    private static List<int> QueueProcess = null!;
     public readonly int TaskId;
+    public readonly string NameSession;
 
     /// <summary>
     /// Инициализация сессии
@@ -19,7 +19,7 @@ public class WAWClient
     /// <param name="nameSession">имя сессии</param>
     public WAWClient(string nameSession)
     {
-        _nameSession = nameSession;
+        NameSession = nameSession;
         _taskQueue = new List<int>();
         _taskFinished = new Dictionary<int, JObject>();
         _random = new Random();
@@ -58,7 +58,7 @@ public class WAWClient
                 {
                     //124 = 1 minute - 60 sec
                     //2 = 1 sec
-                    if (aliveLastId++ > 372)//3 minute wait
+                    if (aliveLastId++ > 400)
                     {
                         QueueProcess.Clear();
                         lastId = 0;
@@ -85,8 +85,11 @@ public class WAWClient
         var data = JObject.Parse(builder.ToString());
         var id = int.Parse(data["value"]![0]!.ToString());
 
+        if (_taskFinished.ContainsKey(id))
+            _taskFinished.Remove(id);
+
         _taskFinished.Add(id, data);
-        
+
         _taskQueue.RemoveAll(task => task == id);
     }
 
@@ -94,19 +97,10 @@ public class WAWClient
     /// Ждем своей очереди
     /// </summary>
     /// <returns>false - если очередь не удалось дождаться и true - если мы смогли дождаться</returns>
-    public bool WaitQueue()
+    public async Task WaitQueue()
     {
-        var succesful = false;
-
-        Task.WaitAll(new Task[] { Task.Run(async() =>
-        {
-            while (!QueueProcess.Any(_id => _id == TaskId))
-                await Task.Delay(500);
-
-            succesful = true;
-        }) }, 190_000);
-
-        return succesful;
+        while (!QueueProcess.Any(_id => _id == TaskId))
+            await Task.Delay(500);
     }
 
     /// <summary>
@@ -140,18 +134,23 @@ public class WAWClient
 
         _socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
-            { Type = "create", Values = new List<object>() { $"{_nameSession}@{TaskId}" } }));
+            { Type = "create", Values = new List<object>() { $"{NameSession}@{TaskId}" } }));
 
         if (waitQr)
         {
-            Task.WaitAll(new Task[] { Task.Run(WaitQr) }, 10_000);
+            if (!await WaitQr())
+            {
+                _taskQueue.RemoveAll(task => task == TaskId);
+                throw new Exception("cant wait qr code");
+            }
 
             Globals.QrCodeName = TaskId.ToString();
 
-            Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 15_000);
-
-            if (_taskQueue.Contains(TaskId))
-                throw new Exception("Error: request is not accepted");
+            if (!await WaitRequest())
+            {
+                _taskQueue.RemoveAll(task => task == TaskId);
+                throw new Exception("cant wait end operation");
+            }
 
             Globals.QrCodeName = string.Empty;
 
@@ -160,10 +159,11 @@ public class WAWClient
         }
         else
         {
-            Task.WaitAll(new Task[] { Task.Run(WaitRequest) }, 15_000);
-
-            if (_taskQueue.Contains(TaskId))
-                throw new Exception("Error: request is not accepted");
+            if (!await WaitRequest())
+            {
+                _taskQueue.RemoveAll(task => task == TaskId);
+                throw new Exception("cant wait end operation");
+            }
         }
 
         var data = _taskFinished[TaskId];
@@ -172,16 +172,21 @@ public class WAWClient
         if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
             throw new Exception($"Error: {(data["value"]?.Count() >= 2 ? data["value"]![1] : "undocumented error :(")}");
 
-        async Task WaitRequest()
+        async Task<bool> WaitRequest()
         {
-            while (_taskQueue.Contains(TaskId))
+            var status = 0;
+            while (_taskQueue.Contains(TaskId) && status++ < 60)
                 await Task.Delay(500);
-        }
 
-        async Task WaitQr()
+            return status < 60;
+        }
+        async Task<bool> WaitQr()
         {
-            while (!File.Exists(@$"{Globals.Setup.PathToQRs}\{TaskId}.png"))
+            var status = 0;
+            while (!File.Exists(@$"{Globals.Setup.PathToQRs}\{TaskId}.png") && status++ < 60)
                 await Task.Delay(500);
+
+            return status < 60;
         }
 
         bool TryDeleteQR()
@@ -220,20 +225,10 @@ public class WAWClient
 
             _socket.Emit("data",
                 JsonConvert.SerializeObject(new ServerData()
-                { Type = "sendText", Values = new List<object>() { $"{_nameSession}@{id}", $"{number.Replace("+", string.Empty)}@c.us", text } }));
+                { Type = "sendText", Values = new List<object>() { $"{NameSession}@{id}", $"{number.Replace("+", string.Empty)}@c.us", text } }));
 
-            var result = false;
-
-            Task.WaitAll(new Task[] { Task.Run(async() =>
-            {
-                while (_taskQueue.Contains(id))
-                    await Task.Delay(100);
-
-                result = true;
-            }) }, 20_000);
-
-            if (!result)
-                return false;
+            while (_taskQueue.Contains(id))
+                await Task.Delay(100);
 
             var data = _taskFinished[id];
 
@@ -244,7 +239,7 @@ public class WAWClient
 
             return true;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Log.Write($"Ошибка отправки сообщения:\n{ex.Message}\n");
             return false;
@@ -264,25 +259,15 @@ public class WAWClient
 
         _socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
-            { Type = "logout", Values = new List<object>() { $"{_nameSession}@{id}" } }));
+            { Type = "logout", Values = new List<object>() { $"{NameSession}@{id}" } }));
 
-        var result = false;
-
-        Task.WaitAll(new Task[] { Task.Run(async() =>
-            {
-                while (_taskQueue.Contains(id))
-                    await Task.Delay(100);
-
-                result = true;
-            }) }, 20_000);
-
-        if (!result)
-            throw new Exception("cant wait end operation");
+        while (_taskQueue.Contains(id))
+            await Task.Delay(100);
 
         var data = _taskFinished[id];
 
         _taskFinished.Remove(id);
-        
+
         _socket.RemoveListener("data", HandlerDataRequests);
 
         _socketClient.Disconnect();
@@ -304,20 +289,10 @@ public class WAWClient
 
         _socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
-            { Type = "free", Values = new List<object>() { $"{_nameSession}@{id}" } }));
+            { Type = "free", Values = new List<object>() { $"{NameSession}@{id}" } }));
 
-        var result = false;
-
-        Task.WaitAll(new Task[] { Task.Run(async() =>
-            {
-                while (_taskQueue.Contains(id))
-                    await Task.Delay(100);
-
-                result = true;
-            }) }, 20_000);
-
-        if (!result)
-            throw new Exception("cant wait end operation");
+        while (_taskQueue.Contains(id))
+            await Task.Delay(100);
 
         var data = _taskFinished[id];
 
@@ -346,20 +321,10 @@ public class WAWClient
 
             _socket.Emit("data",
                 JsonConvert.SerializeObject(new ServerData()
-                { Type = "checkValidPhone", Values = new List<object>() { $"{_nameSession}@{id}", phone } }));
+                { Type = "checkValidPhone", Values = new List<object>() { $"{NameSession}@{id}", phone } }));
 
-            var result = false;
-
-            Task.WaitAll(new Task[] { Task.Run(async() =>
-            {
-                while (_taskQueue.Contains(id))
-                    await Task.Delay(100);
-
-                result = true;
-            }) }, 20_000);
-
-            if (!result)
-                return false;
+            while (_taskQueue.Contains(id))
+                await Task.Delay(100);
 
             var data = _taskFinished[id];
 

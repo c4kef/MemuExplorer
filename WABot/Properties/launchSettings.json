@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "WABot": {
+      "commandName": "Project",
+      "remoteDebugEnabled": false,
+      "authenticationMode": "None",
+      "remoteDebugMachine": "134.17.5.33"
+    }
+  }
+}

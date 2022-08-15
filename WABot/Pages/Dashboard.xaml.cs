@@ -15,7 +15,9 @@ public partial class Dashboard : INotifyPropertyChanged
         _register = new Register();
         _newsletter = new WhatsApp.Newsletter();
         _preparation = new AccPreparation();
+        _preparationWeb = new AccPreparationWeb();
         _newsletterWeb = new WhatsApp.Web.Newsletter();
+
 
         if (!_managerDevicesIsRuning)
             _ = Task.Run(ManagerDevices);
@@ -26,7 +28,7 @@ public partial class Dashboard : INotifyPropertyChanged
     /// <summary>
     /// Активный таск (определяем завершение работы)
     /// </summary>
-    private static Task _activeTask = null!; //To-Do
+    private static Task _activeTask = null!;
     
     /// <summary>
     /// Активна задача?
@@ -42,6 +44,11 @@ public partial class Dashboard : INotifyPropertyChanged
     /// Подготовка аккаунтов
     /// </summary>
     private readonly AccPreparation _preparation;
+
+    /// <summary>
+    /// Подготовка аккаунтов
+    /// </summary>
+    private readonly AccPreparationWeb _preparationWeb;
 
     /// <summary>
     /// Рассылка сообщений Web
@@ -161,9 +168,9 @@ public partial class Dashboard : INotifyPropertyChanged
         if (_isBusy)
             return;
 
-        if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First").Length < Globals.Setup.CountThreadsChrome || Globals.Setup.EnableWarm)
+        if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First").Length < Globals.Setup.CountThreadsChrome)
         {
-            MessageBox.Show("Слишком мало аккаунтов для рассылки или включен режим прогрева");
+            MessageBox.Show("Слишком мало аккаунтов для рассылки");
             return;
         }
 
@@ -205,11 +212,12 @@ public partial class Dashboard : INotifyPropertyChanged
         if (_isBusy)
             return;
 
-        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive))
-        {
-            MessageBox.Show("Запустите устройства");
-            return;
-        }
+        if (!Globals.Setup.EnableWarm)
+            if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive))
+            {
+                MessageBox.Show("Запустите устройства");
+                return;
+            }
 
         if (string.IsNullOrEmpty(Globals.Setup.PathToQRs))
         {
@@ -229,11 +237,18 @@ public partial class Dashboard : INotifyPropertyChanged
         {
             ProgressValue = 100;
 
-            _activeTask = Task.Run(async () => await _preparation.Start(string.IsNullOrEmpty(TextMessage) ? await File.ReadAllTextAsync(Globals.Setup.PathToTextForWarm) : TextMessage));
+            _activeTask = Task.Run(async () =>
+            {
+                if (Globals.Setup.EnableWarm)
+                    await _preparationWeb.Start(string.IsNullOrEmpty(TextMessage) ? await File.ReadAllTextAsync(Globals.Setup.PathToTextForWarm) : TextMessage);
+
+                else
+                    await _preparation.Start(string.IsNullOrEmpty(TextMessage) ? await File.ReadAllTextAsync(Globals.Setup.PathToTextForWarm) : TextMessage);
+            });
+         
             await _activeTask;
 
             MessageBox.Show("Настройка завершена");
-
         }
         catch (Exception ex)
         {

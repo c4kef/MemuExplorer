@@ -214,9 +214,9 @@ public class Newsletter
 
         async Task<bool> IsValid()
         {
-            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", false) && //To-Do
-                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", false) && //To-Do
-                   !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", false) && //To-Do
+            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", false) &&
                    !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']", false);
         }
     }

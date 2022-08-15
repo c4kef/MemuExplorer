@@ -68,7 +68,7 @@ public static class Globals
             throw new Exception("Error: mcc.json not found");
 
         var array = JsonConvert.DeserializeObject<MccMnc[]>(await File.ReadAllTextAsync($@"{Settings.DatasDir}\mcc.json"));
-        var vrem = array.Where(x => x.CountryCode == cc).ToArray();//To-Do
+        var vrem = array.Where(x => x.CountryCode == cc).ToArray();
         
         return (vrem.Length > 0) ? vrem[rnd.Next(0, vrem.Length)] : array[rnd.Next(0, array.Length)];
     }

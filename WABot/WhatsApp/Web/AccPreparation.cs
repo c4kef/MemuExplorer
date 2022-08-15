@@ -56,7 +56,8 @@ public class AccPreparation
             _tetheredDevices[id] = new[] { devices[0], devices[1] };
 
             var task = Handler(id, message.Split('\n'));
-            await Task.Delay(1_000);
+
+            await Task.Delay(2_000);
 
             tasks.Add(task);
 
@@ -87,6 +88,11 @@ public class AccPreparation
     {
         var (c1, c2) = (_tetheredDevices[idThread][0].Client, _tetheredDevices[idThread][1].Client);
         var (c1Index, c2Index) = (_tetheredDevices[idThread][0].Index, _tetheredDevices[idThread][1].Index);
+
+        await c1.GetInstance().RunApk("net.sourceforge.opencamera");
+        await c2.GetInstance().RunApk("net.sourceforge.opencamera");
+        await c1.GetInstance().StopApk("net.sourceforge.opencamera");
+        await c2.GetInstance().StopApk("net.sourceforge.opencamera");
 
         var c1Auth = false;
         var c2Auth = false;
@@ -291,8 +297,7 @@ public class AccPreparation
 
             var wClient = new WAWClient(phone);
 
-            if (!wClient.WaitQueue())
-                return false;
+            await wClient.WaitQueue();
 
             await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
 
@@ -301,95 +306,92 @@ public class AccPreparation
 
             int i = 0;
         initAgain:
-            var initWithErrors = false;
-
-            if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}").Any(_phone => _phone == phone))
-            {
-                try
-                {
-                    wClient.RemoveQueue();
-                }
-                catch
-                {
-                }
-                return true;
-            }
-
-            if (!await IsValidCheck(client) || i > 3)
-            {
-                try
-                {
-                    wClient.RemoveQueue();
-                }
-                catch
-                {
-                }
-                return false;
-            }
-
-            initWithErrors = true;
-
-            if (await client.GetInstance().ExistsElement("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']"))
-                await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
-
-            Task.WaitAll(new Task[] { Task.Run(async () =>
-            {
             try
             {
-                await wClient.Init(true);
-                initWithErrors = false;
-            }
-            catch{}
-            })}, 25_000);
-            
+                var initWithErrors = false;
 
-            await wClient.Free();
-
-            if (await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", false))
-                return false;
-
-            if (await client.GetInstance().ExistsElement("//node[@text='OK']", false))
-            {
-                await client.GetInstance().Click("//node[@text='OK']");
-                i++;
-
-                if (await client.GetInstance().ExistsElement("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']"))
+                if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}").Any(_phone => _phone == phone))
                 {
-                    //while (!string.IsNullOrEmpty(Globals.QrCodeName))
-                        //await Task.Delay(100);
-                    await SetZero(wClient);
-                    await Task.Delay(1_000);
-                    await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
+                    wClient.RemoveQueue();
+                    Log.Write($"[{phone}] - Аккаунт уже был авторизован и мы положительно отвечаем на результат\n", _logFile.FullName);
+                    return true;
                 }
 
-                goto initAgain;
-            }
+                if (!await IsValidCheck(client) || i > 3)
+                {
+                    wClient.RemoveQueue();
+                    Log.Write($"[{phone}] - Аккаунт оказался не валидным\n", _logFile.FullName);
+                    return false;
+                }
 
-            if (initWithErrors)
+                initWithErrors = true;
+
+                if (await client.GetInstance().ExistsElement("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']"))
+                    await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
+
+                try
+                {
+                    await wClient.Init(true);
+                    initWithErrors = false;
+                }
+                catch (Exception ex)
+                {
+                    Log.Write($"[{phone}] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
+                }
+
+                await wClient.Free();
+
+                if (await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", false))
+                    return false;
+
+                if (await client.GetInstance().ExistsElement("//node[@text='OK']", false))
+                {
+                    await client.GetInstance().Click("//node[@text='OK']");
+                    i++;
+
+                    if (await client.GetInstance().ExistsElement("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']"))
+                    {
+                        await SetZero(wClient);
+                        await Task.Delay(1_000);
+                        await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
+                    }
+
+                    goto initAgain;
+                }
+
+                if (initWithErrors)
+                {
+                    i++;
+                    await SetZero(wClient);
+                    Log.Write($"[{phone}] - Инициализировалось с ошибками\n", _logFile.FullName);
+                    goto initAgain;
+                }
+
+                wClient.RemoveQueue();
+
+                if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
+                    Directory.Delete(client.Account, true);
+                else if (Directory.Exists(client.Account))
+                    Directory.Move(client.Account,
+                        @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+
+                if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}") && File.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json"))
+                {
+                    Directory.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}");
+                    File.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}.data.json");
+                }
+
+                Log.Write($"[{phone}] - Пара пошла со счетом проебов {_removedAccounts} и живых {_alivesAccounts}\n", _logFile.FullName);
+                return true;
+            }
+            catch(Exception ex)
             {
-                i++;
+                Log.Write($"[main] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
                 await SetZero(wClient);
-
-                goto initAgain;
+                wClient.RemoveQueue();
+                await wClient.Free();
+                return false;
             }
-
-            wClient.RemoveQueue();
-
-            if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
-                Directory.Delete(client.Account, true);
-            else if (Directory.Exists(client.Account))
-                Directory.Move(client.Account,
-                    @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
-            //$@"{Globals.Setup.PathToDirectoryAccountsWeb}\First"
-
-            if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}") && File.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json"))
-            {
-                Directory.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}");
-                File.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}.data.json");
-            }
-
-            Log.Write($"[{phone}] - Пара пошла со счетом проебов {_removedAccounts} и живых {_alivesAccounts}\n", _logFile.FullName);
-            return true;
 
             async Task SetZero(WAWClient wClient)
             {
@@ -415,9 +417,10 @@ public class AccPreparation
             }
         }
 
+
         async Task<bool> IsValid(WaClient client)
         {
-            await Task.Delay(500);
+            await Task.Delay(MemuLib.Settings.WaitingSecs);
 
             if (await client.GetInstance().ExistsElement("//node[@text='Перезапустить приложение']"))
                 await client.GetInstance().Click("//node[@text='Перезапустить приложение']");
@@ -425,8 +428,14 @@ public class AccPreparation
             if (await client.GetInstance().ExistsElement("//node[@text='ОК']"))
                 await client.GetInstance().Click("//node[@text='ОК']");
 
-            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", false) && //To-Do
-                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", false) && //To-Do
+            if (await client.GetInstance().ExistsElement("//node[@text='OK']"))
+                await client.GetInstance().Click("//node[@text='OK']");
+
+            await Task.Delay(MemuLib.Settings.WaitingSecs);
+
+            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", false) &&
+                   !await client.GetInstance().ExistsElement("//node[@content-desc='Неверный номер?']", false) &&
                    !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", false) &&
                    !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/progress']", false) &&
                    !await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", false);

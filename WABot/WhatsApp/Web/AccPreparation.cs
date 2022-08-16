@@ -105,7 +105,10 @@ public class AccPreparation
             var result = await Globals.GetAccounts(_usedPhones.ToArray(), Globals.Setup.TrustLevelAccount);
 
             if (result.Length == 0)
+            {
+                Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
                 break;
+            }
 
             var (phone, path) = result[0];
 
@@ -232,14 +235,21 @@ public class AccPreparation
             if (!c1Auth || !c2Auth)
                 continue;
 
-            if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1), false))
+            try
             {
-                c2Auth = false;
-                _removedAccounts++;
-                continue;
-            }
+                if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1), false))
+                {
+                    c2Auth = false;
+                    _removedAccounts++;
+                    continue;
+                }
 
-            await TryLoginWeb(c1, c1.Phone.Remove(0, 1), true);
+                await TryLoginWeb(c1, c1.Phone.Remove(0, 1), true);
+            }
+            catch (Exception ex)
+            {
+                Log.Write($"[Handler] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
+            }
 
             _alivesAccounts += 2;
 
@@ -305,9 +315,9 @@ public class AccPreparation
                 await client.GetInstance().Click("//node[@text='OK']");
 
             int i = 0;
-        initAgain:
             try
             {
+            initAgain:
                 var initWithErrors = false;
 
                 if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}").Any(_phone => _phone == phone))
@@ -384,7 +394,7 @@ public class AccPreparation
                 Log.Write($"[{phone}] - Пара пошла со счетом проебов {_removedAccounts} и живых {_alivesAccounts}\n", _logFile.FullName);
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Log.Write($"[main] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
                 await SetZero(wClient);
@@ -435,6 +445,8 @@ public class AccPreparation
 
             return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", false) &&
                    !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='Перезапустить приложение']", false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='Закрыть приложение']", false) &&
                    !await client.GetInstance().ExistsElement("//node[@content-desc='Неверный номер?']", false) &&
                    !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", false) &&
                    !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/progress']", false) &&

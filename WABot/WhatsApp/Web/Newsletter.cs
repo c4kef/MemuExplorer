@@ -1,4 +1,6 @@
-﻿namespace WABot.WhatsApp.Web;
+﻿using WABot.Pages;
+
+namespace WABot.WhatsApp.Web;
 public class Newsletter
 {
     public int MessagesSendedCount { get; private set; }
@@ -10,6 +12,7 @@ public class Newsletter
     private readonly FileInfo _logFile;
     private string[] _contacts;
 
+    public bool IsStop;
     private int _diedAccounts;
     private bool _checkReadyThreads;
 
@@ -28,7 +31,9 @@ public class Newsletter
     public async Task Start(string text)
     {
         var tasks = new List<Task>();
-        var rnd = new Random();
+
+        IsStop = false;
+        MessagesSendedCount = _diedAccounts = 0;
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
 
@@ -79,7 +84,7 @@ public class Newsletter
 
     private async Task Handler(string text)
     {
-        while (_accounts.Count > 0)
+        while (_accounts.Count > 0 && !IsStop)
         {
             var result = _accounts[0];
 
@@ -118,6 +123,9 @@ public class Newsletter
 
         recurseSendMessageToContact:
 
+            if (IsStop)
+                break;
+
             var contact = GetFreeNumberUser();
 
             while (!_checkReadyThreads)
@@ -140,10 +148,10 @@ public class Newsletter
                 ++MessagesSendedCount;
 
                 Log.Write(
-                    $"Отправлено сообщение с номера {phone} на номер {contact}\n",
+                    $"Отправлено сообщение с номера {phone.Remove(0, phone.Length - 5)} на номер {contact}\n",
                     _logFile.FullName);
 
-                if (++countMsg > Globals.Setup.CountMessageFromAccount)
+                if (++countMsg > Globals.Setup.CountMessagesFromAccount)
                 {
                     await waw.Free();
                     continue;
@@ -151,16 +159,27 @@ public class Newsletter
             }
             else
             {
-                Log.Write(
+                /*Log.Write(
                      $"[{phone}] Перед блокировкой было разослано {MessagesSendedCount} сообщений\n",
-                     _logFile.FullName);
+                     _logFile.FullName);*/
 
                 await waw.Free();
 
-                _diedAccounts++;
+                ++_diedAccounts;
+
+                var count = 0;
+                var messages = _sendedMessagesCountFromAccount.TakeLast(10);
+
+                foreach (var msg in messages)
+                    count += msg.Value;
+
+                Dashboard.GetInstance().AverageMessages = (int)Math.Floor((decimal)count / messages.Count());
 
                 if (File.Exists(@$"{result.FullName}"))
                     File.Delete(@$"{result.FullName}");
+
+                if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}"))
+                    Directory.Delete($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}", true);
 
                 continue;
             }

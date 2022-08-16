@@ -10,6 +10,7 @@ public class AccPreparation
     private string[] _names;
     private int _removedAccounts;
     private int _alivesAccounts;
+    public bool IsStop;
 
     public AccPreparation()
     {
@@ -26,6 +27,9 @@ public class AccPreparation
     {
         var tasks = new List<Task>();
         var rnd = new Random();
+
+        IsStop = false;
+        _removedAccounts = _alivesAccounts = 0;
 
         _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames))
             .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
@@ -100,9 +104,9 @@ public class AccPreparation
         Log.Write($"Поток {idThread} запущен\n", _logFile.FullName);
 
         while (Globals.Devices.Where(device => device.Index == c1Index).ToArray()[0].IsActive &&
-               Globals.Devices.Where(device => device.Index == c2Index).ToArray()[0].IsActive)
+               Globals.Devices.Where(device => device.Index == c2Index).ToArray()[0].IsActive && !IsStop)
         {
-            var result = await Globals.GetAccounts(_usedPhones.ToArray(), Globals.Setup.TrustLevelAccount);
+            var result = await Globals.GetAccounts(_usedPhones.ToArray());
 
             if (result.Length == 0)
             {
@@ -154,7 +158,7 @@ public class AccPreparation
 
             File.Delete($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf");
 
-            var countMessages = new Random().Next(5, 10);
+            var countMessages = new Random().Next(2, 3);
 
             var rnd = new Random();
 
@@ -195,8 +199,8 @@ public class AccPreparation
                 }
                 else
                 {
-                    var mc1 = rnd.Next(2, 4);
-                    var mc2 = rnd.Next(2, 4);
+                    var mc1 = rnd.Next(2, 3);
+                    var mc2 = rnd.Next(2, 3);
 
                     for (var mcc = 0; mcc < mc1; mcc++)
                     {
@@ -379,11 +383,11 @@ public class AccPreparation
 
                 wClient.RemoveQueue();
 
-                if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
+                if (Directory.Exists(@$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
                     Directory.Delete(client.Account, true);
                 else if (Directory.Exists(client.Account))
                     Directory.Move(client.Account,
-                        @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+                        @$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
 
                 if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}") && File.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json"))
                 {

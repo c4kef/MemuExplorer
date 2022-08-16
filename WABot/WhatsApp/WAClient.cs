@@ -42,113 +42,6 @@ public class WaClient
         await _mem.Stop();
     }
 
-    public async Task<string> Register(string to, string name)
-    {
-        await _mem.StopApk(PackageName);
-        await _mem.Shell($"pm clear {PackageName}");
-        await _mem.RunApk(PackageName);
-
-
-        if (!await _mem.ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']"))
-            return string.Empty;
-
-        await _mem.Click("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']");
-
-        var obj = await SmsCode.Create(service: "wa", country: Globals.Setup.CountryIndexRegister.ToString());
-
-        if (obj is null)
-            return "stop";
-
-        if (!await _mem.ExistsElement("//node[@text='номер тел.']"))
-            return string.Empty;
-
-        //await _mem.ClearInput("//node[@resource-id='com.whatsapp:id/registration_cc']");
-        //await _mem.Input("//node[@resource-id='com.whatsapp:id/registration_cc']", obj.Phone[0].ToString());
-        
-        await _mem.Click("//node[@resource-id='com.whatsapp:id/registration_country']");
-        await _mem.Click("//node[@resource-id='com.whatsapp:id/menuitem_search']");
-        await _mem.Input("//node[@resource-id='com.whatsapp:id/search_src_text']", "Canada");//text="Канада"
-        await _mem.Click("//node[@text='Канада']");
-
-        await _mem.Input("//node[@text='номер тел.']", obj.Phone.Remove(0, 1));
-
-        await _mem.Click("//node[@text='ДАЛЕЕ']");
-
-        if (!await _mem.ExistsElement("//node[@text='ИЗМЕНИТЬ']"))
-        {
-            obj.Cancel();
-            return string.Empty;
-        }
-
-        await _mem.Click("//node[@text='OK']");
-
-        if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
-        {
-            obj.Cancel();
-            return string.Empty;
-        }
-
-        if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
-        {
-            await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
-            return string.Empty;
-        }
-
-        var count = 0;
-
-        while (await obj.GetMessage() == string.Empty)
-        {
-            ++count;
-            Thread.Sleep(1_500);
-            if (count <= 15) continue;
-            obj.Cancel();
-            return string.Empty;
-        }
-
-        var code = await obj
-            .GetMessage(); /*new string(new Regex(@"\b\d{3}\-\d{3}\b").Match(await obj.GetMessage()).Value.Where(char.IsDigit)
-            .ToArray());*/
-
-        //await _mem.Input("//node[@text='––– –––']", code); - нихуя не работает из-за текста который меняется...
-        await _mem.Input(code); //Костыль, иначе не придумал как можно
-
-        if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
-            return string.Empty;
-
-        if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
-        {
-            await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
-            return string.Empty;
-        }
-
-        await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
-        await _mem.Click("//node[@text='ДАЛЕЕ']");
-
-        if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
-        {
-            await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
-            return string.Empty;
-        }
-
-        count = 0;
-
-        while (await _mem.ExistsElement("//node[@text='Инициализация…']"))
-        {
-            ++count;
-            Thread.Sleep(1_500);
-            if (count > 5)
-                return string.Empty;
-        }
-
-        await _mem.Pull(to, $"/data/data/{PackageName}/");
-
-        Account = string.Empty;
-
-        Phone = obj.Phone;
-
-        return obj.Phone.Remove(0, 1);
-    }
-
     public async Task LoginFile([Optional] string path, [Optional] string name)
     {
         try
@@ -219,7 +112,7 @@ public class WaClient
         {
             if (!await _mem.ExistsElement("//node[@content-desc='Отправить']"))
             {
-                await Task.Delay(1_000);
+                await Task.Delay(100);
                 continue;
             }
 

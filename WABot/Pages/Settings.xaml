@@ -28,33 +28,6 @@
                         </ToolTip>
                     </CheckBox.ToolTip>
                 </CheckBox>
-                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding CountMessage}"
-                              ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Кол-во циклов"
-                              SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact">
-                    <ui:NumberBox.ToolTip>
-                        <ToolTip>
-                            Сколько раз блок текста должен быть продублирован в сообщение
-                        </ToolTip>
-                    </ui:NumberBox.ToolTip>
-                </ui:NumberBox>
-                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding DelayBetweenUsers}"
-                              ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Введите время"
-                              SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact">
-                    <ui:NumberBox.ToolTip>
-                        <ToolTip>
-                            Сколько должно пройти времени с момента последней переписки с другим контактом. Время в формате 1 у.е = 1сек
-                        </ToolTip>
-                    </ui:NumberBox.ToolTip>
-                </ui:NumberBox>
-                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding CountryIndexRegister}"
-                              ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Введите страну"
-                              SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact" Minimum="0">
-                    <ui:NumberBox.ToolTip>
-                        <ToolTip>
-                            Укажите индекс страны через которую будут регистрироваться аккаунты
-                        </ToolTip>
-                    </ui:NumberBox.ToolTip>
-                </ui:NumberBox>
                 <Button HorizontalAlignment="Center"
                         Margin="0,10,0,0"
                         ui:ControlHelper.CornerRadius="5"
@@ -74,18 +47,9 @@
                 Background="Transparent" BorderThickness="1" CornerRadius="10">
             <StackPanel Orientation="Vertical">
                 <Label Content="Настройки рассылки" HorizontalAlignment="Center" />
-                <ui:NumberBox Margin="0,10,0,0" ValueChanged="ValueChanged" Value="{Binding TrustLevelAccount}"
-                              ui:ControlHelper.CornerRadius="5" ui:ControlHelper.PlaceholderText="Уровень доверия"
-                              SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact">
-                    <ui:NumberBox.ToolTip>
-                        <ToolTip>
-                            Определяет уровень прогрева для аккаунтов которыми могут пользоваться боты
-                        </ToolTip>
-                    </ui:NumberBox.ToolTip>
-                </ui:NumberBox>
                 <ui:NumberBox Margin="0,10,0,0"
                               ValueChanged="ValueChanged"
-                              Value="{Binding CountMessageFromAccount}"
+                              Value="{Binding CountMessagesFromAccount}"
                               ui:ControlHelper.CornerRadius="5"
                               ui:ControlHelper.PlaceholderText="Кол-во сообщ."
                               SmallChange="1"

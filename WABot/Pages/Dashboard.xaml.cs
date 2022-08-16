@@ -11,19 +11,19 @@ public partial class Dashboard : INotifyPropertyChanged
     {
         InitializeComponent();
         DataContext = this;
-        _warm = new Warm();
-        _register = new Register();
         _newsletter = new WhatsApp.Newsletter();
         _preparation = new AccPreparation();
         _preparationWeb = new AccPreparationWeb();
         _newsletterWeb = new WhatsApp.Web.Newsletter();
-
+        _dashboard = this;
 
         if (!_managerDevicesIsRuning)
             _ = Task.Run(ManagerDevices);
     }
 
     #region Variables
+
+    private static Dashboard _dashboard = null!;
 
     /// <summary>
     /// Активный таск (определяем завершение работы)
@@ -34,11 +34,6 @@ public partial class Dashboard : INotifyPropertyChanged
     /// Активна задача?
     /// </summary>
     private static bool _isBusy;
-
-    /// <summary>
-    /// Прогрев аккаунтов
-    /// </summary>
-    private readonly Warm _warm;
 
     /// <summary>
     /// Подготовка аккаунтов
@@ -59,11 +54,6 @@ public partial class Dashboard : INotifyPropertyChanged
     /// Рассылка сообщений
     /// </summary>
     private readonly WhatsApp.Newsletter _newsletter;
-
-    /// <summary>
-    /// Регистрация аккаунтов
-    /// </summary>
-    private readonly Register _register;
 
     /// <summary>
     /// Обработчик устройств запущен
@@ -96,6 +86,24 @@ public partial class Dashboard : INotifyPropertyChanged
         }
     }
 
+    private int _averageMessages;
+
+    /// <summary>
+    /// Отображение среднее кол-во сообщений с аккаунта
+    /// </summary>
+    public int AverageMessages
+    {
+        get => _averageMessages;
+        set
+        {
+            Dispatcher.Invoke(() =>
+            {
+                _averageMessages = value;
+                OnPropertyChanged("AverageMessages");
+            });
+        }
+    }
+
     private string _textMessage = null!;
 
     /// <summary>
@@ -112,6 +120,8 @@ public partial class Dashboard : INotifyPropertyChanged
     }
 
     #endregion
+
+    public static Dashboard GetInstance() => _dashboard;
 
     /// <summary>
     /// Обработчик устройств (показывает или скрывает активные/неактивные устройства)
@@ -166,8 +176,12 @@ public partial class Dashboard : INotifyPropertyChanged
     private async void NewsletterWeb(object sender, RoutedEventArgs e)
     {
         if (_isBusy)
+        {
+            _newsletterWeb.IsStop = true;
+            MessageBox.Show("Дождитесь завершения задачи");
             return;
-
+        }
+        
         if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First").Length < Globals.Setup.CountThreadsChrome)
         {
             MessageBox.Show("Слишком мало аккаунтов для рассылки");
@@ -191,7 +205,7 @@ public partial class Dashboard : INotifyPropertyChanged
 
             MessageBox.Show("Рассылка завершена");
 
-            ProgressValue = 0;
+            AverageMessages = ProgressValue = 0;
         }
         catch (Exception ex)
         {
@@ -210,7 +224,12 @@ public partial class Dashboard : INotifyPropertyChanged
     private async void Preparation(object sender, RoutedEventArgs e)
     {
         if (_isBusy)
+        {
+            _preparationWeb.IsStop = true;
+            _preparation.IsStop = true;
+            MessageBox.Show("Дождитесь завершения задачи");
             return;
+        }
 
         if (!Globals.Setup.EnableWarm)
             if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive))
@@ -261,56 +280,6 @@ public partial class Dashboard : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Запуск прогрева
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private async void Warming(object sender, RoutedEventArgs e)
-    {
-        if (_isBusy)
-            return;
-
-        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive) || !Globals.Setup.EnableWarm)
-        {
-            MessageBox.Show("Запустите устройства в режиме прогрева");
-            return;
-        }
-
-        if (string.IsNullOrEmpty(TextMessage))
-        {
-            MessageBox.Show("Укажите текст сообщений");
-            return;
-        }
-        
-        if (Globals.Devices.Count(device => device.IsActive) % 2 != 0)
-        {
-            MessageBox.Show("Активных устройств должно быть четное кол-во");
-            return;
-        }
-
-        _isBusy = true;
-
-        try
-        {
-            ProgressValue = 100;
-
-            _activeTask = Task.Run(async () => await _warm.Start(TextMessage));
-            await _activeTask;
-
-            MessageBox.Show("Прогрев завершен");
-
-            ProgressValue = 0;
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show("Произошла ошибка, лог создан на рабочем столе");
-            await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
-        }
-
-        _isBusy = false;
-    }
-
-    /// <summary>
     /// Запуск рассылки
     /// </summary>
     /// <param name="sender"></param>
@@ -318,7 +287,11 @@ public partial class Dashboard : INotifyPropertyChanged
     private async void Newsletter(object sender, RoutedEventArgs e)
     {
         if (_isBusy)
+        {
+            _newsletter.IsStop = true;
+            MessageBox.Show("Дождитесь завершения задачи");
             return;
+        }
 
         if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive) || Globals.Setup.EnableWarm)
         {
@@ -342,44 +315,6 @@ public partial class Dashboard : INotifyPropertyChanged
             await _activeTask;
 
             MessageBox.Show("Рассылка завершена");
-
-            ProgressValue = 0;
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show("Произошла ошибка, лог создан на рабочем столе");
-            await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
-        }
-
-        _isBusy = false;
-    }
-
-    /// <summary>
-    /// Запуск регистрации
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private async void RegAccounts(object sender, RoutedEventArgs e)
-    {
-        if (_isBusy)
-            return;
-
-        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive) || !Globals.Setup.EnableWarm)
-        {
-            MessageBox.Show("Запустите устройства и включите режим прогрева");
-            return;
-        }
-
-        _isBusy = true;
-
-        try
-        {
-            ProgressValue = 100;
-
-            _activeTask = Task.Run(async () => await _register.Start());
-            await _activeTask;
-
-            MessageBox.Show("Регистрация завершена");
 
             ProgressValue = 0;
         }

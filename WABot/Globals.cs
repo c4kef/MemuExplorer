@@ -35,6 +35,7 @@ public static class Globals
     public static List<Device> Devices { get; set; } = null!;
     public static Setup Setup { get; private set; } = null!;
     public static DirectoryInfo RemoveAccountsDirectory { get; private set; } = null!;
+    public static DirectoryInfo ScannedAccountsDirectory { get; private set; } = null!;
     public static DirectoryInfo TempDirectory { get; private set; } = null!;
     public static VirtualOutput Camera { get; private set; } = null!;
     public static string QrCodeName { get; set; } = string.Empty;
@@ -47,6 +48,7 @@ public static class Globals
 
         TempDirectory = Directory.CreateDirectory("Temp");
         RemoveAccountsDirectory = Directory.CreateDirectory("RemovedAccounts");
+        ScannedAccountsDirectory = Directory.CreateDirectory("ScannedAccounts");
 
         Setup = (File.Exists(NameSetupFile)
             ? JsonConvert.DeserializeObject<Setup>(await File.ReadAllTextAsync(NameSetupFile))
@@ -122,36 +124,7 @@ public static class Globals
         await File.WriteAllTextAsync(NameSetupFile, JsonConvert.SerializeObject(Setup));
     }
 
-    public static async Task<(string phone, string path)[]> GetAccountsWarm(string[] phoneFrom)
-    {
-        var accounts = new List<(string phone, string path)>();
-
-        foreach (var accountDirectory in Directory.GetDirectories(Setup.PathToDirectoryAccounts))
-        {
-            if (!File.Exists($@"{accountDirectory}\Data.json") ||
-                !Directory.Exists($@"{accountDirectory}\com.whatsapp"))
-                continue;
-
-            var phone = new DirectoryInfo(accountDirectory).Name;
-            var dataAccount =
-                JsonConvert.DeserializeObject<AccountData>(
-                    await File.ReadAllTextAsync($@"{accountDirectory}\Data.json"));
-
-            switch (phoneFrom.Contains(phone))
-            {
-                case false when !dataAccount!.LastActiveDialog!.ContainsKey(phone):
-                case false when dataAccount.LastActiveDialog!.ContainsKey(phone) &&
-                                (DateTime.Now - dataAccount.LastActiveDialog[phone]).TotalMilliseconds >=
-                                Setup.DelayBetweenUsers * 1000:
-                    accounts.Add((phone, accountDirectory));
-                    break;
-            }
-        }
-
-        return accounts.ToArray();
-    }
-
-    public static async Task<(string phone, string path)[]> GetAccounts(string[] phoneFrom, int trustLevelAccount)
+    public static async Task<(string phone, string path)[]> GetAccounts(string[] phoneFrom)
     {
         var accounts = new List<(string phone, string path)>();
 
@@ -161,11 +134,8 @@ public static class Globals
                 continue;
 
             var phone = new DirectoryInfo(accountDirectory).Name;
-            var dataAccount =
-                JsonConvert.DeserializeObject<AccountData>(
-                    await File.ReadAllTextAsync($@"{accountDirectory}\Data.json"));
 
-            if (!phoneFrom.Contains(phone) && dataAccount!.TrustLevelAccount >= trustLevelAccount)
+            if (!phoneFrom.Contains(phone))
                 accounts.Add((phone, accountDirectory));
         }
 
@@ -179,34 +149,14 @@ public static class Globals
 public class Setup
 {
     /// <summary>
-    /// Кол-во циклов на блок сообщений
+    /// Кол-во сообщений с аккаунта
     /// </summary>
-    public int CountMessage = 1;
+    public int CountMessagesFromAccount = 50;
 
     /// <summary>
     /// Кол-во потоков хрома
     /// </summary>
     public int CountThreadsChrome = 1;
-
-    /// <summary>
-    /// Задержка между отправкой сообщений между двумя пользователями (срабатывает по окончанию цикла)
-    /// </summary>
-    public int DelayBetweenUsers = 24000;
-
-    /// <summary>
-    /// Уровень прогрева аккаунта для начала рассылки сообщений
-    /// </summary>
-    public int TrustLevelAccount = 0;
-
-    /// <summary>
-    /// Кол-во сообщений с аккаунта при рассылке
-    /// </summary>
-    public int CountMessageFromAccount = 2;
-
-    /// <summary>
-    /// Индекс страны для регистрации
-    /// </summary>
-    public int CountryIndexRegister = 0;
 
     /// <summary>
     /// Включить режим прогрева
@@ -258,7 +208,7 @@ public class AccountData
     public int TrustLevelAccount = 0;
 
     /// <summary>
-    /// 
+    /// Кол-во сообщений
     /// </summary>
     public int CountMessages = 0;
 

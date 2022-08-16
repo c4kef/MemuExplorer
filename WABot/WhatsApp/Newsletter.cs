@@ -10,7 +10,8 @@ public class Newsletter
     private readonly List<string> _usedPhonesUsers;
     private readonly FileInfo _logFile;
 
-    private FileInfo _pathToContacts;
+    public bool IsStop;
+    private FileInfo _pathToContacts = null!;
     private string[] _contacts;
     private string[] _names;
 
@@ -27,6 +28,9 @@ public class Newsletter
     {
         var tasks = new List<Task>();
         var rnd = new Random();
+
+        IsStop = false;
+        MessagesSendedCount = 0;
 
         _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames))
             .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
@@ -110,11 +114,11 @@ public class Newsletter
         var client = _tetheredDevices[idThread].Client;
         var clientIndex = _tetheredDevices[idThread].Index;
 
-        //await client.ImportContacts(_pathToContacts.FullName);
+        await client.ImportContacts(_pathToContacts.FullName);
 
-        while (true)//Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive
+        while (Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive && !IsStop)
         {
-            /*var result = await Globals.GetAccounts(_usedPhones.ToArray(), Globals.Setup.TrustLevelAccount);
+            var result = await Globals.GetAccounts(_usedPhones.ToArray());
 
             if (result.Length == 0)
                 break;
@@ -142,21 +146,21 @@ public class Newsletter
                         @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
 
                 continue;
-            }*/
+            }
 
             var countMsg = 0;
 
         recurseSendMessageToContact:
 
-            /*if (!Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
-                break;*/
+            if (!Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
+                break;
 
             var contact = GetFreeNumberUser();
 
             if (string.IsNullOrEmpty(contact))
                 break;
 
-            /*if (!await IsValid())
+            if (!await IsValid())
             {
                 if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") &&
                     Directory.Exists(client.Account))
@@ -166,7 +170,7 @@ public class Newsletter
                         @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
 
                 continue;
-            }*/
+            }
 
             var messageSended = await client.SendMessage(contact, text);
 
@@ -177,18 +181,18 @@ public class Newsletter
                     break;
                 case true:
                     {
-                        //++_sendedMessagesCountFromAccount[phone];
-                        //++MessagesSendedCount;
+                        ++_sendedMessagesCountFromAccount[phone];
+                        ++MessagesSendedCount;
 
-                        /*Log.Write(
+                        Log.Write(
                             $"Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
-                            _logFile.FullName);*/
+                            _logFile.FullName);
 
-                        /*Log.Write(
+                        Log.Write(
                             $"[{_sendedMessagesCountFromAccount[phone]}] - Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
-                            logAccount.FullName);*/
+                            logAccount.FullName);
 
-                        if (++countMsg > Globals.Setup.CountMessageFromAccount)
+                        if (++countMsg > Globals.Setup.CountMessagesFromAccount)
                             continue;
 
                         break;

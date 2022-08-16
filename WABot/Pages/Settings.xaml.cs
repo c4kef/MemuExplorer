@@ -21,16 +21,7 @@ public partial class Settings : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Сколько раз блок текста должен быть продублирован в сообщение
-    /// </summary>
-    public int CountMessage
-    {
-        get => Globals.Setup.CountMessage;
-        set => Globals.Setup.CountMessage = value;
-    }
-
-    /// <summary>
-    /// Сколько раз блок текста должен быть продублирован в сообщение
+    /// Кол-во потоков для хрома
     /// </summary>
     public int CountThreadsChrome
     {
@@ -39,41 +30,14 @@ public partial class Settings : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Сколько должно пройти времени с момента последней переписки с другим контактом. Время в формате 1 у.е = 1сек
+    /// Кол-во потоков для хрома
     /// </summary>
-    public int DelayBetweenUsers
+    public int CountMessagesFromAccount
     {
-        get => Globals.Setup.DelayBetweenUsers;
-        set => Globals.Setup.DelayBetweenUsers = value;
-    }
-    
-    /// <summary>
-    /// Индекс старны через которую будут регистрироваться аккаунты
-    /// </summary>
-    public int CountryIndexRegister
-    {
-        get => Globals.Setup.CountryIndexRegister;
-        set => Globals.Setup.CountryIndexRegister = value;
+        get => Globals.Setup.CountMessagesFromAccount;
+        set => Globals.Setup.CountMessagesFromAccount = value;
     }
 
-    /// <summary>
-    /// Определяет уровень прогрева для аккаунтов которыми могут пользоваться боты
-    /// </summary>
-    public int TrustLevelAccount
-    {
-        get => Globals.Setup.TrustLevelAccount;
-        set => Globals.Setup.TrustLevelAccount = value;
-    }
-
-    /// <summary>
-    /// Кол-во сообщений с одного аккаунта при рассылке
-    /// </summary>
-    public int CountMessageFromAccount
-    {
-        get => Globals.Setup.CountMessageFromAccount;
-        set => Globals.Setup.CountMessageFromAccount = value;
-    }
-    
     /// <summary>
     /// Включить прогрев?
     /// </summary>

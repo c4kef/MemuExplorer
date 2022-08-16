@@ -35,8 +35,19 @@
                     <Button HorizontalAlignment="Center"
                             Margin="10,0,0,0"
                             ui:ControlHelper.CornerRadius="5"
-                            Content="Рассылка"
+                            Content="Рассылка Веб"
                             Click="NewsletterWeb">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                Начнет процесс рассылки сообщений пользователям через вебку
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
+                    <Button HorizontalAlignment="Center"
+                            Margin="10,0,0,0"
+                            ui:ControlHelper.CornerRadius="5"
+                            Content="Рассылка"
+                            Click="Newsletter">
                         <Button.ToolTip>
                             <ToolTip>
                                 Начнет процесс рассылки сообщений пользователям

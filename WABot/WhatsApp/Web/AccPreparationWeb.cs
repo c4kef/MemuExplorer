@@ -10,6 +10,7 @@ public class AccPreparationWeb
     private string[] _names;
     private int _removedAccounts;
     private int _alivesAccounts;
+    public bool IsStop;
 
     public AccPreparationWeb()
     {
@@ -26,6 +27,9 @@ public class AccPreparationWeb
     {
         var tasks = new List<Task>();
         var rnd = new Random();
+
+        IsStop = false;
+        _removedAccounts = _alivesAccounts = 0;
 
         _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames))
             .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
@@ -84,7 +88,7 @@ public class AccPreparationWeb
         WAWClient c1 = null!, c2 = null!;
         bool c1Auth = false, c2Auth = false;
 
-        while (_accounts.Count > 1)
+        while (_accounts.Count > 1 && !IsStop)
         {
             var result = _accounts[0];
 

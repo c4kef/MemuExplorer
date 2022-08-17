@@ -34,7 +34,7 @@
                 <CheckBox Margin="0,10,0,0"
                           ui:ControlHelper.CornerRadius="5"
                           Content="Сканирование QR кода"
-                          IsChecked="{Binding EnableWarm}"
+                          IsChecked="{Binding EnableScanQr}"
                           Click="EnableWarmClicked">
                     <CheckBox.ToolTip>
                         <ToolTip>

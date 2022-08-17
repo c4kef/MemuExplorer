@@ -58,7 +58,7 @@ public class AccPreparationWeb
 
         Task.WaitAll(tasks.ToArray(), -1);
 
-        foreach (var device in Globals.Devices)
+        foreach (var device in Globals.Devices.ToArray())
             device.InUsage = false;
 
         Log.Write($"Завершено\n", _logFile.FullName);

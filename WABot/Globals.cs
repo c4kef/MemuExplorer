@@ -159,9 +159,14 @@ public class Setup
     public int CountThreadsChrome = 1;
 
     /// <summary>
-    /// Включить режим прогрева
+    /// Включить подготовку аккаунта через веб?
     /// </summary>
     public bool EnableWarm = false;
+
+    /// <summary>
+    /// Включить сканирование qr кода?
+    /// </summary>
+    public bool EnableScanQr = false;
 
     /// <summary>
     /// Путь до директории с аккаунтами WhatsApp

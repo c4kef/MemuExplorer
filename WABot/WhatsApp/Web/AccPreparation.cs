@@ -70,7 +70,7 @@ public class AccPreparation
 
         Task.WaitAll(tasks.ToArray(), -1);
 
-        foreach (var device in Globals.Devices)
+        foreach (var device in Globals.Devices.ToArray())
             device.InUsage = false;
 
         Log.Write($"Завершено\n", _logFile.FullName);
@@ -103,8 +103,8 @@ public class AccPreparation
 
         Log.Write($"Поток {idThread} запущен\n", _logFile.FullName);
 
-        while (Globals.Devices.Where(device => device.Index == c1Index).ToArray()[0].IsActive &&
-               Globals.Devices.Where(device => device.Index == c2Index).ToArray()[0].IsActive && !IsStop)
+        while (Globals.Devices.ToArray().Where(device => device.Index == c1Index).ToArray()[0].IsActive &&
+               Globals.Devices.ToArray().Where(device => device.Index == c2Index).ToArray()[0].IsActive && !IsStop)
         {
             var result = await Globals.GetAccounts(_usedPhones.ToArray());
 
@@ -239,25 +239,43 @@ public class AccPreparation
             if (!c1Auth || !c2Auth)
                 continue;
 
-            try
+            if (Globals.Setup.EnableScanQr)
             {
-                if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1), false))
+                try
                 {
-                    c2Auth = false;
-                    _removedAccounts++;
-                    continue;
-                }
+                    if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1), false))
+                    {
+                        c2Auth = false;
+                        _removedAccounts++;
+                        continue;
+                    }
 
-                await TryLoginWeb(c1, c1.Phone.Remove(0, 1), true);
+                    await TryLoginWeb(c1, c1.Phone.Remove(0, 1), true);
+                }
+                catch (Exception ex)
+                {
+                    Log.Write($"[Handler] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Log.Write($"[Handler] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
+                SuccesfulMoveAccount(c1);
+                SuccesfulMoveAccount(c2);
+                Log.Write($"[Handler] - Аккаунты перемещены\n", _logFile.FullName);
             }
 
             _alivesAccounts += 2;
 
             c1Auth = c2Auth = false;
+        }
+
+        void SuccesfulMoveAccount(WaClient client)
+        {
+            if (Directory.Exists(@$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
+                Directory.Delete(client.Account, true);
+            else if (Directory.Exists(client.Account))
+                Directory.Move(client.Account,
+                    @$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
         }
 
         async Task<bool> TryLogin(WaClient client, string phone, string path)
@@ -383,11 +401,7 @@ public class AccPreparation
 
                 wClient.RemoveQueue();
 
-                if (Directory.Exists(@$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
-                    Directory.Delete(client.Account, true);
-                else if (Directory.Exists(client.Account))
-                    Directory.Move(client.Account,
-                        @$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+                SuccesfulMoveAccount(client);
 
                 if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}") && File.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json"))
                 {

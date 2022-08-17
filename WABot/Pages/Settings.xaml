@@ -20,11 +20,25 @@
                 Background="Transparent" BorderThickness="1" CornerRadius="10">
             <StackPanel Orientation="Vertical">
                 <Label Content="Настройки подготовки" HorizontalAlignment="Center" />
-                <CheckBox Margin="0,10,0,0" ui:ControlHelper.CornerRadius="5" Content="Включить"
-                          IsChecked="{Binding EnableWarm}" Click="EnableWarmClicked">
+                <CheckBox Margin="0,10,0,0"
+                          ui:ControlHelper.CornerRadius="5"
+                          Content="Подготовка в веб"
+                          IsChecked="{Binding EnableWarm}"
+                          Click="EnableWarmClicked">
                     <CheckBox.ToolTip>
                         <ToolTip>
                             Включить подготовку аккаунтов для рассылки через веб?
+                        </ToolTip>
+                    </CheckBox.ToolTip>
+                </CheckBox>
+                <CheckBox Margin="0,10,0,0"
+                          ui:ControlHelper.CornerRadius="5"
+                          Content="Сканирование QR кода"
+                          IsChecked="{Binding EnableWarm}"
+                          Click="EnableWarmClicked">
+                    <CheckBox.ToolTip>
+                        <ToolTip>
+                            Включить при подготовке аккаунта сканирование qr кода?
                         </ToolTip>
                     </CheckBox.ToolTip>
                 </CheckBox>

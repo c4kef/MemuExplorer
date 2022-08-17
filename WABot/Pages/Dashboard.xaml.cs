@@ -204,8 +204,6 @@ public partial class Dashboard : INotifyPropertyChanged
             await _activeTask;
 
             MessageBox.Show("Рассылка завершена");
-
-            AverageMessages = ProgressValue = 0;
         }
         catch (Exception ex)
         {
@@ -213,6 +211,7 @@ public partial class Dashboard : INotifyPropertyChanged
             await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
         }
 
+        AverageMessages = ProgressValue = 0;
         _isBusy = false;
     }
 
@@ -293,15 +292,9 @@ public partial class Dashboard : INotifyPropertyChanged
             return;
         }
 
-        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive) || Globals.Setup.EnableWarm)
+        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive) )
         {
-            MessageBox.Show("Запустите устройства или отключите режим прогрева");
-            return;
-        }
-
-        if (string.IsNullOrEmpty(TextMessage) || TextMessage.ToLower().Contains("https") || TextMessage.ToLower().Contains("http") || TextMessage.ToLower().Contains("www"))
-        {
-            MessageBox.Show("Укажите корректный текст сообщения");
+            MessageBox.Show("Запустите устройства");
             return;
         }
 
@@ -316,7 +309,6 @@ public partial class Dashboard : INotifyPropertyChanged
 
             MessageBox.Show("Рассылка завершена");
 
-            ProgressValue = 0;
         }
         catch (Exception ex)
         {
@@ -324,6 +316,7 @@ public partial class Dashboard : INotifyPropertyChanged
             await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
         }
 
+        AverageMessages = ProgressValue = 0;
         _isBusy = false;
     }
 

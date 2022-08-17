@@ -1,4 +1,6 @@
-﻿namespace WABot.WhatsApp;
+﻿using WABot.Pages;
+
+namespace WABot.WhatsApp;
 
 public class Newsletter
 {
@@ -14,6 +16,7 @@ public class Newsletter
     private FileInfo _pathToContacts = null!;
     private string[] _contacts;
     private string[] _names;
+    private int _diedAccounts;
 
     public Newsletter()
     {
@@ -30,7 +33,7 @@ public class Newsletter
         var rnd = new Random();
 
         IsStop = false;
-        MessagesSendedCount = 0;
+        MessagesSendedCount = _diedAccounts = 0;
 
         _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames))
             .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
@@ -79,7 +82,7 @@ public class Newsletter
 
         Task.WaitAll(tasks.ToArray(), -1);
 
-        foreach (var device in Globals.Devices)
+        foreach (var device in Globals.Devices.ToArray())
             device.InUsage = false;
 
         Log.Write("\n\nКол-во сообщений с аккаунта:\n", _logFile.FullName);
@@ -88,7 +91,7 @@ public class Newsletter
             Log.Write($"{account.Key} - {account.Value}\n", _logFile.FullName);
 
         Log.Write($"\nОбщее количество отправленных сообщений: {MessagesSendedCount}\n", _logFile.FullName);
-        Log.Write($"\nОтлетело: {_sendedMessagesCountFromAccount.Count(account => account.Value == 0)}\n", _logFile.FullName);
+        Log.Write($"\nОтлетело: {_diedAccounts}\n", _logFile.FullName);
         busyDevices.Clear();
         Stop();
 
@@ -116,7 +119,7 @@ public class Newsletter
 
         await client.ImportContacts(_pathToContacts.FullName);
 
-        while (Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive && !IsStop)
+        while (Globals.Devices.ToArray().Where(device => device.Index == clientIndex).ToArray()[0].IsActive && !IsStop)
         {
             var result = await Globals.GetAccounts(_usedPhones.ToArray());
 
@@ -152,7 +155,7 @@ public class Newsletter
 
         recurseSendMessageToContact:
 
-            if (!Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive)
+            if (!Globals.Devices.ToArray().Where(device => device.Index == clientIndex).ToArray()[0].IsActive || IsStop)
                 break;
 
             var contact = GetFreeNumberUser();
@@ -178,6 +181,14 @@ public class Newsletter
             {
                 case false when await client.GetInstance().ExistsElement("//node[@text='OK']", false):
                     await client.GetInstance().Click("//node[@text='OK']");
+                    _diedAccounts++;
+                    var count = 0;
+                    var messages = _sendedMessagesCountFromAccount.TakeLast(10);
+
+                    foreach (var msg in messages)
+                        count += msg.Value;
+
+                    Dashboard.GetInstance().AverageMessages = (int)Math.Floor((decimal)count / messages.Count());
                     break;
                 case true:
                     {
@@ -185,7 +196,7 @@ public class Newsletter
                         ++MessagesSendedCount;
 
                         Log.Write(
-                            $"Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
+                            $"Отправлено сообщение с номера {client.Phone.Remove(0, phone.Length - 5)} на номер {contact}\n",
                             _logFile.FullName);
 
                         Log.Write(

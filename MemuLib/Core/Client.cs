@@ -242,7 +242,7 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var element = _adbClient.FindElement(_device, uiElement);
+        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromMilliseconds(Settings.WaitingSecs));
         
         if (element is null)
             throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
@@ -267,7 +267,7 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var element = _adbClient.FindElement(_device, uiElement);
+        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromMilliseconds(Settings.WaitingSecs));
        
         if (element is null)
             throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
@@ -291,7 +291,7 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var element = _adbClient.FindElement(_device, uiElement);
+        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromMilliseconds(Settings.WaitingSecs));
        
         if (element is null)
             throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");

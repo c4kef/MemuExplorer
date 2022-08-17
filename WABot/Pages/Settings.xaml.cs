@@ -39,12 +39,21 @@ public partial class Settings : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Включить прогрев?
+    /// Включить подготовку через веб?
     /// </summary>
     public bool EnableWarm
     {
         get => Globals.Setup.EnableWarm;
         set => Globals.Setup.EnableWarm = value;
+    }
+
+    /// <summary>
+    /// Включить сканирование qr кода при подготовке?
+    /// </summary>
+    public bool EnableScanQr
+    {
+        get => Globals.Setup.EnableScanQr;
+        set => Globals.Setup.EnableScanQr = value;
     }
 
     public Brush ColorPathToDirectoryAccounts =>

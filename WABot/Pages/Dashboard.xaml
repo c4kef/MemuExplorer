@@ -126,7 +126,7 @@
                          Minimum="0"
                          Value="{Binding ProgressValue}" />
             <Label Content="{Binding AverageMessages}"
-                   ContentStringFormat="Среднее при рассылке: {0}s"
+                   ContentStringFormat="Среднее при рассылке: {0}"
                    HorizontalAlignment="Center"
                    Margin="0,10,0,0" />
         </StackPanel>

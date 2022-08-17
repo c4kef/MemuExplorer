@@ -1,15 +1,5 @@
-﻿bool WaitQr()
-{
-    var status = false;
-    Task.WaitAll(new Task[] { Task.Run(async() =>
-            {
-                while (true)
-                    await Task.Delay(500);
+﻿var arr = new List<string>();
+arr.AddRange(await File.ReadAllLinesAsync(Console.ReadLine()!));
+arr.AddRange(await File.ReadAllLinesAsync(Console.ReadLine()!));
 
-                status = true;
-            }) }, 30_000);
-
-    return status;
-}
-
-Console.WriteLine(WaitQr());
+await File.WriteAllLinesAsync("checked.txt", arr.Distinct());

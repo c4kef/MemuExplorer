@@ -124,7 +124,10 @@ public class Newsletter
         recurseSendMessageToContact:
 
             if (IsStop)
+            {
+                await waw.Free();
                 break;
+            }
 
             var contact = GetFreeNumberUser();
 
@@ -175,12 +178,15 @@ public class Newsletter
 
                 Dashboard.GetInstance().AverageMessages = (int)Math.Floor((decimal)count / messages.Count());
 
-                if (File.Exists(@$"{result.FullName}"))
-                    File.Delete(@$"{result.FullName}");
+                try
+                {
+                    if (File.Exists(@$"{result.FullName}"))
+                        File.Delete(@$"{result.FullName}");
 
-                if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}"))
-                    Directory.Delete($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}", true);
-
+                    if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}"))
+                        Directory.Delete($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}", true);
+                }
+                catch{}
                 continue;
             }
 

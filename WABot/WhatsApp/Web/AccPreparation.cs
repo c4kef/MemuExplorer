@@ -431,7 +431,6 @@ public class AccPreparation
             }
         }
 
-
         async Task<bool> IsValid(WaClient client)
         {
             await Task.Delay(MemuLib.Settings.WaitingSecs);

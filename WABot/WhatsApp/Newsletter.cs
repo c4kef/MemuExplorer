@@ -237,7 +237,7 @@ public class Newsletter
                         Dashboard.GetInstance().CompletedTasks = ++MessagesSendedCount;
 
                         Log.Write(
-                            $"{phone.Remove(5, phone.Length - 5)};{contact}",
+                            $"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{contact}",
                             _logFile.FullName);
 
                         Log.Write(

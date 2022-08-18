@@ -167,8 +167,6 @@ public class Newsletter
 
             _usedPhones.Add(phone);
 
-            var logAccount = new FileInfo($@"{path}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_log.txt");
-            
             _sendedMessagesCountFromAccount[phone] = 0;
 
             await client.ReCreate($"+{phone}", path);
@@ -217,7 +215,7 @@ public class Newsletter
             {
                 case false when await client.GetInstance().ExistsElement("//node[@text='OK']", false):
                     await client.GetInstance().Click("//node[@text='OK']");
-                    
+
                     _usedPhonesUsers.Remove(contact);
                     Dashboard.GetInstance().BannedAccounts = ++_diedAccounts;
                     var count = 0;
@@ -243,10 +241,6 @@ public class Newsletter
                             $"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{contact}",
                             _logFile.FullName);
 
-                        Log.Write(
-                            $"[{_sendedMessagesCountFromAccount[phone]}] - Отправлено сообщение с номера {client.Phone.Remove(0, 1)} на номер {contact}\n",
-                            logAccount.FullName);
-
                         if (++countMsg > Globals.Setup.CountMessagesFromAccount)
                             continue;
 
@@ -255,7 +249,6 @@ public class Newsletter
             }
 
             await Task.Delay(new Random().Next(30_000, 60_000));//Ждем 30-60 сек
-
             goto recurseSendMessageToContact;
         }
 

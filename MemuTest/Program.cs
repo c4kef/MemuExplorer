@@ -1,5 +1,6 @@
-﻿var arr = new List<string>();
-arr.AddRange(await File.ReadAllLinesAsync(Console.ReadLine()!));
-arr.AddRange(await File.ReadAllLinesAsync(Console.ReadLine()!));
+﻿var r1 = await File.ReadAllLinesAsync(Console.ReadLine()!);
+var r2 = await File.ReadAllLinesAsync(Console.ReadLine()!);
 
-await File.WriteAllLinesAsync("checked.txt", arr.Distinct());
+foreach (var r in r1)
+    if (r2.Contains(r))
+        Console.WriteLine(r);

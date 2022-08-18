@@ -1,4 +1,5 @@
-﻿using WABot.Pages;
+﻿using MS.WindowsAPICodePack.Internal;
+using WABot.Pages;
 
 namespace WABot.WhatsApp;
 
@@ -93,6 +94,8 @@ public class Newsletter
 
         var busyDevices = new List<int>();
 
+        Dashboard.GetInstance().CountTasks = _contacts.Length;
+
         await Globals.InitAccountsFolder();
 
         while (true)
@@ -154,8 +157,6 @@ public class Newsletter
         {
             var result = await Globals.GetAccounts(_usedPhones.ToArray());
 
-            Dashboard.GetInstance().CountTasks = result.Length;
-
             if (result.Length == 0)
                 break;
 
@@ -181,6 +182,7 @@ public class Newsletter
                     Directory.Move(client.Account,
                         @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
 
+                Dashboard.GetInstance().BannedAccounts = ++_diedAccounts;
                 continue;
             }
 
@@ -205,6 +207,7 @@ public class Newsletter
                     Directory.Move(client.Account,
                         @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
 
+                Dashboard.GetInstance().BannedAccounts = ++_diedAccounts;
                 continue;
             }
 

@@ -39,9 +39,6 @@ public class Newsletter
             if (_usedPhonesUsers.Count() == 0)
                 continue;
 
-            if (removedPhone.Count() % 100 != 0)
-                continue;
-
             var contact = string.Empty;
 
             foreach(var phone in _usedPhonesUsers)

@@ -1,6 +1,10 @@
-﻿var r1 = await File.ReadAllLinesAsync(Console.ReadLine()!);
-var r2 = await File.ReadAllLinesAsync(Console.ReadLine()!);
+﻿using System.Linq;
 
-foreach (var r in r1)
-    if (r2.Contains(r))
-        Console.WriteLine(r);
+var removed = Directory.GetDirectories(Console.ReadLine()!).Select(dir => new DirectoryInfo(dir));
+var newAcc = Directory.GetDirectories(Console.ReadLine()!).Select(dir => new DirectoryInfo(dir));
+for (var i = 0; i < newAcc.Count(); i++)
+{
+    if (removed.Any(acc => acc.Name == newAcc.ToArray()[i].Name))
+        Directory.Delete(newAcc.ToArray()[i].FullName, true);
+}
+Console.WriteLine("OK");

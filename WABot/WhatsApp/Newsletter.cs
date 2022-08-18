@@ -40,9 +40,6 @@ public class Newsletter
             if (_usedPhonesUsers.Count() == 0)
                 continue;
 
-            if (removedPhone.Count() % 100 != 0)
-                continue;
-
             var contact = string.Empty;
 
             foreach (var phone in _usedPhonesUsers)
@@ -217,6 +214,7 @@ public class Newsletter
                     await client.GetInstance().Click("//node[@text='OK']");
 
                     _usedPhonesUsers.Remove(contact);
+
                     Dashboard.GetInstance().BannedAccounts = ++_diedAccounts;
                     var count = 0;
                     var messages = _sendedMessagesCountFromAccount.TakeLast(10);

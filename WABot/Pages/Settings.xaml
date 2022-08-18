@@ -45,8 +45,8 @@
                 <CheckBox Margin="0,10,0,0"
                           ui:ControlHelper.CornerRadius="5"
                           Content="Только проверка бана"
-                          IsChecked="{Binding EnableScanQr}"
-                          Click="EnableScanQrClicked">
+                          IsChecked="{Binding EnableCheckBan}"
+                          Click="EnableCheckBanClicked">
                     <CheckBox.ToolTip>
                         <ToolTip>
                             Включить только проверку бана на аккаунтах?

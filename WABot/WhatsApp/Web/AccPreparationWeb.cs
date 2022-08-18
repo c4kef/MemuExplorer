@@ -1,13 +1,15 @@
-﻿namespace WABot.WhatsApp.Web;
+﻿using WABot.Pages;
+
+namespace WABot.WhatsApp.Web;
 
 public class AccPreparationWeb
 {
     private readonly List<string> _usedPhones;
     private readonly List<string> _usedPhonesUsers;
     private readonly List<FileInfo> _accounts;
-    private readonly FileInfo _logFile;
 
-    private string[] _names;
+    private FileInfo _logFile;
+
     private int _removedAccounts;
     private int _alivesAccounts;
     public bool IsStop;
@@ -16,7 +18,6 @@ public class AccPreparationWeb
     {
         _usedPhonesUsers = _usedPhones = new List<string>();
         _accounts = new List<FileInfo>();
-        _names = new[] { "" };
 
         _removedAccounts = _alivesAccounts = 0;
 
@@ -30,9 +31,7 @@ public class AccPreparationWeb
 
         IsStop = false;
         _removedAccounts = _alivesAccounts = 0;
-
-        _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames))
-            .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
+        _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_prep_log.txt");
 
         foreach (var account in Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\Second"))
             _accounts.Add(new FileInfo(account));
@@ -46,6 +45,8 @@ public class AccPreparationWeb
             MessageBox.Show("Похоже кол-во потоков не кратно двум либо аккаунтов очень мало");
             return;
         }
+
+        Dashboard.GetInstance().CountTasks = _accounts.Count;
 
         for (var i = 0; i < Globals.Setup.CountThreadsChrome / 2; i++)
         {
@@ -73,6 +74,7 @@ public class AccPreparationWeb
     {
         _usedPhones.Clear();
         _usedPhonesUsers.Clear();
+        _accounts.Clear();
     }
 
     /* if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}") && File.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json"))
@@ -126,7 +128,7 @@ public class AccPreparationWeb
                 Log.Write($"[{phone}] - {(c1Auth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
 
                 if (!c1Auth)
-                    _removedAccounts++;
+                    Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
 
                 continue;
             }
@@ -153,7 +155,7 @@ public class AccPreparationWeb
 
                 if (!c2Auth)
                 {
-                    _removedAccounts++;
+                    Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
                     continue;
                 }
             }
@@ -193,7 +195,7 @@ public class AccPreparationWeb
                         if (!await c1.SendText(c2.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
                         {
                             c1Auth = false;
-                            _removedAccounts++;
+                            Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
                             break;
                         }
 
@@ -205,7 +207,7 @@ public class AccPreparationWeb
                         if (!await c2.SendText(c1.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
                         {
                             c2Auth = false;
-                            _removedAccounts++;
+                            Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
                             break;
                         }
 
@@ -224,7 +226,7 @@ public class AccPreparationWeb
             Move(c1.NameSession, true);
             Move(c2.NameSession, false);
 
-            _alivesAccounts += 2;
+            Dashboard.GetInstance().CompletedTasks = _alivesAccounts += 2;
         }
 
         void Move(string phone, bool firstMsg)

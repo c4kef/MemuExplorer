@@ -1,12 +1,14 @@
-﻿namespace WABot.WhatsApp.Web;
+﻿using WABot.Pages;
+
+namespace WABot.WhatsApp.Web;
 
 public class AccPreparation
 {
     private readonly Dictionary<int, Device[]> _tetheredDevices;
     private readonly List<string> _usedPhones;
     private readonly List<string> _usedPhonesUsers;
-    private readonly FileInfo _logFile;
-
+  
+    private FileInfo _logFile;
     private string[] _names;
     private int _removedAccounts;
     private int _alivesAccounts;
@@ -30,6 +32,7 @@ public class AccPreparation
 
         IsStop = false;
         _removedAccounts = _alivesAccounts = 0;
+        _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_prep_log.txt");
 
         _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames))
             .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
@@ -108,6 +111,8 @@ public class AccPreparation
         {
             var result = await Globals.GetAccounts(_usedPhones.ToArray());
 
+            Dashboard.GetInstance().CountTasks = result.Length;
+
             if (result.Length == 0)
             {
                 Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
@@ -126,7 +131,7 @@ public class AccPreparation
                 c1Auth = await TryLogin(c1, phone, path);
 
                 if (!c1Auth)
-                    _removedAccounts++;
+                    Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
 
                 Log.Write($"[{phone}] - {(c1Auth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
                 continue;
@@ -139,7 +144,7 @@ public class AccPreparation
 
                 if (!c2Auth)
                 {
-                    _removedAccounts++;
+                    Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
                     continue;
                 }
             }
@@ -170,14 +175,14 @@ public class AccPreparation
                 if (!await IsValid(c1))
                 {
                     c1Auth = false;
-                    _removedAccounts++;
+                    Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
                     break;
                 }
 
                 if (!await IsValid(c2))
                 {
                     c2Auth = false;
-                    _removedAccounts++;
+                    Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
                     break;
                 }
 
@@ -209,7 +214,7 @@ public class AccPreparation
                         if (!await IsValid(c1))
                         {
                             c1Auth = false;
-                            _removedAccounts++;
+                            Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
                             break;
                         }
                     }
@@ -223,7 +228,7 @@ public class AccPreparation
                         if (!await IsValid(c2))
                         {
                             c2Auth = false;
-                            _removedAccounts++;
+                            Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
                             break;
                         }
                     }
@@ -246,7 +251,7 @@ public class AccPreparation
                     if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1), false))
                     {
                         c2Auth = false;
-                        _removedAccounts++;
+                        Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
                         continue;
                     }
 
@@ -264,7 +269,7 @@ public class AccPreparation
                 Log.Write($"[Handler] - Аккаунты перемещены\n", _logFile.FullName);
             }
 
-            _alivesAccounts += 2;
+            Dashboard.GetInstance().CompletedTasks = _alivesAccounts += 2;
 
             c1Auth = c2Auth = false;
         }

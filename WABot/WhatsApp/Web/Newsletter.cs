@@ -6,10 +6,10 @@ public class Newsletter
     public int MessagesSendedCount { get; private set; }
 
     private readonly Dictionary<string, int> _sendedMessagesCountFromAccount;
-    private readonly List<FileInfo> _accounts;
     private readonly List<string> _usedPhones;
     private readonly List<string> _usedPhonesUsers;
-    private readonly FileInfo _logFile;
+
+    private FileInfo _logFile;
     private string[] _contacts;
 
     public bool IsStop;
@@ -21,11 +21,45 @@ public class Newsletter
         _sendedMessagesCountFromAccount = new Dictionary<string, int>();
         _usedPhonesUsers = _usedPhones = new List<string>();
         _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_log.txt");
-        _accounts = new List<FileInfo>();
 
         _diedAccounts = 0;
         _contacts = new[] { "" };
         _checkReadyThreads = false;
+    }
+
+    private async Task HandlerNumberRewrite()
+    {
+        var contacts = _contacts.ToList();
+        var removedPhone = new List<string>();
+
+        while (!IsStop)
+        {
+            await Task.Delay(500);
+
+            if (_usedPhonesUsers.Count() == 0)
+                continue;
+
+            if (removedPhone.Count() % 100 != 0)
+                continue;
+
+            var contact = string.Empty;
+
+            foreach(var phone in _usedPhonesUsers)
+                if (!removedPhone.Contains(phone))
+                {
+                    contact = phone;
+                    break;
+                }
+
+            if (string.IsNullOrEmpty(contact))
+                continue;
+
+            contacts.RemoveAll(phone => phone == contact);
+
+            await File.WriteAllLinesAsync(Globals.Setup.PathToPhonesUsers, contacts);
+
+            removedPhone.Add(contact);
+        }
     }
 
     public async Task Start(string text)
@@ -33,18 +67,21 @@ public class Newsletter
         var tasks = new List<Task>();
 
         IsStop = false;
+
+        _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_log.txt");
         MessagesSendedCount = _diedAccounts = 0;
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
 
-        foreach (var account in Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First"))
-            _accounts.Add(new FileInfo(account));
+        Dashboard.GetInstance().CountTasks = _contacts.Length;
+
+        _ = Task.Run(HandlerNumberRewrite);
 
         Log.Write($"Добро пожаловать в логи, текст рассылки:\n{text}\n\n", _logFile.FullName);
 
         for (var i = 0; i < Globals.Setup.CountThreadsChrome; i++)
         {
-            var task = Handler(SelectWord(text));
+            var task = Handler();
             
             await Task.Delay(1_500);
 
@@ -57,6 +94,8 @@ public class Newsletter
 
         _checkReadyThreads = false;
 
+        IsStop = true;
+
         Log.Write("\n\nКол-во сообщений с аккаунта:\n", _logFile.FullName);
 
         foreach (var account in _sendedMessagesCountFromAccount)
@@ -65,15 +104,6 @@ public class Newsletter
         Log.Write($"\nОбщее количество отправленных сообщений: {MessagesSendedCount}\n", _logFile.FullName);
         Log.Write($"\nОтлетело: {_diedAccounts}\n", _logFile.FullName);
         Stop();
-
-        string SelectWord(string value)
-        {
-            var backValue = value;
-            foreach (var match in new Regex(@"(\w+)\|\|(\w+)", RegexOptions.Multiline).Matches(backValue))
-                backValue = backValue.Replace(match.ToString()!, match.ToString()!.Split("||")[new Random().Next(0, 100) >= 50 ? 1 : 0]);
-
-            return backValue;
-        }
     }
 
     public void Stop()
@@ -82,11 +112,16 @@ public class Newsletter
         _usedPhonesUsers.Clear();
     }
 
-    private async Task Handler(string text)
+    private async Task Handler()
     {
-        while (_accounts.Count > 0 && !IsStop)
+        while (!IsStop)
         {
-            var result = _accounts[0];
+            var accountsWeb = await Globals.GetAccountsWeb(_usedPhones.ToArray());
+
+            if (accountsWeb.Length == 0)
+                break;
+
+            var result = accountsWeb[0];
 
             var phone = result.Name.Split('.')[0];
 
@@ -99,7 +134,6 @@ public class Newsletter
             result.MoveTo($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name}", true);
 
             _usedPhones.Add(phone);
-            _accounts.RemoveAt(0);
 
             _sendedMessagesCountFromAccount[phone] = 0;
 
@@ -143,15 +177,15 @@ public class Newsletter
             /*if (!await waw.CheckValidPhone(contact))
                 goto recurseSendMessageToContact;*/
 
-            var messageSended = await waw.SendText(contact, SelectWord(text));
+            var messageSended = await waw.SendText(contact, SelectWord(Dashboard.GetInstance().TextMessage));
 
             if (messageSended)
             {
                 ++_sendedMessagesCountFromAccount[phone];
-                ++MessagesSendedCount;
+                Dashboard.GetInstance().CompletedTasks = ++MessagesSendedCount;
 
                 Log.Write(
-                    $"Отправлено сообщение с номера {phone.Remove(0, phone.Length - 5)} на номер {contact}\n",
+                    $"{phone.Remove(5, phone.Length - 5)};{contact}",
                     _logFile.FullName);
 
                 if (++countMsg > Globals.Setup.CountMessagesFromAccount)
@@ -168,7 +202,9 @@ public class Newsletter
 
                 await waw.Free();
 
-                ++_diedAccounts;
+                _usedPhonesUsers.Remove(contact);
+
+                Dashboard.GetInstance().BannedAccounts = ++_diedAccounts;
 
                 var count = 0;
                 var messages = _sendedMessagesCountFromAccount.TakeLast(10);
@@ -178,6 +214,11 @@ public class Newsletter
 
                 Dashboard.GetInstance().AverageMessages = (int)Math.Floor((decimal)count / messages.Count());
 
+                count = 0;
+                foreach (var msg in _sendedMessagesCountFromAccount)
+                    count += msg.Value;
+
+                Dashboard.GetInstance().AverageMessagesAll = (int)Math.Floor((decimal)count / _sendedMessagesCountFromAccount.Count());
                 try
                 {
                     if (File.Exists(@$"{result.FullName}"))

@@ -1,4 +1,5 @@
-﻿using Brush = System.Windows.Media.Brush;
+﻿using System.Diagnostics;
+using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 
 namespace WABot.Pages;
@@ -45,6 +46,15 @@ public partial class Settings : INotifyPropertyChanged
     {
         get => Globals.Setup.EnableWarm;
         set => Globals.Setup.EnableWarm = value;
+    }
+
+    /// <summary>
+    /// Включить подготовку через веб?
+    /// </summary>
+    public bool EnableCheckBan
+    {
+        get => Globals.Setup.EnableCheckBan;
+        set => Globals.Setup.EnableCheckBan = value;
     }
 
     /// <summary>
@@ -207,6 +217,22 @@ public partial class Settings : INotifyPropertyChanged
         await Globals.SaveSetup();
     }
 
+    private async void EnableScanQrClicked(object sender, RoutedEventArgs e)
+    {
+        EnableScanQr = (sender as CheckBox)!.IsChecked!.Value;
+        OnPropertyChanged("EnableScanQr");
+
+        await Globals.SaveSetup();
+    }
+
+    private async void EnableCheckBanClicked(object sender, RoutedEventArgs e)
+    {
+        EnableCheckBan = (sender as CheckBox)!.IsChecked!.Value;
+        OnPropertyChanged("EnableCheckBan");
+
+        await Globals.SaveSetup();
+    }
+
     private async void SelectFileTextForWarm(object sender, RoutedEventArgs e)
     {
         var dialog = new CommonOpenFileDialog();
@@ -218,5 +244,40 @@ public partial class Settings : INotifyPropertyChanged
         }
 
         OnPropertyChanged("ColorPathToTextForWarm");
+    }
+
+    private async void ExportWarmedAccounts(object sender, RoutedEventArgs e)
+    {
+        var accounts = Directory.CreateDirectory(MemuLib.Globals.RandomString(10));
+
+        var first = Directory.CreateDirectory($@"{accounts.FullName}\First");
+        var second = Directory.CreateDirectory($@"{accounts.FullName}\Second");
+
+        var firstDirectoryWarmed = Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First").Select(path => new FileInfo(path));
+        var secondDirectoryWarmed = Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\Second").Select(path => new FileInfo(path));
+
+        foreach (var account in firstDirectoryWarmed.ToArray())
+            try
+            {
+                if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First\{account.Name.Split('.')[0]}"))
+                {
+                    Directory.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First\{account.Name.Split('.')[0]}", $@"{first.FullName}\{account.Name.Split('.')[0]}");
+                    File.Move(account.FullName, $@"{first.FullName}\{account.Name}");
+                }
+            }
+            catch { }
+
+        foreach (var account in secondDirectoryWarmed.ToArray())
+            try
+            {
+                if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\Second\{account.Name.Split('.')[0]}"))
+                {
+                    Directory.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\Second\{account.Name.Split('.')[0]}", $@"{second.FullName}\{account.Name.Split('.')[0]}");
+                    File.Move(account.FullName, $@"{second.FullName}\{account.Name}");
+                }
+            }
+            catch { }
+
+        Process.Start("explorer.exe", accounts.FullName);
     }
 }

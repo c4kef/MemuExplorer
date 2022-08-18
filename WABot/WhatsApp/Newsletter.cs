@@ -10,8 +10,8 @@ public class Newsletter
     private readonly Dictionary<string, int> _sendedMessagesCountFromAccount;
     private readonly List<string> _usedPhones;
     private readonly List<string> _usedPhonesUsers;
-    private readonly FileInfo _logFile;
 
+    private FileInfo _logFile;
     public bool IsStop;
     private FileInfo _pathToContacts = null!;
     private string[] _contacts;
@@ -27,6 +27,41 @@ public class Newsletter
         _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_log.txt");
     }
 
+    private async Task HandlerNumberRewrite()
+    {
+        var contacts = _contacts.ToList();
+        var removedPhone = new List<string>();
+
+        while (!IsStop)
+        {
+            await Task.Delay(500);
+
+            if (_usedPhonesUsers.Count() == 0)
+                continue;
+
+            if (removedPhone.Count() % 100 != 0)
+                continue;
+
+            var contact = string.Empty;
+
+            foreach (var phone in _usedPhonesUsers)
+                if (!removedPhone.Contains(phone))
+                {
+                    contact = phone;
+                    break;
+                }
+
+            if (string.IsNullOrEmpty(contact))
+                continue;
+
+            contacts.RemoveAll(phone => phone == contact);
+
+            await File.WriteAllLinesAsync(Globals.Setup.PathToPhonesUsers, contacts);
+
+            removedPhone.Add(contact);
+        }
+    }
+
     public async Task Start(string text)
     {
         var tasks = new List<Task>();
@@ -34,11 +69,14 @@ public class Newsletter
 
         IsStop = false;
         MessagesSendedCount = _diedAccounts = 0;
+        _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_log.txt");
 
         _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToUserNames))
             .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
+
+        _ = Task.Run(HandlerNumberRewrite);
 
         var cObjs = new List<CObj>();
 
@@ -72,7 +110,7 @@ public class Newsletter
             _tetheredDevices[id] = devices[0];
             await devices[0].Client.Start();
 
-            var task = Handler(id, SelectWord(text));
+            var task = Handler(id);
             await Task.Delay(1_000);
 
             tasks.Add(task);
@@ -85,6 +123,8 @@ public class Newsletter
         foreach (var device in Globals.Devices.ToArray())
             device.InUsage = false;
 
+        IsStop = true;
+
         Log.Write("\n\nКол-во сообщений с аккаунта:\n", _logFile.FullName);
 
         foreach (var account in _sendedMessagesCountFromAccount)
@@ -94,15 +134,6 @@ public class Newsletter
         Log.Write($"\nОтлетело: {_diedAccounts}\n", _logFile.FullName);
         busyDevices.Clear();
         Stop();
-
-        string SelectWord(string value)
-        {
-            var backValue = value;
-            foreach (var match in new Regex(@"(\w+)\|\|(\w+)", RegexOptions.Multiline).Matches(backValue))
-                backValue = backValue.Replace(match.ToString()!, match.ToString()!.Split("||")[new Random().Next(0, 100) >= 50 ? 1 : 0]);
-
-            return backValue;
-        }
     }
 
     public void Stop()
@@ -112,7 +143,7 @@ public class Newsletter
         _usedPhonesUsers.Clear();
     }
 
-    private async Task Handler(int idThread, string text)
+    private async Task Handler(int idThread)
     {
         var client = _tetheredDevices[idThread].Client;
         var clientIndex = _tetheredDevices[idThread].Index;
@@ -122,6 +153,8 @@ public class Newsletter
         while (Globals.Devices.ToArray().Where(device => device.Index == clientIndex).ToArray()[0].IsActive && !IsStop)
         {
             var result = await Globals.GetAccounts(_usedPhones.ToArray());
+
+            Dashboard.GetInstance().CountTasks = result.Length;
 
             if (result.Length == 0)
                 break;
@@ -175,13 +208,15 @@ public class Newsletter
                 continue;
             }
 
-            var messageSended = await client.SendMessage(contact, text);
+            var messageSended = await client.SendMessage(contact, SelectWord(Dashboard.GetInstance().TextMessage));
 
             switch (messageSended)
             {
                 case false when await client.GetInstance().ExistsElement("//node[@text='OK']", false):
                     await client.GetInstance().Click("//node[@text='OK']");
-                    _diedAccounts++;
+                    
+                    _usedPhonesUsers.Remove(contact);
+                    Dashboard.GetInstance().BannedAccounts = ++_diedAccounts;
                     var count = 0;
                     var messages = _sendedMessagesCountFromAccount.TakeLast(10);
 
@@ -189,14 +224,20 @@ public class Newsletter
                         count += msg.Value;
 
                     Dashboard.GetInstance().AverageMessages = (int)Math.Floor((decimal)count / messages.Count());
+
+                    count = 0;
+                    foreach (var msg in _sendedMessagesCountFromAccount)
+                        count += msg.Value;
+
+                    Dashboard.GetInstance().AverageMessagesAll = (int)Math.Floor((decimal)count / _sendedMessagesCountFromAccount.Count());
                     break;
                 case true:
                     {
                         ++_sendedMessagesCountFromAccount[phone];
-                        ++MessagesSendedCount;
+                        Dashboard.GetInstance().CompletedTasks = ++MessagesSendedCount;
 
                         Log.Write(
-                            $"Отправлено сообщение с номера {client.Phone.Remove(0, phone.Length - 5)} на номер {contact}\n",
+                            $"{phone.Remove(5, phone.Length - 5)};{contact}",
                             _logFile.FullName);
 
                         Log.Write(
@@ -213,6 +254,15 @@ public class Newsletter
             await Task.Delay(new Random().Next(30_000, 60_000));//Ждем 30-60 сек
 
             goto recurseSendMessageToContact;
+        }
+
+        string SelectWord(string value)
+        {
+            var backValue = value;
+            foreach (var match in new Regex(@"(\w+)\|\|(\w+)", RegexOptions.Multiline).Matches(backValue))
+                backValue = backValue.Replace(match.ToString()!, match.ToString()!.Split("||")[new Random().Next(0, 100) >= 50 ? 1 : 0]);
+
+            return backValue;
         }
 
         string GetFreeNumberUser()

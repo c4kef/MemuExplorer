@@ -44,6 +44,8 @@ public static class Log
             _ = Task.Run(HandlerWriter);
 
         var about =
+            (info.Contains(';')) ?
+            $"{info}\n" :
             $"[{DateTime.Now:yyyy/MM/dd HH:mm:ss}] {new StackTrace().GetFrame(1)?.GetMethod()?.Name} -> {info}\n";
 
         DataWrites.Add(new DataWrite() {Path = (string.IsNullOrEmpty(path)) ? "log.txt" : path, Text = about});

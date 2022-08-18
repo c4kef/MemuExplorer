@@ -124,6 +124,21 @@ public static class Globals
         await File.WriteAllTextAsync(NameSetupFile, JsonConvert.SerializeObject(Setup));
     }
 
+    public static async Task<FileInfo[]> GetAccountsWeb(string[] usedPhone)
+    {
+        var accounts = new List<FileInfo>();
+
+        foreach (var account in Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First"))
+        {
+            var file = new FileInfo(account);
+
+            if (!usedPhone.Contains(file.Name.Split('.')[0]))
+                accounts.Add(file);
+        }
+
+        return accounts.ToArray();
+    }
+
     public static async Task<(string phone, string path)[]> GetAccounts(string[] phoneFrom)
     {
         var accounts = new List<(string phone, string path)>();
@@ -167,6 +182,11 @@ public class Setup
     /// Включить сканирование qr кода?
     /// </summary>
     public bool EnableScanQr = false;
+
+    /// <summary>
+    /// Включить проверку только на бан?
+    /// </summary>
+    public bool EnableCheckBan = false;
 
     /// <summary>
     /// Путь до директории с аккаунтами WhatsApp

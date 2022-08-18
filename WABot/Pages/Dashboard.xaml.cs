@@ -71,25 +71,10 @@ public partial class Dashboard : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
     }
 
-    private int _progressValue;
-
-    /// <summary>
-    /// Отображение статуса завершения задачи
-    /// </summary>
-    public int ProgressValue
-    {
-        get => _progressValue;
-        set
-        {
-            _progressValue = value;
-            OnPropertyChanged("ProgressValue");
-        }
-    }
-
     private int _averageMessages;
 
     /// <summary>
-    /// Отображение среднее кол-во сообщений с аккаунта
+    /// Отображение среднее кол-во сообщений с аккаунта за последние 10 сообщений
     /// </summary>
     public int AverageMessages
     {
@@ -104,6 +89,78 @@ public partial class Dashboard : INotifyPropertyChanged
         }
     }
 
+    private int _averageMessagesAll;
+
+    /// <summary>
+    /// Отображение среднее кол-во сообщений с аккаунта с момента запуска задания
+    /// </summary>
+    public int AverageMessagesAll
+    {
+        get => _averageMessagesAll;
+        set
+        {
+            Dispatcher.Invoke(() =>
+            {
+                _averageMessagesAll = value;
+                OnPropertyChanged("AverageMessagesAll");
+            });
+        }
+    }
+
+    private int _completedTasks;
+
+    /// <summary>
+    /// Отображение выполненых заданий
+    /// </summary>
+    public int CompletedTasks
+    {
+        get => _completedTasks;
+        set
+        {
+            Dispatcher.Invoke(() =>
+            {
+                _completedTasks = value;
+                OnPropertyChanged("CompletedTasks");
+            });
+        }
+    }
+
+    private int _countTasks;
+
+    /// <summary>
+    /// Отображение всего заданий
+    /// </summary>
+    public int CountTasks
+    {
+        get => _countTasks;
+        set
+        {
+            Dispatcher.Invoke(() =>
+            {
+                _countTasks = value;
+                OnPropertyChanged("CountTasks");
+            });
+        }
+    }
+
+    private int _bannedAccounts;
+
+    /// <summary>
+    /// Отображение отлетевших аккаунтов
+    /// </summary>
+    public int BannedAccounts
+    {
+        get => _bannedAccounts;
+        set
+        {
+            Dispatcher.Invoke(() =>
+            {
+                _bannedAccounts = value;
+                OnPropertyChanged("BannedAccounts");
+            });
+        }
+    }
+
     private string _textMessage = null!;
 
     /// <summary>
@@ -114,8 +171,11 @@ public partial class Dashboard : INotifyPropertyChanged
         get => _textMessage;
         set
         {
-            _textMessage = value;
-            OnPropertyChanged("TextMessage");
+            Dispatcher.Invoke(() =>
+            {
+                _textMessage = value;
+                OnPropertyChanged("TextMessage");
+            });
         }
     }
 
@@ -198,8 +258,6 @@ public partial class Dashboard : INotifyPropertyChanged
 
         try
         {
-            ProgressValue = 100;
-
             _activeTask = Task.Run(() => _newsletterWeb.Start(TextMessage));
             await _activeTask;
 
@@ -211,7 +269,7 @@ public partial class Dashboard : INotifyPropertyChanged
             await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
         }
 
-        AverageMessages = ProgressValue = 0;
+        AverageMessages = AverageMessagesAll = BannedAccounts = CountTasks = CompletedTasks = 0;
         _isBusy = false;
     }
 
@@ -253,8 +311,6 @@ public partial class Dashboard : INotifyPropertyChanged
 
         try
         {
-            ProgressValue = 100;
-
             _activeTask = Task.Run(async () =>
             {
                 if (Globals.Setup.EnableWarm)
@@ -274,7 +330,7 @@ public partial class Dashboard : INotifyPropertyChanged
             await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
         }
 
-        ProgressValue = 0;
+        AverageMessages = AverageMessagesAll = BannedAccounts = CountTasks = CompletedTasks = 0;
         _isBusy = false;
     }
 
@@ -302,8 +358,6 @@ public partial class Dashboard : INotifyPropertyChanged
 
         try
         {
-            ProgressValue = 100;
-
             _activeTask = Task.Run(() => _newsletter.Start(TextMessage));
             await _activeTask;
 
@@ -316,7 +370,7 @@ public partial class Dashboard : INotifyPropertyChanged
             await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
         }
 
-        AverageMessages = ProgressValue = 0;
+        AverageMessages = AverageMessagesAll = BannedAccounts = CountTasks = CompletedTasks = 0;
         _isBusy = false;
     }
 

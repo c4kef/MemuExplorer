@@ -149,6 +149,18 @@ public class AccPreparation
                 }
             }
 
+            if (Globals.Setup.EnableCheckBan)
+            {
+                SuccesfulMoveAccount(c1);
+                SuccesfulMoveAccount(c2);
+                Log.Write($"[Handler] - Аккаунты перемещены\n", _logFile.FullName);
+                Dashboard.GetInstance().CompletedTasks = _alivesAccounts += 2;
+
+                c1Auth = c2Auth = false;
+
+                continue;
+            }
+
             await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf", ContactManager.Export(
                 new List<CObj>()
                 {

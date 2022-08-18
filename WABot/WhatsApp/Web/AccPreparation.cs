@@ -175,7 +175,7 @@ public class AccPreparation
 
             File.Delete($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf");
 
-            var countMessages = new Random().Next(2, 3);
+            var countMessages = new Random().Next(5, 10);
 
             var rnd = new Random();
 
@@ -216,8 +216,8 @@ public class AccPreparation
                 }
                 else
                 {
-                    var mc1 = rnd.Next(2, 3);
-                    var mc2 = rnd.Next(2, 3);
+                    var mc1 = rnd.Next(2, 4);
+                    var mc2 = rnd.Next(2, 4);
 
                     for (var mcc = 0; mcc < mc1; mcc++)
                     {

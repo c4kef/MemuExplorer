@@ -37,7 +37,7 @@ public class Newsletter
         {
             await Task.Delay(500);
 
-            if (_usedPhonesUsers.Count() == 0)
+            if (_usedPhonesUsers.Count == 0)
                 continue;
 
             var contact = string.Empty;

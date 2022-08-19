@@ -64,7 +64,7 @@ io.sockets.on("connection", function (socket)
                     },
                     headless: false, // Headless chrome
                     devtools: false, // Open devtools by default
-                    useChrome: true, // If false will use Chromium instance
+                    useChrome: false, // If false will use Chromium instance
                     debug: false, // Opens a debug session
                     logQR: false, // Logs QR automatically in terminal
                     browserWS: '', // If u want to use browserWSEndpoint

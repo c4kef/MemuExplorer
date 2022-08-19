@@ -67,10 +67,19 @@ public class WaClient
 
         s1:
             if (!await _mem.ExistsElement("//node[@resource-id='com.whatsapp:id/registration_name']"))
-                return;
+                goto s2;
 
             await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
             await _mem.Click("//node[@text='ДАЛЕЕ']");
+            await Task.Delay(2_000);
+            await _mem.StopApk(PackageName);
+            await _mem.RunApk(PackageName);
+
+        s2:
+            if (!await _mem.ExistsElement("//node[@text='ПРОПУСТИТЬ']"))
+                return;
+
+            await _mem.Click("//node[@text='ПРОПУСТИТЬ']");
             await Task.Delay(2_000);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);

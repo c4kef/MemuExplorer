@@ -366,6 +366,19 @@ public class AccPreparation
                     return true;
                 }
 
+                if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}").Any(_phone => _phone == phone))
+                {
+                    wClient.RemoveQueue();
+                    Log.Write($"[{phone}] - Аккаунт уже был авторизован и мы положительно отвечаем на результат\n", _logFile.FullName);
+
+                    if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}") && File.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json"))
+                    {
+                        Directory.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}");
+                        File.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}.data.json");
+                    }
+                    return true;
+                }
+
                 if (!await IsValidCheck(client) || i > 3)
                 {
                     wClient.RemoveQueue();

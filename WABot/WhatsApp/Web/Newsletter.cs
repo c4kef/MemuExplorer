@@ -174,8 +174,8 @@ public class Newsletter
                 break;
             }
 
-            /*if (!await waw.CheckValidPhone(contact))
-                goto recurseSendMessageToContact;*/
+            if (!await waw.CheckValidPhone(contact))
+                goto recurseSendMessageToContact;
 
             var text = Dashboard.GetInstance().TextMessage.Split('\n').ToList();
             var file = text.TakeLast(1).ToArray()[0];
@@ -204,10 +204,6 @@ public class Newsletter
             }
             else
             {
-                /*Log.Write(
-                     $"[{phone}] Перед блокировкой было разослано {MessagesSendedCount} сообщений\n",
-                     _logFile.FullName);*/
-
                 await waw.Free();
 
                 _usedPhonesUsers.Remove(contact);

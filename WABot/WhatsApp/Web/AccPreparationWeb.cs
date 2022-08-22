@@ -114,6 +114,8 @@ public class AccPreparationWeb
                 try
                 {
                     await c1.Init(false);
+                    if (!await c1.WaitForInChat())
+                        throw new Exception("Cant connect");
                     c1Auth = true;
                 }
                 catch (Exception)//Скорее всего аккаунт уже не валидный
@@ -136,10 +138,11 @@ public class AccPreparationWeb
             if (!c2Auth)
             {
                 c2 = new WAWClient(phone);
-
                 try
                 {
                     await c2.Init(false);
+                    if (!await c2.WaitForInChat())
+                        throw new Exception("Cant connect");
                     c2Auth = true;
                 }
                 catch (Exception)//Скорее всего аккаунт уже не валидный

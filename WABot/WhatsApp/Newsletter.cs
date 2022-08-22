@@ -35,7 +35,7 @@ public class Newsletter
 
         while (!IsStop)
         {
-            await Task.Delay(500);
+            await Task.Delay(5_000);
 
             if (_usedPhonesUsers.Count == 0)
                 continue;
@@ -45,12 +45,12 @@ public class Newsletter
             foreach (var phone in _usedPhonesUsers)
                 if (!removedPhone.Contains(phone))
                 {
+                    if (string.IsNullOrEmpty(phone))
+                        continue;
+
                     contact = phone;
                     break;
                 }
-
-            if (string.IsNullOrEmpty(contact))
-                continue;
 
             contacts.RemoveAll(phone => phone == contact);
 
@@ -74,7 +74,7 @@ public class Newsletter
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
 
-        _ = Task.Run(HandlerNumberRewrite);
+        //_ = Task.Factory.StartNew(HandlerNumberRewrite);
 
         var cObjs = new List<CObj>();
 

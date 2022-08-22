@@ -394,6 +394,9 @@ public class AccPreparation
                 try
                 {
                     await wClient.Init(true);
+
+                    if (!await wClient.WaitForInChat())
+                        throw new Exception("Cant connect");
                     initWithErrors = false;
                 }
                 catch (Exception ex)

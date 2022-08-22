@@ -34,22 +34,22 @@ public class Newsletter
 
         while (!IsStop)
         {
-            await Task.Delay(500);
+            await Task.Delay(5_000);
 
             if (_usedPhonesUsers.Count == 0)
                 continue;
 
             var contact = string.Empty;
 
-            foreach(var phone in _usedPhonesUsers)
+            foreach (var phone in _usedPhonesUsers)
                 if (!removedPhone.Contains(phone))
                 {
+                    if (string.IsNullOrEmpty(phone))
+                        continue;
+
                     contact = phone;
                     break;
                 }
-
-            if (string.IsNullOrEmpty(contact))
-                continue;
 
             contacts.RemoveAll(phone => phone == contact);
 
@@ -72,7 +72,7 @@ public class Newsletter
 
         Dashboard.GetInstance().CountTasks = _contacts.Length;
 
-        _ = Task.Run(HandlerNumberRewrite);
+        _ = Task.Factory.StartNew(HandlerNumberRewrite);
 
         Log.Write($"Добро пожаловать в логи, текст рассылки:\n{text}\n\n", _logFile.FullName);
 
@@ -80,7 +80,7 @@ public class Newsletter
         {
             var task = Handler();
             
-            await Task.Delay(1_500);
+            await Task.Delay(2_500);
 
             tasks.Add(task);
         }
@@ -113,6 +113,7 @@ public class Newsletter
     {
         while (!IsStop)
         {
+            await Task.Delay(1_500);
             var accountsWeb = await Globals.GetAccountsWeb(_usedPhones.ToArray());
 
             if (accountsWeb.Length == 0)
@@ -139,6 +140,8 @@ public class Newsletter
             try
             {
                 await waw.Init(false);
+                if (!await waw.WaitForInChat())
+                    throw new Exception("Cant connect");
             }
             catch (Exception)//Скорее всего аккаунт уже не валидный
             {
@@ -174,7 +177,15 @@ public class Newsletter
             /*if (!await waw.CheckValidPhone(contact))
                 goto recurseSendMessageToContact;*/
 
-            var messageSended = await waw.SendText(contact, SelectWord(Dashboard.GetInstance().TextMessage));
+            var text = Dashboard.GetInstance().TextMessage.Split('\n').ToList();
+            var file = text.TakeLast(1).ToArray()[0];
+
+            var isFile = !string.IsNullOrEmpty(file) && (File.Exists(file) || file.Contains("http"));
+
+            if (isFile)
+                text.RemoveAll(str => str.Contains(file));
+
+            var messageSended = await waw.SendText(contact, SelectWord(string.Join('\n', text)), isFile ? new FileInfo(file) : null);
 
             if (messageSended)
             {

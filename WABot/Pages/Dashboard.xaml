@@ -63,6 +63,17 @@
                             </ToolTip>
                         </Button.ToolTip>
                     </Button>
+                    <Button HorizontalAlignment="Center"
+                            Margin="10,0,0,0"
+                            ui:ControlHelper.CornerRadius="5"
+                            Content="Чекер веб"
+                            Click="CheckerWeb">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                Начнет процесс проверки просканированых аккаунтов
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
                     <!--<Button HorizontalAlignment="Center" Margin="0,0,0,0" ui:ControlHelper.CornerRadius="5"
                             Content="Прогрев" Click="Warming">
                         <Button.ToolTip>

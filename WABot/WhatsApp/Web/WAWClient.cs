@@ -215,7 +215,7 @@ public class WAWClient
     /// </summary>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>
-    public async Task<bool> SendText(string number, string text)
+    public async Task<bool> SendText(string number, string text, FileInfo? image = null)
     {
         try
         {
@@ -223,9 +223,14 @@ public class WAWClient
 
             _taskQueue.Add(id);
 
-            _socket.Emit("data",
-                JsonConvert.SerializeObject(new ServerData()
-                { Type = "sendText", Values = new List<object>() { $"{NameSession}@{id}", $"{number.Replace("+", string.Empty)}@c.us", text } }));
+            if (image != null && image.Exists)
+                _socket.Emit("data",
+                    JsonConvert.SerializeObject(new ServerData()
+                    { Type = "sendText", Values = new List<object>() { $"{NameSession}@{id}", $"{number.Replace("+", string.Empty)}@c.us", image.FullName, text } }));
+            else
+                _socket.Emit("data",
+                    JsonConvert.SerializeObject(new ServerData()
+                    { Type = "sendText", Values = new List<object>() { $"{NameSession}@{id}", $"{number.Replace("+", string.Empty)}@c.us", text } }));
 
             while (_taskQueue.Contains(id))
                 await Task.Delay(100);
@@ -334,6 +339,54 @@ public class WAWClient
                 throw new Exception($"Error: {data["value"]![1]}");
 
             return (bool)(data["value"]![1] ?? false);
+        }
+        catch (Exception ex)
+        {
+            Log.Write($"Ошибка проверки номера:\n{ex.Message}\n");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Проверяет контакт на наличие Whatsapp
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Неверное значение</exception>
+    /// <exception cref="Exception">Ошибка сервера</exception>
+    public async Task<bool> WaitForInChat()
+    {
+        try
+        {
+            var id = _random.Next(1_000_000, 10_000_000);
+
+            _taskQueue.Add(id);
+
+            _socket.Emit("data",
+                JsonConvert.SerializeObject(new ServerData()
+                { Type = "waitForInChat", Values = new List<object>() { $"{NameSession}@{id}" } }));
+
+            if (!await WaitRequest())
+            {
+                _taskQueue.RemoveAll(task => task == id);
+                throw new Exception("cant wait end operation");
+            }
+
+            var data = _taskFinished[id];
+
+            _taskFinished.Remove(id);
+
+            if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
+                throw new Exception($"Error: {data["value"]![1]}");
+
+            return (bool)(data["value"]![1] ?? false);
+
+            async Task<bool> WaitRequest()
+            {
+                var status = 0;
+                while (_taskQueue.Contains(id) && status++ < 120)
+                    await Task.Delay(500);
+
+                return status < 60;
+            }
         }
         catch (Exception ex)
         {

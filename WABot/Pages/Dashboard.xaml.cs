@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using MS.WindowsAPICodePack.Internal;
+using System.Drawing;
 using System.Drawing.Imaging;
 using VirtualCameraOutput;
 using WABot.WhatsApp.Web;
@@ -15,6 +16,7 @@ public partial class Dashboard : INotifyPropertyChanged
         _preparation = new AccPreparation();
         _preparationWeb = new AccPreparationWeb();
         _newsletterWeb = new WhatsApp.Web.Newsletter();
+        _checkerWeb = new WhatsApp.Web.Checker();
         _dashboard = this;
 
         if (!_managerDevicesIsRuning)
@@ -44,6 +46,11 @@ public partial class Dashboard : INotifyPropertyChanged
     /// Подготовка аккаунтов
     /// </summary>
     private readonly AccPreparationWeb _preparationWeb;
+
+    /// <summary>
+    /// Проверка аккаунтов веб
+    /// </summary>
+    private readonly Checker _checkerWeb;
 
     /// <summary>
     /// Рассылка сообщений Web
@@ -363,6 +370,40 @@ public partial class Dashboard : INotifyPropertyChanged
 
             MessageBox.Show("Рассылка завершена");
 
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Произошла ошибка, лог создан на рабочем столе");
+            await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
+        }
+
+        AverageMessages = AverageMessagesAll = BannedAccounts = CountTasks = CompletedTasks = 0;
+        _isBusy = false;
+    }
+
+    private async void CheckerWeb(object sender, RoutedEventArgs e)
+    {
+        if (_isBusy)
+        {
+            _checkerWeb.IsStop = true;
+            MessageBox.Show("Дождитесь завершения задачи");
+            return;
+        }
+
+        if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First").Length < Globals.Setup.CountThreadsChrome)
+        {
+            MessageBox.Show("Слишком мало аккаунтов для рассылки");
+            return;
+        }
+
+        _isBusy = true;
+
+        try
+        {
+            _activeTask = Task.Run(() => _checkerWeb.Start());
+            await _activeTask;
+
+            MessageBox.Show("Проверка завершена");
         }
         catch (Exception ex)
         {

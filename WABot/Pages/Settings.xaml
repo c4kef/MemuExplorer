@@ -6,177 +6,240 @@
          mc:Ignorable="d"
          xmlns:ui="http://schemas.modernwpf.com/2019"
          Title="Settings" Height="450" Width="800">
-    <Grid HorizontalAlignment="Center" VerticalAlignment="Stretch">
+    <Grid HorizontalAlignment="Center"
+          VerticalAlignment="Stretch">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="180" />
-            <ColumnDefinition Width="180" />
-            <ColumnDefinition Width="180" />
+            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="200" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Border Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"
-                Background="Transparent" BorderThickness="1" CornerRadius="10">
-            <StackPanel Orientation="Vertical">
-                <Label Content="Настройки подготовки" HorizontalAlignment="Center" />
-                <CheckBox Margin="0,10,0,0"
-                          ui:ControlHelper.CornerRadius="5"
-                          Content="Подготовка в веб"
-                          IsChecked="{Binding EnableWarm}"
-                          Click="EnableWarmClicked">
-                    <CheckBox.ToolTip>
-                        <ToolTip>
-                            Включить подготовку аккаунтов для рассылки через веб?
-                        </ToolTip>
-                    </CheckBox.ToolTip>
-                </CheckBox>
-                <CheckBox Margin="0,10,0,0"
-                          ui:ControlHelper.CornerRadius="5"
-                          Content="Сканирование QR кода"
-                          IsChecked="{Binding EnableScanQr}"
-                          Click="EnableScanQrClicked">
-                    <CheckBox.ToolTip>
-                        <ToolTip>
-                            Включить при подготовке аккаунта сканирование qr кода?
-                        </ToolTip>
-                    </CheckBox.ToolTip>
-                </CheckBox>
-                <CheckBox Margin="0,10,0,0"
-                          ui:ControlHelper.CornerRadius="5"
-                          Content="Только проверка бана"
-                          IsChecked="{Binding EnableCheckBan}"
-                          Click="EnableCheckBanClicked">
-                    <CheckBox.ToolTip>
-                        <ToolTip>
-                            Включить только проверку бана на аккаунтах?
-                        </ToolTip>
-                    </CheckBox.ToolTip>
-                </CheckBox>
-                <Button HorizontalAlignment="Center"
-                        Margin="0,10,0,0"
-                        ui:ControlHelper.CornerRadius="5"
-                        Content="Текст прогрева"
-                        BorderBrush="{Binding ColorPathToTextForWarm}"
-                        Click="SelectFileTextForWarm">
-                    <Button.ToolTip>
-                        <ToolTip>
-                            Укажите путь на файл с текстом для прогрева
-                        </ToolTip>
-                    </Button.ToolTip>
-                </Button>
-                <Button HorizontalAlignment="Center"
-                        Margin="0,10,0,0"
-                        ui:ControlHelper.CornerRadius="5"
-                        Content="Экспорт"
-                        Click="ExportWarmedAccounts">
-                    <Button.ToolTip>
-                        <ToolTip>
-                            Экспортирует уже готовые аккаунты в другую папку
-                        </ToolTip>
-                    </Button.ToolTip>
-                </Button>
-            </StackPanel>
+        <Border Grid.Column="0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Margin="10,0,0,0"
+                Background="Transparent"
+                BorderThickness="1"
+                CornerRadius="10">
+            <ScrollViewer VerticalScrollBarVisibility="Hidden"
+                          HorizontalScrollBarVisibility="Hidden"
+                          Margin="0,0,0,10">
+                <StackPanel Orientation="Vertical">
+                    <Label Content="Настройки подготовки"
+                           HorizontalAlignment="Center" />
+                    <CheckBox Margin="0,10,0,0"
+                              ui:ControlHelper.CornerRadius="5"
+                              Content="Подготовка в веб"
+                              IsChecked="{Binding EnableWarm}"
+                              Click="EnableWarmClicked">
+                        <CheckBox.ToolTip>
+                            <ToolTip>
+                                Включить подготовку аккаунтов для рассылки через веб?
+                            </ToolTip>
+                        </CheckBox.ToolTip>
+                    </CheckBox>
+                    <ui:NumberBox Margin="0,10,0,0"
+                                  ValueChanged="ValueChanged"
+                                  Value="{Binding CountWarmsOnWeb}"
+                                  ui:ControlHelper.CornerRadius="5"
+                                  ui:ControlHelper.PlaceholderText="Кол-во прогонов"
+                                  SmallChange="1"
+                                  LargeChange="10"
+                                  Minimum="1"
+                                  SpinButtonPlacementMode="Compact">
+                        <ui:NumberBox.ToolTip>
+                            <ToolTip>
+                                Укажите кол-во прогонов аккаунтов на прогрев через вебку
+                            </ToolTip>
+                        </ui:NumberBox.ToolTip>
+                    </ui:NumberBox>
+                    <CheckBox Margin="0,10,0,0"
+                              ui:ControlHelper.CornerRadius="5"
+                              Content="Только проверка бана"
+                              IsChecked="{Binding EnableCheckBan}"
+                              Click="EnableCheckBanClicked">
+                        <CheckBox.ToolTip>
+                            <ToolTip>
+                                Включить только проверку бана на аккаунтах?
+                            </ToolTip>
+                        </CheckBox.ToolTip>
+                    </CheckBox>
+                    <CheckBox Margin="0,10,0,0"
+                              ui:ControlHelper.CornerRadius="5"
+                              Content="Сканирование QR кода"
+                              IsChecked="{Binding EnableScanQr}"
+                              Click="EnableScanQrClicked">
+                        <CheckBox.ToolTip>
+                            <ToolTip>
+                                Включить сканирование qr кода?
+                            </ToolTip>
+                        </CheckBox.ToolTip>
+                    </CheckBox>
+                    <CheckBox Margin="0,10,0,0"
+                              ui:ControlHelper.CornerRadius="5"
+                              Content="Минимальный прогрев"
+                              IsChecked="{Binding EnableMinWarm}"
+                              Click="EnableMinWarmClicked">
+                        <CheckBox.ToolTip>
+                            <ToolTip>
+                                Включить минимальный прогрев?
+                            </ToolTip>
+                        </CheckBox.ToolTip>
+                    </CheckBox>
+                    <Button HorizontalAlignment="Center"
+                            Margin="0,10,0,0"
+                            ui:ControlHelper.CornerRadius="5"
+                            Content="Аккаунты от WhatsApp"
+                            BorderBrush="{Binding ColorPathToDirectoryAccounts}"
+                            Click="SelectAccounts">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                Укажите путь на папку с аккаунтами от WhatsApp
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
+                    <Button HorizontalAlignment="Center"
+                            Margin="0,10,0,0"
+                            ui:ControlHelper.CornerRadius="5"
+                            Content="Выберите папку QR"
+                            BorderBrush="{Binding ColorPathToQRs}"
+                            Click="SelectQrCodes">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                Укажите путь на папку с qr кодами от WhatsApp Web
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
+                    <Button HorizontalAlignment="Center"
+                            Margin="0,10,0,0"
+                            ui:ControlHelper.CornerRadius="5"
+                            Content="Текст прогрева"
+                            BorderBrush="{Binding ColorPathToTextForWarm}"
+                            Click="SelectFileTextForWarm">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                Укажите путь на файл с текстом для прогрева
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
+                    <Button HorizontalAlignment="Center"
+                            Margin="0,10,0,0"
+                            ui:ControlHelper.CornerRadius="5"
+                            Content="Выберите имена"
+                            BorderBrush="{Binding ColorPathToUserNames}"
+                            Click="SelectUserNames">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                Укажите путь на csv файл с именами юзверей
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
 
-        <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"
-                Background="Transparent" BorderThickness="1" CornerRadius="10">
-            <StackPanel Orientation="Vertical">
-                <Label Content="Настройки рассылки" HorizontalAlignment="Center" />
-                <ui:NumberBox Margin="0,10,0,0"
-                              ValueChanged="ValueChanged"
-                              Value="{Binding CountMessagesFromAccount}"
-                              ui:ControlHelper.CornerRadius="5"
-                              ui:ControlHelper.PlaceholderText="Кол-во сообщ."
-                              SmallChange="1"
-                              LargeChange="10"
-                              SpinButtonPlacementMode="Compact">
-                    <ui:NumberBox.ToolTip>
-                        <ToolTip>
-                            Укажите кол-во сообщений от одного аккаунта
-                        </ToolTip>
-                    </ui:NumberBox.ToolTip>
-                </ui:NumberBox>
-                <ui:NumberBox Margin="0,10,0,0"
-                              ValueChanged="ValueChanged"
-                              Value="{Binding CountThreadsChrome}"
-                              ui:ControlHelper.CornerRadius="5"
-                              ui:ControlHelper.PlaceholderText="Кол-во потоков"
-                              SmallChange="1"
-                              LargeChange="10"
-                              SpinButtonPlacementMode="Compact">
-                    <ui:NumberBox.ToolTip>
-                        <ToolTip>
-                            Укажите кол-во потоков
-                        </ToolTip>
-                    </ui:NumberBox.ToolTip>
-                </ui:NumberBox>
-                <Button HorizontalAlignment="Center"
-                        Margin="0,10,0,0"
-                        ui:ControlHelper.CornerRadius="5"
-                        Content="Аккаунты от W"
-                        BorderBrush="{Binding ColorPathToDirectoryAccounts}"
-                        Click="SelectAccounts">
-                    <Button.ToolTip>
-                        <ToolTip>
-                            Укажите путь на папку с аккаунтами от WhatsApp
-                        </ToolTip>
-                    </Button.ToolTip>
-                </Button>
-                <Button HorizontalAlignment="Center"
-                        Margin="0,10,0,0"
-                        ui:ControlHelper.CornerRadius="5"
-                        Content="Аккаунты от WWeb"
-                        BorderBrush="{Binding ColorPathToDirectoryAccountsWeb}"
-                        Click="SelectAccountsWeb">
-                    <Button.ToolTip>
-                        <ToolTip>
-                            Укажите путь на папку с аккаунтами от WhatsApp Web
-                        </ToolTip>
-                    </Button.ToolTip>
-                </Button>
-                <Button HorizontalAlignment="Center" Margin="0,10,0,0" ui:ControlHelper.CornerRadius="5"
-                        Content="Выберите папку QR" BorderBrush="{Binding ColorPathToQRs}"
-                        Click="SelectQrCodes">
-                    <Button.ToolTip>
-                        <ToolTip>
-                            Укажите путь на папку с qr кодами от WhatsApp Web
-                        </ToolTip>
-                    </Button.ToolTip>
-                </Button>
-                <Button HorizontalAlignment="Center" Margin="0,10,0,0" ui:ControlHelper.CornerRadius="5"
-                        Content="Выберите номера" BorderBrush="{Binding ColorPathToPhonesUsers}" Click="SelectNumbers">
-                    <Button.ToolTip>
-                        <ToolTip>
-                            Укажите путь на текстовый файл с номерами на которые произведется рассылка
-                        </ToolTip>
-                    </Button.ToolTip>
-                </Button>
-            </StackPanel>
-        </Border>
+        <Border Grid.Column="1"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Margin="5,0,0,0"
+                Background="Transparent"
+                BorderThickness="1"
+                CornerRadius="10">
+            <ScrollViewer VerticalScrollBarVisibility="Hidden"
+                          HorizontalScrollBarVisibility="Hidden"
+                          Margin="0,0,0,10">
 
-        <Border Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"
-                Background="Transparent" BorderThickness="1" CornerRadius="10">
-            <StackPanel Orientation="Vertical">
-                <Label Content="Настройки устройств" HorizontalAlignment="Center" />
-                <Button HorizontalAlignment="Center" Margin="0,10,0,0" ui:ControlHelper.CornerRadius="5"
-                        Content="Выберите образ" BorderBrush="{Binding ColorPathToImageDevice}"
-                        Click="SelectImageDevice">
-                    <Button.ToolTip>
-                        <ToolTip>
-                            Укажите путь на образ виртуального устройства (образ от Memu Play)
-                        </ToolTip>
-                    </Button.ToolTip>
-                </Button>
-                <Button HorizontalAlignment="Center" Margin="0,10,0,0" ui:ControlHelper.CornerRadius="5"
-                        Content="Выберите имена" BorderBrush="{Binding ColorPathToUserNames}" Click="SelectUserNames">
-                    <Button.ToolTip>
-                        <ToolTip>
-                            Укажите путь на csv файл с именами юзверей
-                        </ToolTip>
-                    </Button.ToolTip>
-                </Button>
-            </StackPanel>
+                <StackPanel Orientation="Vertical">
+                    <Label Content="Настройки рассылки"
+                           HorizontalAlignment="Center" />
+                    <ui:NumberBox Margin="0,10,0,0"
+                                  ValueChanged="ValueChanged"
+                                  Value="{Binding CountMessagesFromAccount}"
+                                  ui:ControlHelper.CornerRadius="5"
+                                  ui:ControlHelper.PlaceholderText="Кол-во сообщ."
+                                  SmallChange="1"
+                                  LargeChange="10"
+                                  SpinButtonPlacementMode="Compact">
+                        <ui:NumberBox.ToolTip>
+                            <ToolTip>
+                                Укажите кол-во сообщений от одного аккаунта
+                            </ToolTip>
+                        </ui:NumberBox.ToolTip>
+                    </ui:NumberBox>
+                    <ui:NumberBox Margin="0,10,0,0"
+                                  ValueChanged="ValueChanged"
+                                  Value="{Binding CountThreadsChrome}"
+                                  ui:ControlHelper.CornerRadius="5"
+                                  ui:ControlHelper.PlaceholderText="Кол-во потоков"
+                                  SmallChange="1"
+                                  LargeChange="10"
+                                  SpinButtonPlacementMode="Compact">
+                        <ui:NumberBox.ToolTip>
+                            <ToolTip>
+                                Укажите кол-во потоков
+                            </ToolTip>
+                        </ui:NumberBox.ToolTip>
+                    </ui:NumberBox>
+                    <ui:NumberBox Margin="0,10,0,0"
+                                  ValueChanged="ValueChanged"
+                                  Value="{Binding WarmLevelForNewsletter}"
+                                  ui:ControlHelper.CornerRadius="5"
+                                  ui:ControlHelper.PlaceholderText="Минимальный прогрев"
+                                  SmallChange="1"
+                                  LargeChange="10"
+                                  SpinButtonPlacementMode="Compact">
+                        <ui:NumberBox.ToolTip>
+                            <ToolTip>
+                                Укажите минимальный прогрев для аккаунтов в рассылке
+                            </ToolTip>
+                        </ui:NumberBox.ToolTip>
+                    </ui:NumberBox>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:NumberBox Margin="0,10,0,0"
+                                      ValueChanged="ValueChanged"
+                                      Value="{Binding DelaySendMessageFrom}"
+                                      ui:ControlHelper.CornerRadius="5"
+                                      ui:ControlHelper.PlaceholderText="От"
+                                      SmallChange="1"
+                                      LargeChange="10"
+                                      SpinButtonPlacementMode="Compact">
+                            <ui:NumberBox.ToolTip>
+                                <ToolTip>
+                                    Задержка отправки сообщения "от" (в секундах)
+                                </ToolTip>
+                            </ui:NumberBox.ToolTip>
+                        </ui:NumberBox>
+                        <ui:NumberBox Margin="5,10,0,0"
+                                      ValueChanged="ValueChanged"
+                                      Value="{Binding DelaySendMessageTo}"
+                                      ui:ControlHelper.CornerRadius="5"
+                                      ui:ControlHelper.PlaceholderText="До"
+                                      SmallChange="1"
+                                      LargeChange="10"
+                                      SpinButtonPlacementMode="Compact">
+                            <ui:NumberBox.ToolTip>
+                                <ToolTip>
+                                    Задержка отправки сообщения "до" (в секундах)
+                                </ToolTip>
+                            </ui:NumberBox.ToolTip>
+                        </ui:NumberBox>
+                    </StackPanel>
+                    <Button HorizontalAlignment="Center"
+                            Margin="0,10,0,0"
+                            ui:ControlHelper.CornerRadius="5"
+                            Content="Выберите номера"
+                            BorderBrush="{Binding ColorPathToPhonesUsers}"
+                            Click="SelectNumbers">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                Укажите путь на текстовый файл с номерами на которые произведется рассылка
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
     </Grid>
 </ui:Page>

@@ -55,15 +55,10 @@ io.sockets.on("connection", function(socket) {
                                     });
                             });
                         },
-                        statusFind: (statusSession, session) => {
-                            //console.log('Status Session: ', statusSession); //return isLogged || notLogged || browserClose || qrReadSuccess || qrReadFail || autocloseCalled || desconnectedMobile || deleteToken
-                            //Create session wss return "serverClose" case server for close
-                            //console.log('Session name: ', session);
-                        },
                         headless: false, // Headless chrome
                         devtools: false, // Open devtools by default
                         useChrome: false, // If false will use Chromium instance
-                        waitForLogin: false,
+                        waitForLogin: (data["Values"][2].toString().toLowerCase() === 'true'),
                         debug: false, // Opens a debug session
                         logQR: false, // Logs QR automatically in terminal
                         browserWS: '', // If u want to use browserWSEndpoint
@@ -73,9 +68,18 @@ io.sockets.on("connection", function(socket) {
                         updatesLog: true, // Logs info updates automatically in terminal
                         autoClose: 25000, // Automatically closes the wppconnect only when scanning the QR code (default 60 seconds, if you want to turn it off, assign 0 or false)
                         tokenStore: 'file', // Define how work with tokens, that can be a custom interface
-                        folderNameToken: './tokens', //folder name when saving tokens
+                        folderNameToken: data["Values"][1].toString(), //folder name when saving tokens
                     })
                     .then((client) => {
+                        client.onStateChange((state) => {
+                            console.log(state);
+                            const backdataSub = {
+                                status: "statusSession",
+                                value: []
+                            };
+                            backdataSub.value.push(state);
+                            socket.emit("state", JSON.stringify(backdataSub));
+                        });
                         console.log("[" + data["Values"][0].split('@')[0] + "] - \"create\" sucessful created");
                         backdata.status = 200
                         sessions.push({
@@ -92,11 +96,12 @@ io.sockets.on("connection", function(socket) {
                     });
                 break;
 
-            case "startEvents":
+            /*case "startEvents":
                 console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"startEvents\"");
                 backdata.status = 200
 
                 await getSession(data["Values"][0].split('@')[0]).onMessage(message => {
+                    console.log("[" + data["Values"][0].split('@')[0] + "] - [startEvents] called \"" + message + "\"");
                     const backdata = {
                         value: message
                     };
@@ -105,7 +110,7 @@ io.sockets.on("connection", function(socket) {
                 })
 
                 socket.emit("data", JSON.stringify(backdata));
-                break;
+                break;*/
 
             case "logout":
                 console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"logout\"");
@@ -117,7 +122,7 @@ io.sockets.on("connection", function(socket) {
 
             case "waitForInChat":
                 console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"waitForInChat\"");
-                backdata.status = 200
+                backdata.status = 200;
                 await getSession(data["Values"][0].split('@')[0]).waitForInChat();
                 backdata.value.push(true);
                 socket.emit("data", JSON.stringify(backdata));

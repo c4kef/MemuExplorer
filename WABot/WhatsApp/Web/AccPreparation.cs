@@ -1,4 +1,5 @@
-﻿using WABot.Pages;
+﻿using MemuLib.Core;
+using WABot.Pages;
 
 namespace WABot.WhatsApp.Web;
 
@@ -42,6 +43,7 @@ public class AccPreparation
         await Globals.InitAccountsFolder();
 
         Log.Write($"Добро пожаловать в логи подготовки аккаунтов\n", _logFile.FullName);
+        Dashboard.GetInstance().CountTasks = (await Globals.GetAccounts(_usedPhones.ToArray(), true)).Length;
 
         while (true)
         {
@@ -109,11 +111,11 @@ public class AccPreparation
         while (Globals.Devices.ToArray().Where(device => device.Index == c1Index).ToArray()[0].IsActive &&
                Globals.Devices.ToArray().Where(device => device.Index == c2Index).ToArray()[0].IsActive && !IsStop)
         {
-            var result = await Globals.GetAccounts(_usedPhones.ToArray());
+            var result = await Globals.GetAccounts(_usedPhones.ToArray(), true);
 
             Dashboard.GetInstance().CountTasks = result.Length;
 
-            if (result.Length == 0)
+            if (result.Length < 2)
             {
                 Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
                 break;
@@ -151,8 +153,8 @@ public class AccPreparation
 
             if (Globals.Setup.EnableCheckBan)
             {
-                SuccesfulMoveAccount(c1);
-                SuccesfulMoveAccount(c2);
+                await SuccesfulMoveAccount(c1);
+                await SuccesfulMoveAccount(c2);
                 Log.Write($"[Handler] - Аккаунты перемещены\n", _logFile.FullName);
                 Dashboard.GetInstance().CompletedTasks = _alivesAccounts += 2;
 
@@ -161,91 +163,99 @@ public class AccPreparation
                 continue;
             }
 
-            await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf", ContactManager.Export(
-                new List<CObj>()
-                {
+            if (Globals.Setup.EnableMinWarm)
+            {
+                await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf", ContactManager.Export(
+                    new List<CObj>()
+                    {
                         new(MemuLib.Globals.RandomString(new Random().Next(5, 15)), c1.Phone),
                         new(MemuLib.Globals.RandomString(new Random().Next(5, 15)), c2.Phone)
-                }
-            ));
+                    }
+                ));
 
-            await c1.ImportContacts($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf");
+                await c1.ImportContacts($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf");
 
-            await c2.ImportContacts($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf");
+                await c2.ImportContacts($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf");
 
-            File.Delete($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf");
+                File.Delete($@"{Globals.TempDirectory.FullName}\{idThread}_contacts.vcf");
 
-            var countMessages = new Random().Next(5, 10);
+                var countMessages = new Random().Next(5, 10);
 
-            var rnd = new Random();
+                var rnd = new Random();
 
-            for (var i = 0; i < countMessages; i++)
-            {
-                if (!c1Auth || !c2Auth)
-                    break;
-
-                if (!await IsValid(c1))
+                for (var i = 0; i < countMessages; i++)
                 {
-                    c1Auth = false;
-                    Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
-                    break;
-                }
+                    if (!c1Auth || !c2Auth)
+                        break;
 
-                if (!await IsValid(c2))
-                {
-                    c2Auth = false;
-                    Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
-                    break;
-                }
-
-                if (i == 0)
-                {
-                    if (!await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]))
+                    if (!await IsValid(c1))
                     {
-                        i = -1;
-                        continue;
+                        c1Auth = false;
+                        Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                        break;
                     }
 
-                    await Task.Delay(500);
-
-                    if (!await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]))
+                    if (!await IsValid(c2))
                     {
-                        i = -1;
-                        continue;
+                        c2Auth = false;
+                        Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                        break;
                     }
-                }
-                else
-                {
-                    var mc1 = rnd.Next(2, 4);
-                    var mc2 = rnd.Next(2, 4);
 
-                    for (var mcc = 0; mcc < mc1; mcc++)
+                    if (i == 0)
                     {
-                        await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]);
-
-                        if (!await IsValid(c1))
+                        if (!await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]))
                         {
-                            c1Auth = false;
-                            Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
-                            break;
+                            i = -1;
+                            continue;
+                        }
+
+                        await Task.Delay(500);
+
+                        if (!await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]))
+                        {
+                            i = -1;
+                            continue;
                         }
                     }
-
-                    await Task.Delay(500);
-
-                    for (var mcc = 0; mcc < mc2; mcc++)
+                    else
                     {
-                        await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]);
+                        var mc1 = rnd.Next(2, 4);
+                        var mc2 = rnd.Next(2, 4);
 
-                        if (!await IsValid(c2))
+                        for (var mcc = 0; mcc < mc1; mcc++)
                         {
-                            c2Auth = false;
-                            Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
-                            break;
+                            await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]);
+
+                            if (!await IsValid(c1))
+                            {
+                                c1Auth = false;
+                                Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                                break;
+                            }
+                        }
+
+                        await Task.Delay(500);
+
+                        for (var mcc = 0; mcc < mc2; mcc++)
+                        {
+                            await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]);
+
+                            if (!await IsValid(c2))
+                            {
+                                c2Auth = false;
+                                Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                                break;
+                            }
                         }
                     }
                 }
             }
+
+            c1.AccountData.FirstMsg = true;
+            c2.AccountData.FirstMsg = false;
+            ++c1.AccountData.TrustLevelAccount;
+            ++c2.AccountData.TrustLevelAccount;
 
             await c1.GetInstance().StopApk(c1.PackageName);
             await c1.GetInstance().RunApk(c1.PackageName);
@@ -260,14 +270,16 @@ public class AccPreparation
             {
                 try
                 {
-                    if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1), false))
+                    if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1)))
                     {
                         c2Auth = false;
                         Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
                         continue;
                     }
+                    Dashboard.GetInstance().CompletedTasks = ++_alivesAccounts;
 
-                    await TryLoginWeb(c1, c1.Phone.Remove(0, 1), true);
+                    if (await TryLoginWeb(c1, c1.Phone.Remove(0, 1)))
+                        Dashboard.GetInstance().CompletedTasks = ++_alivesAccounts;
                 }
                 catch (Exception ex)
                 {
@@ -276,18 +288,17 @@ public class AccPreparation
             }
             else
             {
-                SuccesfulMoveAccount(c1);
-                SuccesfulMoveAccount(c2);
+                await SuccesfulMoveAccount(c1);
+                await SuccesfulMoveAccount(c2);
                 Log.Write($"[Handler] - Аккаунты перемещены\n", _logFile.FullName);
             }
-
-            Dashboard.GetInstance().CompletedTasks = _alivesAccounts += 2;
 
             c1Auth = c2Auth = false;
         }
 
-        void SuccesfulMoveAccount(WaClient client)
+        async Task SuccesfulMoveAccount(WaClient client)
         {
+            await client.UpdateData();
             if (Directory.Exists(@$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
                 Directory.Delete(client.Account, true);
             else if (Directory.Exists(client.Account))
@@ -320,68 +331,25 @@ public class AccPreparation
             return true;
         }
 
-        async Task<bool> TryLoginWeb(WaClient client, string phone, bool firstMsg)
+        async Task<bool> TryLoginWeb(WaClient client, string phone)
         {
-            if (await client.GetInstance().ExistsElement("//node[@text='НЕ СЕЙЧАС']", false))
-            {
-                await client.GetInstance().Click("//node[@text='НЕ СЕЙЧАС']");
-                await Task.Delay(500);
-            }
-
-            if (await client.GetInstance().ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
-            {
-                await client.GetInstance().Click("//node[@text='Выберите частоту резервного копирования']");
-                await client.GetInstance().Click("//node[@text='Никогда']");
-                await client.GetInstance().Click("//node[@text='ГОТОВО']");
-                await Task.Delay(2_000);
-                await client.GetInstance().StopApk(client.PackageName);
-                await client.GetInstance().RunApk(client.PackageName);
-            }
-
-            await client.GetInstance().Click("//node[@content-desc='Ещё']");
-            await client.GetInstance().Click("//node[@text='Связанные устройства']");
-
-            if (await client.GetInstance().ExistsElement("//node[@resource-id='android:id/button1']"))
-                await client.GetInstance().Click("//node[@resource-id='android:id/button1']");
-
-            var wClient = new WAWClient(phone);
-
-            await wClient.WaitQueue();
-
-            await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
-
-            if (await client.GetInstance().ExistsElement("//node[@text='OK']"))
-                await client.GetInstance().Click("//node[@text='OK']");
-
+            await MoveToScan(client, true);
             int i = 0;
             try
             {
             initAgain:
                 var initWithErrors = false;
 
-                if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}").Any(_phone => _phone == phone))
+                if (Directory.GetFiles(client.Account).Any(_phone => _phone == phone))
                 {
-                    wClient.RemoveQueue();
+                    client.Web!.RemoveQueue();
                     Log.Write($"[{phone}] - Аккаунт уже был авторизован и мы положительно отвечаем на результат\n", _logFile.FullName);
-                    return true;
-                }
-
-                if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}").Any(_phone => _phone == phone))
-                {
-                    wClient.RemoveQueue();
-                    Log.Write($"[{phone}] - Аккаунт уже был авторизован и мы положительно отвечаем на результат\n", _logFile.FullName);
-
-                    if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}") && File.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json"))
-                    {
-                        Directory.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}");
-                        File.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}.data.json");
-                    }
                     return true;
                 }
 
                 if (!await IsValidCheck(client) || i > 3)
                 {
-                    wClient.RemoveQueue();
+                    client.Web!.RemoveQueue();
                     Log.Write($"[{phone}] - Аккаунт оказался не валидным\n", _logFile.FullName);
                     return false;
                 }
@@ -393,10 +361,8 @@ public class AccPreparation
 
                 try
                 {
-                    await wClient.Init(true);
+                    await client.Web!.Init(true, client.Account);
 
-                    if (!await wClient.WaitForInChat())
-                        throw new Exception("Cant connect");
                     initWithErrors = false;
                 }
                 catch (Exception ex)
@@ -404,22 +370,26 @@ public class AccPreparation
                     Log.Write($"[{phone}] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
                 }
 
-                await wClient.Free();
+                await client.Web!.Free();
 
-                if (await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", false))
+                if (await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", isWait: false))
                     return false;
 
-                if (await client.GetInstance().ExistsElement("//node[@text='OK']", false))
+                if (await client.GetInstance().ExistsElement("//node[@text='OK']", isWait: false))
                 {
-                    await client.GetInstance().Click("//node[@text='OK']");
+                    //await client.GetInstance().Click("//node[@text='OK']");
                     i++;
 
                     if (await client.GetInstance().ExistsElement("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']"))
                     {
-                        await SetZero(wClient);
-                        await Task.Delay(1_000);
-                        await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
+                        await SetZero(client.Web);
+                        //await Task.Delay(1_000);
+                        //await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
                     }
+
+                    await client.GetInstance().StopApk(c1.PackageName);
+                    await client.GetInstance().RunApk(c1.PackageName);
+                    await MoveToScan(client, false);
 
                     goto initAgain;
                 }
@@ -427,20 +397,19 @@ public class AccPreparation
                 if (initWithErrors)
                 {
                     i++;
-                    await SetZero(wClient);
+                    await SetZero(client.Web);
                     Log.Write($"[{phone}] - Инициализировалось с ошибками\n", _logFile.FullName);
+
+                    await client.GetInstance().StopApk(c1.PackageName);
+                    await client.GetInstance().RunApk(c1.PackageName);
+                    await MoveToScan(client, false);
+                    
                     goto initAgain;
                 }
 
-                wClient.RemoveQueue();
+                client.Web.RemoveQueue();
 
-                SuccesfulMoveAccount(client);
-
-                if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}") && File.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json"))
-                {
-                    Directory.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}");
-                    File.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}.data.json");
-                }
+                await SuccesfulMoveAccount(client);
 
                 Log.Write($"[{phone}] - Пара пошла со счетом проебов {_removedAccounts} и живых {_alivesAccounts}\n", _logFile.FullName);
                 return true;
@@ -448,9 +417,9 @@ public class AccPreparation
             catch (Exception ex)
             {
                 Log.Write($"[main] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
-                await SetZero(wClient);
-                wClient.RemoveQueue();
-                await wClient.Free();
+                await SetZero(client.Web);
+                client.Web.RemoveQueue();
+                await client.Web.Free();
                 return false;
             }
 
@@ -478,6 +447,41 @@ public class AccPreparation
             }
         }
 
+        async Task MoveToScan(WaClient client, bool isWaitQueue)
+        {
+            if (await client.GetInstance().ExistsElement("//node[@text='НЕ СЕЙЧАС']", isWait: false))
+            {
+                await client.GetInstance().Click("//node[@text='НЕ СЕЙЧАС']");
+                await Task.Delay(500);
+            }
+
+            if (await client.GetInstance().ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
+            {
+                await client.GetInstance().Click("//node[@text='Выберите частоту резервного копирования']");
+                await client.GetInstance().Click("//node[@text='Никогда']");
+                await client.GetInstance().Click("//node[@text='ГОТОВО']");
+                await Task.Delay(2_000);
+                await client.GetInstance().StopApk(client.PackageName);
+                await client.GetInstance().RunApk(client.PackageName);
+            }
+
+            await client.GetInstance().Click("//node[@content-desc='Ещё']");
+            await client.GetInstance().Click("//node[@text='Связанные устройства']");
+
+            if (await client.GetInstance().ExistsElement("//node[@resource-id='android:id/button1']"))
+                await client.GetInstance().Click("//node[@resource-id='android:id/button1']");
+
+            if (isWaitQueue)
+            {
+                client.Web.AddToQueue();
+                await client.Web.WaitQueue();
+            }
+            await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
+
+            if (await client.GetInstance().ExistsElement("//node[@text='OK']"))
+                await client.GetInstance().Click("//node[@text='OK']");
+        }
+
         async Task<bool> IsValid(WaClient client)
         {
             await Task.Delay(MemuLib.Settings.WaitingSecs);
@@ -491,17 +495,23 @@ public class AccPreparation
             if (await client.GetInstance().ExistsElement("//node[@text='OK']"))
                 await client.GetInstance().Click("//node[@text='OK']");
 
+            if (await client.GetInstance().ExistsElement("//node[@text='ПРОПУСТИТЬ']"))
+                await client.GetInstance().Click("//node[@text='ПРОПУСТИТЬ']");
+
             await Task.Delay(MemuLib.Settings.WaitingSecs);
 
-            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='Перезапустить приложение']", false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='Закрыть приложение']", false) &&
-                   !await client.GetInstance().ExistsElement("//node[@content-desc='Неверный номер?']", false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", false) &&
-                   !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/progress']", false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", false);
-            //!await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']", false);
+            var dump = client.GetInstance().DumpScreen();
+
+            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='Перезапустить приложение']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='Закрыть приложение']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@content-desc='Неверный номер?']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='WA Business']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='WhatsApp']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/progress']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", dump, false);
         }
     }
 }

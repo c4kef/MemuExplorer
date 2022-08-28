@@ -1,4 +1,5 @@
-﻿using WABot.Pages;
+﻿using MS.WindowsAPICodePack.Internal;
+using WABot.Pages;
 
 namespace WABot.WhatsApp.Web;
 public class Newsletter
@@ -114,43 +115,41 @@ public class Newsletter
         while (!IsStop)
         {
             await Task.Delay(1_500);
-            var accountsWeb = await Globals.GetAccountsWeb(_usedPhones.ToArray());
+            var accountsWeb = await Globals.GetAccounts(_usedPhones.ToArray(), false);
 
             if (accountsWeb.Length == 0)
                 break;
 
-            var result = accountsWeb[0];
-
-            var phone = result.Name.Split('.')[0];
+            var (phone, path) = accountsWeb[0];
 
             if (_usedPhones.Contains(phone))
                 continue;
-
-            if (Directory.Exists($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}"))
-                Directory.Move($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}");
-
-            result.MoveTo($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name}", true);
 
             _usedPhones.Add(phone);
 
             _sendedMessagesCountFromAccount[phone] = 0;
 
-            var waw = new WAWClient(phone);
+            var countTryLogin = 0;
+        tryAgain:
+            var waw = new WaClient(phone, path);
 
             try
             {
-                await waw.Init(false);
-                if (!await waw.WaitForInChat())
+                await waw.Web!.Init(false, path);
+                if (!await waw.Web!.WaitForInChat())
                     throw new Exception("Cant connect");
+                if (!waw.Web!.IsConnected)
+                    throw new Exception("Is not connected");
             }
             catch (Exception)//Скорее всего аккаунт уже не валидный
             {
-                await waw.Free();
-                if (File.Exists(@$"{result.FullName}"))
-                    File.Delete(@$"{result.FullName}");
-
-                waw.RemoveQueue();
-                continue;
+                await waw.Web!.Free();
+                Directory.Move(path, $@"{Globals.LogoutAccountsDirectory}\{phone}");
+                waw.Web!.RemoveQueue();
+                if (countTryLogin++ > 2)
+                    goto tryAgain;
+                else
+                    continue;
             }
 
             var countMsg = 0;
@@ -159,7 +158,7 @@ public class Newsletter
 
             if (IsStop)
             {
-                await waw.Free();
+                await waw.Web!.Free();
                 break;
             }
 
@@ -170,12 +169,26 @@ public class Newsletter
 
             if (string.IsNullOrEmpty(contact))
             {
-                await waw.Free();
+                await waw.Web!.Free();
                 break;
             }
 
-            if (!await waw.CheckValidPhone(contact))
-                goto recurseSendMessageToContact;
+            if (!waw.Web!.IsConnected)
+            {
+                await BanAccount(waw.Web!, contact);
+                continue;
+            }
+
+            try
+            {
+                if (!await waw.Web!.CheckValidPhone(contact))
+                    goto recurseSendMessageToContact;
+            }
+            catch
+            {
+                await BanAccount(waw.Web!, contact);
+                continue;
+            }
 
             var text = Dashboard.GetInstance().TextMessage.Split('\n').ToList();
             var file = text.TakeLast(1).ToArray()[0];
@@ -185,7 +198,7 @@ public class Newsletter
             if (isFile)
                 text.RemoveAll(str => str.Contains(file));
 
-            var messageSended = await waw.SendText(contact, SelectWord(string.Join('\n', text)), isFile ? new FileInfo(file) : null);
+            var messageSended = await waw.Web!.SendText(contact, SelectWord(string.Join('\n', text)), isFile ? new FileInfo(file) : null);
 
             if (messageSended)
             {
@@ -195,49 +208,49 @@ public class Newsletter
                 Log.Write(
                     $"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{contact}",
                     _logFile.FullName);
+                
+                waw.AccountData.CountMessages++;
 
                 if (++countMsg > Globals.Setup.CountMessagesFromAccount)
                 {
-                    await waw.Free();
+                    await waw.UpdateData();
+                    await waw.Web!.Free();
                     continue;
                 }
             }
             else
             {
-                await waw.Free();
-
-                _usedPhonesUsers.Remove(contact);
-
-                Dashboard.GetInstance().BannedAccounts = ++_diedAccounts;
-
-                var count = 0;
-                var messages = _sendedMessagesCountFromAccount.TakeLast(10);
-
-                foreach (var msg in messages)
-                    count += msg.Value;
-
-                Dashboard.GetInstance().AverageMessages = (int)Math.Floor((decimal)count / messages.Count());
-
-                count = 0;
-                foreach (var msg in _sendedMessagesCountFromAccount)
-                    count += msg.Value;
-
-                Dashboard.GetInstance().AverageMessagesAll = (int)Math.Floor((decimal)count / _sendedMessagesCountFromAccount.Count());
-                try
-                {
-                    if (File.Exists(@$"{result.FullName}"))
-                        File.Delete(@$"{result.FullName}");
-
-                    if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}"))
-                        Directory.Delete($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}", true);
-                }
-                catch{}
+                await waw.UpdateData();
+                await BanAccount(waw.Web!, contact);
                 continue;
             }
 
-            await Task.Delay(new Random().Next(30_000, 60_000));//Ждем 30-60 сек
-
+            await waw.UpdateData();
+            await Task.Delay(new Random().Next(Globals.Setup.DelaySendMessageFrom * 1_000, Globals.Setup.DelaySendMessageTo * 1_000));
             goto recurseSendMessageToContact;
+        }
+
+        async Task BanAccount(WAWClient waw, string contact)
+        {
+            await waw.Free();
+
+            _usedPhonesUsers.Remove(contact);
+
+            Dashboard.GetInstance().BannedAccounts = ++_diedAccounts;
+
+            var count = 0;
+            var messages = _sendedMessagesCountFromAccount.TakeLast(10);
+
+            foreach (var msg in messages)
+                count += msg.Value;
+
+            Dashboard.GetInstance().AverageMessages = (int)Math.Floor((decimal)count / messages.Count());
+
+            count = 0;
+            foreach (var msg in _sendedMessagesCountFromAccount)
+                count += msg.Value;
+
+            Dashboard.GetInstance().AverageMessagesAll = (int)Math.Floor((decimal)count / _sendedMessagesCountFromAccount.Count());
         }
 
         string SelectWord(string value)

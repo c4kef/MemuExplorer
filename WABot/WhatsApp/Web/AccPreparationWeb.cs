@@ -6,19 +6,19 @@ public class AccPreparationWeb
 {
     private readonly List<string> _usedPhones;
     private readonly List<string> _usedPhonesUsers;
-    private readonly List<FileInfo> _accounts;
 
     private FileInfo _logFile;
 
     private int _removedAccounts;
     private int _alivesAccounts;
     public bool IsStop;
+    private int _countWarms;
 
     public AccPreparationWeb()
     {
         _usedPhonesUsers = _usedPhones = new List<string>();
-        _accounts = new List<FileInfo>();
 
+        _countWarms = 1;
         _removedAccounts = _alivesAccounts = 0;
 
         _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_prep_log.txt");
@@ -30,23 +30,21 @@ public class AccPreparationWeb
         var rnd = new Random();
 
         IsStop = false;
+        _countWarms = 1;
         _removedAccounts = _alivesAccounts = 0;
         _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_prep_log.txt");
-
-        foreach (var account in Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\Second"))
-            _accounts.Add(new FileInfo(account));
 
         var busyDevices = new List<int>();
 
         Log.Write($"Добро пожаловать в логи подготовки аккаунтов\n", _logFile.FullName);
 
-        if (_accounts.Count < Globals.Setup.CountThreadsChrome || Globals.Setup.CountThreadsChrome % 2 != 0)
+        if (Globals.Setup.CountThreadsChrome % 2 != 0)
         {
-            MessageBox.Show("Похоже кол-во потоков не кратно двум либо аккаунтов очень мало");
+            MessageBox.Show("Похоже кол-во потоков не кратно двум");
             return;
         }
 
-        Dashboard.GetInstance().CountTasks = _accounts.Count;
+        Dashboard.GetInstance().CountTasks = (await Globals.GetAccounts(_usedPhones.ToArray(), true)).Length;
 
         for (var i = 0; i < Globals.Setup.CountThreadsChrome / 2; i++)
         {
@@ -74,57 +72,56 @@ public class AccPreparationWeb
     {
         _usedPhones.Clear();
         _usedPhonesUsers.Clear();
-        _accounts.Clear();
     }
-
-    /* if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}") && File.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json"))
- {
-     Directory.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}");
-     File.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{client.Phone.Remove(0, 1)}.data.json", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{client.Phone.Remove(0, 1)}.data.json");
- }*/
 
     private async Task Handler(string[] messages)
     {
         Log.Write($"Поток запущен\n", _logFile.FullName);
 
-        WAWClient c1 = null!, c2 = null!;
+        WaClient c1 = null!, c2 = null!;
         bool c1Auth = false, c2Auth = false;
-
-        while (_accounts.Count > 1 && !IsStop)
+        again:
+        while (!IsStop)
         {
-            var result = _accounts[0];
+            var result = await Globals.GetAccounts(_usedPhones.ToArray(), true);
 
-            var phone = result.Name.Split('.')[0];
+            Dashboard.GetInstance().CountTasks = result.Length;
+
+            if (result.Length < 2)
+            {
+                Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
+                break;
+            }
+
+            var (phone, path) = result[0];
 
             if (_usedPhones.Contains(phone))
                 continue;
 
             _usedPhones.Add(phone);
-            _accounts.RemoveAt(0);
-
-            if (Directory.Exists($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}"))
-                Directory.Move($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}");
-
-            result.MoveTo($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name}", true);
 
             if (!c1Auth)
             {
-                c1 = new WAWClient(phone);
+                var countTryLogin = 0;
+            tryAgain:
+                c1 = new WaClient($"+{phone}", path);
 
                 try
                 {
-                    await c1.Init(false);
-                    if (!await c1.WaitForInChat())
+                    await c1.Web!.Init(false, path);
+                    if (!await c1.Web!.WaitForInChat())
                         throw new Exception("Cant connect");
+                    if (!c1.Web!.IsConnected)
+                        throw new Exception("Is not connected");
                     c1Auth = true;
                 }
                 catch (Exception)//Скорее всего аккаунт уже не валидный
                 {
-                    await c1.Free();
-                    if (File.Exists(@$"{result.FullName}"))
-                        File.Delete(@$"{result.FullName}");
-
-                    c1.RemoveQueue();
+                    await c1.Web!.Free();
+                    Directory.Move(path, $@"{Globals.LogoutAccountsDirectory}\{phone}");
+                    c1.Web!.RemoveQueue();
+                    if (countTryLogin++ > 2)
+                        goto tryAgain;
                 }
 
                 Log.Write($"[{phone}] - {(c1Auth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
@@ -135,32 +132,35 @@ public class AccPreparationWeb
                 continue;
             }
 
+
             if (!c2Auth)
             {
-                c2 = new WAWClient(phone);
+                var countTryLogin = 0;
+            tryAgain:
+                c2 = new WaClient($"+{phone}", path);
+
                 try
                 {
-                    await c2.Init(false);
-                    if (!await c2.WaitForInChat())
+                    await c2.Web!.Init(false, path);
+                    if (!await c2.Web!.WaitForInChat())
                         throw new Exception("Cant connect");
+                    if (!c2.Web!.IsConnected)
+                        throw new Exception("Is not connected");
                     c2Auth = true;
                 }
                 catch (Exception)//Скорее всего аккаунт уже не валидный
                 {
-                    await c2.Free();
-                    if (File.Exists(@$"{result.FullName}"))
-                        File.Delete(@$"{result.FullName}");
-
-                    c2.RemoveQueue();
+                    await c2.Web!.Free();
+                    Directory.Move(path, $@"{Globals.LogoutAccountsDirectory}\{phone}");
+                    c2.Web!.RemoveQueue();
+                    if (countTryLogin++ > 2)
+                        goto tryAgain;
                 }
 
                 Log.Write($"[{phone}] - {(c2Auth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
 
                 if (!c2Auth)
-                {
                     Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
-                    continue;
-                }
             }
 
             var countMessages = new Random().Next(5, 10);
@@ -169,12 +169,12 @@ public class AccPreparationWeb
 
             for (var i = 0; i < countMessages; i++)
             {
-                if (!c1Auth || !c2Auth)
+                if (!c1Auth || !c2Auth || !c1.Web!.IsConnected || !c2.Web!.IsConnected)
                     break;
 
                 if (i == 0)
                 {
-                    if (!await c1.SendText(c2.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
+                    if (!await c1.Web!.SendText(c2.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
                     {
                         i = -1;
                         continue;
@@ -182,7 +182,7 @@ public class AccPreparationWeb
 
                     await Task.Delay(rnd.Next(2_000, 10_000));
 
-                    if (!await c2.SendText(c1.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
+                    if (!await c2.Web!.SendText(c1.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
                     {
                         i = -1;
                         continue;
@@ -195,7 +195,7 @@ public class AccPreparationWeb
 
                     for (var mcc = 0; mcc < mc1; mcc++)
                     {
-                        if (!await c1.SendText(c2.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
+                        if (!await c1.Web!.SendText(c2.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
                         {
                             c1Auth = false;
                             Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
@@ -207,7 +207,7 @@ public class AccPreparationWeb
 
                     for (var mcc = 0; mcc < mc2; mcc++)
                     {
-                        if (!await c2.SendText(c1.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
+                        if (!await c2.Web!.SendText(c1.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
                         {
                             c2Auth = false;
                             Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
@@ -221,24 +221,21 @@ public class AccPreparationWeb
 
             c1Auth = c2Auth = false;
             
-            await c1.Free();
-            await c2.Free();
+            await c1.Web!.Free();
+            await c2.Web!.Free();
+
+            c1.AccountData.TrustLevelAccount++;
+            c2.AccountData.TrustLevelAccount++;
+
+            await c1.UpdateData();
+            await c2.UpdateData();
 
             await Task.Delay(2_000);
-
-            Move(c1.NameSession, true);
-            Move(c2.NameSession, false);
 
             Dashboard.GetInstance().CompletedTasks = _alivesAccounts += 2;
         }
 
-        void Move(string phone, bool firstMsg)
-        {
-            if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{phone}") && File.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{phone}.data.json"))
-            {
-                Directory.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{phone}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{phone}");
-                File.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{phone}.data.json", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{(firstMsg ? "First" : "Second")}\{phone}.data.json");
-            }
-        }
+        if (!IsStop && ++_countWarms < Globals.Setup.CountWarmsOnWeb)
+            goto again;
     }
 }

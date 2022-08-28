@@ -1,4 +1,6 @@
-﻿namespace MemuLib.Core;
+﻿using System.Xml;
+
+namespace MemuLib.Core;
 
 public class Client
 {
@@ -205,7 +207,7 @@ public class Client
     /// Проверка элемента на существование
     /// </summary>
     /// <param name="uiElement">название элемента в интерфейсе</param>
-    public async Task<bool> ExistsElement(string uiElement, bool isWait = true)
+    public async Task<bool> ExistsElement(string uiElement, XmlDocument? dump = null, bool isWait = true)
     {
         try
         {
@@ -218,7 +220,7 @@ public class Client
             if (isWait)
                 await Task.Delay(Settings.WaitingSecs);
 
-            var element = _adbClient.FindElement(_device, uiElement, (isWait) ? TimeSpan.FromMilliseconds(Settings.WaitingSecs) : TimeSpan.Zero);
+            var element = (dump is null) ? _adbClient.FindElement(_device, uiElement, (isWait) ? TimeSpan.FromMilliseconds(Settings.WaitingSecs) : TimeSpan.Zero) : FindElement(uiElement, dump, (isWait) ? TimeSpan.FromMilliseconds(Settings.WaitingSecs) : TimeSpan.Zero);
 
             return element is not null;
         }
@@ -228,11 +230,52 @@ public class Client
         }
     }
 
+    public XmlDocument DumpScreen() => _adbClient.DumpScreen(_device);
+
+    public Element FindElement(string xpath, XmlDocument xmlDocument, TimeSpan timeout = default(TimeSpan))
+    {
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
+        while (timeout == TimeSpan.Zero || stopwatch.Elapsed < timeout)
+        {
+            if (xmlDocument != null)
+            {
+                XmlNode xmlNode = xmlDocument.SelectSingleNode(xpath);
+                if (xmlNode != null)
+                {
+                    string value = xmlNode.Attributes!["bounds"]!.Value;
+                    if (value != null)
+                    {
+                        int[] array = value.Replace("][", ",").Replace("[", "").Replace("]", "")
+                            .Split(new char[1] { ',' })
+                            .Select(new Func<string, int>(int.Parse))
+                            .ToArray();
+                        Dictionary<string, string> dictionary = new Dictionary<string, string>();
+                        foreach (XmlAttribute item in xmlNode.Attributes!)
+                        {
+                            dictionary.Add(item.Name, item.Value);
+                        }
+
+                        Cords cords = new Cords((array[0] + array[2]) / 2, (array[1] + array[3]) / 2);
+                        return new Element(_adbClient, _device, cords, dictionary);
+                    }
+                }
+            }
+
+            if (timeout == TimeSpan.Zero)
+            {
+                break;
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// Симуляция кликов по экрану
     /// </summary>
     /// <param name="uiElement">название элемента в интерфейсе</param>
-    public async Task Click(string uiElement)
+    public async Task Click(string uiElement, XmlDocument? dump = null)
     {
         if (!await Memu.Exists(_index))
         {
@@ -242,7 +285,7 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromMilliseconds(Settings.WaitingSecs));
+        var element = (dump is null) ? _adbClient.FindElement(_device, uiElement, TimeSpan.FromMilliseconds(Settings.WaitingSecs)) : FindElement(uiElement, dump, TimeSpan.FromMilliseconds(Settings.WaitingSecs));
         
         if (element is null)
             throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");

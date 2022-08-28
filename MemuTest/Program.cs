@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 
-var removed = Directory.GetDirectories(Console.ReadLine()!).Select(dir => new DirectoryInfo(dir));
-var newAcc = Directory.GetDirectories(Console.ReadLine()!).Select(dir => new DirectoryInfo(dir));
-for (var i = 0; i < newAcc.Count(); i++)
+var data = await File.ReadAllLinesAsync(@"C:\Users\artem\Downloads\test.txt");
+var copedData = data.ToList();
+for (int i = 0; i < data.Length; i++)
 {
-    if (removed.Any(acc => acc.Name == newAcc.ToArray()[i].Name))
-        Directory.Delete(newAcc.ToArray()[i].FullName, true);
+    copedData.RemoveAll(str => str.Split(';')[2] == data[i].Split(';')[2]);
+    copedData.Add(data[i]);
 }
-Console.WriteLine("OK");
+await File.WriteAllLinesAsync("compared.txt", copedData.ToArray());

@@ -15,7 +15,7 @@ public class Checker
 
         IsStop = false;
 
-        Dashboard.GetInstance().CountTasks = Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First").Length;
+        Dashboard.GetInstance().CountTasks = (await Globals.GetAccounts(_usedPhones.ToArray(), true)).Length;
 
         for (var i = 0; i < Globals.Setup.CountThreadsChrome; i++)
         {
@@ -42,48 +42,44 @@ public class Checker
         while (!IsStop)
         {
             await Task.Delay(1_500);
-            var accountsWeb = await Globals.GetAccountsWeb(_usedPhones.ToArray());
+            var accountsWeb = await Globals.GetAccounts(_usedPhones.ToArray(), true);
 
             if (accountsWeb.Length == 0)
                 break;
 
-            var result = accountsWeb[0];
-
-            var phone = result.Name.Split('.')[0];
+            var (phone, path) = accountsWeb[0];
 
             if (_usedPhones.Contains(phone))
                 continue;
 
-            if (Directory.Exists($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}"))
-                Directory.Move($@"{result.Directory!.FullName}\{result.Name.Split('.')[0]}", $@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name.Split('.')[0]}");
-
-            result.MoveTo($@"{Globals.Setup.PathToDirectoryAccountsWeb}\{result.Name}", true);
-
             _usedPhones.Add(phone);
 
-            var waw = new WAWClient(phone);
+            var countTryLogin = 0;
+            tryAgain:
+            var waw = new WaClient(phone, path);
 
             try
             {
-                await waw.Init(false);
-                if (!await waw.WaitForInChat())
+                await waw.Web!.Init(false, path);
+                if (!await waw.Web!.WaitForInChat())
                     throw new Exception("Cant connect");
             }
             catch (Exception)
             {
-                await waw.Free();
-                if (File.Exists(@$"{result.FullName}"))
-                    File.Delete(@$"{result.FullName}");
-
-                waw.RemoveQueue();
+                await waw.Web!.Free();
+                Directory.Move(path, $@"{Globals.LogoutAccountsDirectory}\{phone}");
+                waw.Web!.RemoveQueue();
                 ++Dashboard.GetInstance().BannedAccounts;
-                Dashboard.GetInstance().CountTasks = Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First").Length;
-                continue;
+                Dashboard.GetInstance().CountTasks = (await Globals.GetAccounts(_usedPhones.ToArray(), true)).Length;
+                if (countTryLogin++ > 2)
+                    goto tryAgain;
+                else
+                    continue;
             }
 
             ++Dashboard.GetInstance().CompletedTasks;
-            await waw.Free();
-            waw.RemoveQueue();
+            await waw.Web!.Free();
+            waw.Web!.RemoveQueue();
         }
     }
 }

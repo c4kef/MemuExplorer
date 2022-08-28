@@ -249,12 +249,6 @@ public partial class Dashboard : INotifyPropertyChanged
             return;
         }
         
-        if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First").Length < Globals.Setup.CountThreadsChrome)
-        {
-            MessageBox.Show("Слишком мало аккаунтов для рассылки");
-            return;
-        }
-
         if (string.IsNullOrEmpty(TextMessage))
         {
             MessageBox.Show("Укажите текст сообщения");
@@ -383,16 +377,36 @@ public partial class Dashboard : INotifyPropertyChanged
 
     private async void CheckerWeb(object sender, RoutedEventArgs e)
     {
+        /*var waw = new WAWClient("fasdfsd");
+        tryAgain:
+        try
+        {
+            await waw.Init(false);
+            if (!await waw.WaitForInChat())
+                throw new Exception("Cant connect");
+            if (!waw.IsConnected)
+                throw new Exception("Is not connected");
+        }
+        catch (Exception)//Скорее всего аккаунт уже не валидный
+        {
+            await waw.Free();
+            waw.RemoveQueue();
+            return;
+        }
+
+        while(true)
+        {
+            if (!await waw.SendText("79772801086", "dd"))
+                break;
+
+            await Task.Delay(3_000);
+        }
+        goto tryAgain;
+        */
         if (_isBusy)
         {
             _checkerWeb.IsStop = true;
             MessageBox.Show("Дождитесь завершения задачи");
-            return;
-        }
-
-        if (Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First").Length < Globals.Setup.CountThreadsChrome)
-        {
-            MessageBox.Show("Слишком мало аккаунтов для рассылки");
             return;
         }
 

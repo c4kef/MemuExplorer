@@ -177,7 +177,7 @@ public class Newsletter
                     Directory.Move(client.Account,
                         @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
 
-                Dashboard.GetInstance().BannedAccounts = ++_diedAccounts;
+                //Dashboard.GetInstance().BannedAccounts = ++_diedAccounts;
                 continue;
             }
 
@@ -202,7 +202,7 @@ public class Newsletter
                     Directory.Move(client.Account,
                         @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
 
-                Dashboard.GetInstance().BannedAccounts = ++_diedAccounts;
+                //Dashboard.GetInstance().BannedAccounts = ++_diedAccounts;
                 continue;
             }
 
@@ -210,7 +210,7 @@ public class Newsletter
 
             switch (messageSended)
             {
-                case false when await client.GetInstance().ExistsElement("//node[@text='OK']", false):
+                case false when await client.GetInstance().ExistsElement("//node[@text='OK']", isWait: false):
                     await client.GetInstance().Click("//node[@text='OK']");
 
                     _usedPhonesUsers.Remove(contact);
@@ -234,19 +234,24 @@ public class Newsletter
                     {
                         ++_sendedMessagesCountFromAccount[phone];
                         Dashboard.GetInstance().CompletedTasks = ++MessagesSendedCount;
+                        client.AccountData.CountMessages++;
 
                         Log.Write(
                             $"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{contact}",
                             _logFile.FullName);
 
                         if (++countMsg > Globals.Setup.CountMessagesFromAccount)
+                        {
+                            await client.UpdateData();
                             continue;
+                        }
 
                         break;
                     }
             }
 
-            await Task.Delay(new Random().Next(30_000, 60_000));//Ждем 30-60 сек
+            await client.UpdateData();
+            await Task.Delay(new Random().Next(Globals.Setup.DelaySendMessageFrom * 1_000, Globals.Setup.DelaySendMessageTo * 1_000));
             goto recurseSendMessageToContact;
         }
 
@@ -273,10 +278,31 @@ public class Newsletter
 
         async Task<bool> IsValid()
         {
-            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", false) &&
-                   !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/message']", false);
+            await Task.Delay(MemuLib.Settings.WaitingSecs);
+
+            if (await client.GetInstance().ExistsElement("//node[@text='Перезапустить приложение']"))
+                await client.GetInstance().Click("//node[@text='Перезапустить приложение']");
+
+            if (await client.GetInstance().ExistsElement("//node[@text='ОК']"))
+                await client.GetInstance().Click("//node[@text='ОК']");
+
+            if (await client.GetInstance().ExistsElement("//node[@text='OK']"))
+                await client.GetInstance().Click("//node[@text='OK']");
+
+            await Task.Delay(MemuLib.Settings.WaitingSecs);
+
+            var dump = client.GetInstance().DumpScreen();
+
+            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='Перезапустить приложение']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='Закрыть приложение']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@content-desc='Неверный номер?']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='WA Business']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='WhatsApp']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/progress']", dump, false) &&
+                   !await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", dump, false);
         }
     }
 }

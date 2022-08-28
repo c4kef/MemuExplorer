@@ -31,6 +31,15 @@ public partial class Settings : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// Уровень прогрева при рассылке
+    /// </summary>
+    public int WarmLevelForNewsletter
+    {
+        get => Globals.Setup.WarmLevelForNewsletter;
+        set => Globals.Setup.WarmLevelForNewsletter = value;
+    }
+
+    /// <summary>
     /// Кол-во потоков для хрома
     /// </summary>
     public int CountMessagesFromAccount
@@ -40,12 +49,48 @@ public partial class Settings : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// Кол-во прогонов через вебку
+    /// </summary>
+    public int CountWarmsOnWeb
+    {
+        get => Globals.Setup.CountWarmsOnWeb;
+        set => Globals.Setup.CountWarmsOnWeb = value;
+    }
+
+    /// <summary>
+    /// Кол-во прогонов через вебку
+    /// </summary>
+    public int DelaySendMessageFrom
+    {
+        get => Globals.Setup.DelaySendMessageFrom;
+        set => Globals.Setup.DelaySendMessageFrom = value;
+    }
+
+    /// <summary>
+    /// Кол-во прогонов через вебку
+    /// </summary>
+    public int DelaySendMessageTo
+    {
+        get => Globals.Setup.DelaySendMessageTo;
+        set => Globals.Setup.DelaySendMessageTo = value;
+    }
+
+    /// <summary>
     /// Включить подготовку через веб?
     /// </summary>
     public bool EnableWarm
     {
         get => Globals.Setup.EnableWarm;
         set => Globals.Setup.EnableWarm = value;
+    }
+
+    /// <summary>
+    /// Включить минимальный прогрев?
+    /// </summary>
+    public bool EnableMinWarm
+    {
+        get => Globals.Setup.EnableMinWarm;
+        set => Globals.Setup.EnableMinWarm = value;
     }
 
     /// <summary>
@@ -84,12 +129,6 @@ public partial class Settings : INotifyPropertyChanged
             ? Brushes.Red
             : Brushes.GreenYellow;
 
-    public Brush ColorPathToImageDevice =>
-        string.IsNullOrEmpty(Globals.Setup.PathToImageDevice) ||
-        !File.Exists(Globals.Setup.PathToImageDevice)
-            ? Brushes.Red
-            : Brushes.GreenYellow;
-
     public Brush ColorPathToUserNames =>
         string.IsNullOrEmpty(Globals.Setup.PathToUserNames) ||
         !File.Exists(Globals.Setup.PathToUserNames)
@@ -101,12 +140,6 @@ public partial class Settings : INotifyPropertyChanged
         !Directory.Exists(Globals.Setup.PathToQRs)
             ? Brushes.Red
             : Brushes.GreenYellow;
-
-    public Brush ColorPathToDirectoryAccountsWeb =>
-    string.IsNullOrEmpty(Globals.Setup.PathToDirectoryAccountsWeb) ||
-    !Directory.Exists(Globals.Setup.PathToDirectoryAccountsWeb)
-        ? Brushes.Red
-        : Brushes.GreenYellow;
 
     #endregion
 
@@ -133,28 +166,12 @@ public partial class Settings : INotifyPropertyChanged
             foreach (var variaDirectory in Directory.GetDirectories(dialog.FileName))
                 if (!File.Exists($@"{variaDirectory}\Data.json"))
                     await File.WriteAllTextAsync($@"{variaDirectory}\Data.json",
-                        JsonConvert.SerializeObject(new AccountData()
-                        {
-                            LastActiveDialog = new Dictionary<string, DateTime>()
-                        }));
+                        JsonConvert.SerializeObject(new AccountData()));
 
             await Globals.SaveSetup();
         }
 
         OnPropertyChanged("ColorPathToDirectoryAccounts");
-    }
-
-    private async void SelectAccountsWeb(object sender, RoutedEventArgs e)
-    {
-        var dialog = new CommonOpenFileDialog();
-        dialog.IsFolderPicker = true;
-        if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
-        {
-            Globals.Setup.PathToDirectoryAccountsWeb = dialog.FileName;
-            await Globals.SaveSetup();
-        }
-
-        OnPropertyChanged("ColorPathToDirectoryAccountsWeb");
     }
 
     private async void SelectNumbers(object sender, RoutedEventArgs e)
@@ -168,19 +185,6 @@ public partial class Settings : INotifyPropertyChanged
         }
 
         OnPropertyChanged("ColorPathToPhonesUsers");
-    }
-
-    private async void SelectImageDevice(object sender, RoutedEventArgs e)
-    {
-        var dialog = new CommonOpenFileDialog();
-        dialog.Filters.Add(new CommonFileDialogFilter("Образ устройства", ".ova"));
-        if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
-        {
-            Globals.Setup.PathToImageDevice = dialog.FileName;
-            await Globals.SaveSetup();
-        }
-
-        OnPropertyChanged("ColorPathToImageDevice");
     }
 
     private async void SelectUserNames(object sender, RoutedEventArgs e)
@@ -233,6 +237,14 @@ public partial class Settings : INotifyPropertyChanged
         await Globals.SaveSetup();
     }
 
+    private async void EnableMinWarmClicked(object sender, RoutedEventArgs e)
+    {
+        EnableMinWarm = (sender as CheckBox)!.IsChecked!.Value;
+        OnPropertyChanged("EnableMinWarm");
+
+        await Globals.SaveSetup();
+    }
+
     private async void SelectFileTextForWarm(object sender, RoutedEventArgs e)
     {
         var dialog = new CommonOpenFileDialog();
@@ -244,40 +256,5 @@ public partial class Settings : INotifyPropertyChanged
         }
 
         OnPropertyChanged("ColorPathToTextForWarm");
-    }
-
-    private async void ExportWarmedAccounts(object sender, RoutedEventArgs e)
-    {
-        var accounts = Directory.CreateDirectory(MemuLib.Globals.RandomString(10));
-
-        var first = Directory.CreateDirectory($@"{accounts.FullName}\First");
-        var second = Directory.CreateDirectory($@"{accounts.FullName}\Second");
-
-        var firstDirectoryWarmed = Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First").Select(path => new FileInfo(path));
-        var secondDirectoryWarmed = Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\Second").Select(path => new FileInfo(path));
-
-        foreach (var account in firstDirectoryWarmed.ToArray())
-            try
-            {
-                if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First\{account.Name.Split('.')[0]}"))
-                {
-                    Directory.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First\{account.Name.Split('.')[0]}", $@"{first.FullName}\{account.Name.Split('.')[0]}");
-                    File.Move(account.FullName, $@"{first.FullName}\{account.Name}");
-                }
-            }
-            catch { }
-
-        foreach (var account in secondDirectoryWarmed.ToArray())
-            try
-            {
-                if (Directory.Exists($@"{Globals.Setup.PathToDirectoryAccountsWeb}\Second\{account.Name.Split('.')[0]}"))
-                {
-                    Directory.Move($@"{Globals.Setup.PathToDirectoryAccountsWeb}\Second\{account.Name.Split('.')[0]}", $@"{second.FullName}\{account.Name.Split('.')[0]}");
-                    File.Move(account.FullName, $@"{second.FullName}\{account.Name}");
-                }
-            }
-            catch { }
-
-        Process.Start("explorer.exe", accounts.FullName);
     }
 }

@@ -36,6 +36,7 @@ public static class Globals
     public static Setup Setup { get; private set; } = null!;
     public static DirectoryInfo RemoveAccountsDirectory { get; private set; } = null!;
     public static DirectoryInfo ScannedAccountsDirectory { get; private set; } = null!;
+    public static DirectoryInfo LogoutAccountsDirectory { get; private set; } = null!;
     public static DirectoryInfo TempDirectory { get; private set; } = null!;
     public static VirtualOutput Camera { get; private set; } = null!;
     public static string QrCodeName { get; set; } = string.Empty;
@@ -47,8 +48,10 @@ public static class Globals
         _ = Task.Run(WAWClient.QueueCameraHandler);
 
         TempDirectory = Directory.CreateDirectory("Temp");
+
         RemoveAccountsDirectory = Directory.CreateDirectory("RemovedAccounts");
         ScannedAccountsDirectory = Directory.CreateDirectory("ScannedAccounts");
+        LogoutAccountsDirectory = Directory.CreateDirectory("LogoutAccounts");
 
         Setup = (File.Exists(NameSetupFile)
             ? JsonConvert.DeserializeObject<Setup>(await File.ReadAllTextAsync(NameSetupFile))
@@ -106,17 +109,11 @@ public static class Globals
 
     public static async Task InitAccountsFolder()
     {
-        if (!string.IsNullOrEmpty(Setup.PathToDirectoryAccountsWeb))
-        {
-            Directory.CreateDirectory($@"{Setup.PathToDirectoryAccountsWeb}\First");
-            Directory.CreateDirectory($@"{Setup.PathToDirectoryAccountsWeb}\Second");
-        }
-
         foreach (var directory in Directory.GetDirectories(Setup.PathToDirectoryAccounts))
             if (!File.Exists($@"{directory}\Data.json") && (Directory.Exists($@"{directory}\com.whatsapp") || Directory.Exists($@"{directory}\com.whatsapp.w4b")))
                 await File.WriteAllTextAsync($@"{directory}\Data.json",
                     JsonConvert.SerializeObject(new AccountData()
-                    { LastActiveDialog = new Dictionary<string, DateTime>(), TrustLevelAccount = 0 }));
+                    { TrustLevelAccount = 0 }, Formatting.Indented));
     }
 
     public static async Task SaveSetup()
@@ -124,22 +121,7 @@ public static class Globals
         await File.WriteAllTextAsync(NameSetupFile, JsonConvert.SerializeObject(Setup));
     }
 
-    public static async Task<FileInfo[]> GetAccountsWeb(string[] usedPhone)
-    {
-        var accounts = new List<FileInfo>();
-
-        foreach (var account in Directory.GetFiles($@"{Globals.Setup.PathToDirectoryAccountsWeb}\First"))
-        {
-            var file = new FileInfo(account);
-
-            if (!usedPhone.Contains(file.Name.Split('.')[0]))
-                accounts.Add(file);
-        }
-
-        return accounts.ToArray();
-    }
-
-    public static async Task<(string phone, string path)[]> GetAccounts(string[] phoneFrom)
+    public static async Task<(string phone, string path)[]> GetAccounts(string[] phoneFrom, bool isWarming = false)
     {
         var accounts = new List<(string phone, string path)>();
 
@@ -149,8 +131,11 @@ public static class Globals
                 continue;
 
             var phone = new DirectoryInfo(accountDirectory).Name;
+            var dataAccount =
+                JsonConvert.DeserializeObject<AccountData>(
+                    await File.ReadAllTextAsync($@"{accountDirectory}\Data.json"));
 
-            if (!phoneFrom.Contains(phone))
+            if (!phoneFrom.Contains(phone) && (isWarming || dataAccount!.TrustLevelAccount >= Setup.WarmLevelForNewsletter))
                 accounts.Add((phone, accountDirectory));
         }
 
@@ -164,6 +149,21 @@ public static class Globals
 public class Setup
 {
     /// <summary>
+    /// Задержка оптравки сообщения от
+    /// </summary>
+    public int DelaySendMessageFrom = 0;
+
+    /// <summary>
+    /// Задержка оптравки сообщения до
+    /// </summary>
+    public int DelaySendMessageTo = 0;
+
+    /// <summary>
+    /// Кол-во прогонов через вебку
+    /// </summary>
+    public int CountWarmsOnWeb = 1;
+
+    /// <summary>
     /// Кол-во сообщений с аккаунта
     /// </summary>
     public int CountMessagesFromAccount = 50;
@@ -172,6 +172,11 @@ public class Setup
     /// Кол-во потоков хрома
     /// </summary>
     public int CountThreadsChrome = 1;
+
+    /// <summary>
+    /// Уровень прогрева при рассылке
+    /// </summary>
+    public int WarmLevelForNewsletter = 0;
 
     /// <summary>
     /// Включить подготовку аккаунта через веб?
@@ -189,6 +194,11 @@ public class Setup
     public bool EnableCheckBan = false;
 
     /// <summary>
+    /// Включить минимальный прогрев?
+    /// </summary>
+    public bool EnableMinWarm = false;
+
+    /// <summary>
     /// Путь до директории с аккаунтами WhatsApp
     /// </summary>
     public string PathToDirectoryAccounts = string.Empty;
@@ -199,19 +209,9 @@ public class Setup
     public string PathToTextForWarm = string.Empty;
 
     /// <summary>
-    /// Путь до директории с аккаунтами WhatsApp Web
-    /// </summary>
-    public string PathToDirectoryAccountsWeb = string.Empty;
-
-    /// <summary>
     /// Путь до файла с номерами пользователей для рассылки сообщений
     /// </summary>
     public string PathToPhonesUsers = string.Empty;
-
-    /// <summary>
-    /// Путь до образа виртуального устройства
-    /// </summary>
-    public string PathToImageDevice = string.Empty;
 
     /// <summary>
     /// Путь до файла с именами пользователей
@@ -243,9 +243,9 @@ public class AccountData
     public DateTime CreatedDate = DateTime.Now;
 
     /// <summary>
-    /// Последняя переписка с аккаунтом
+    /// Аккаунт первый начал переписку?
     /// </summary>
-    public Dictionary<string, DateTime>? LastActiveDialog = new Dictionary<string, DateTime>();
+    public bool FirstMsg = false;
 }
 
 public class Device

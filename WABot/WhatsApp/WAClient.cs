@@ -1,4 +1,5 @@
 ﻿using MemuLib.Core.SimServices;
+using WABot.WhatsApp.Web;
 
 namespace WABot.WhatsApp;
 
@@ -9,6 +10,7 @@ public class WaClient
     public string Account { private set; get; }
     public AccountData AccountData;
     public bool IsW4B;
+    public WAWClient? Web;
     public string PackageName
     {
         get => (IsW4B) ? "com.whatsapp.w4b"  : "com.whatsapp";
@@ -23,6 +25,9 @@ public class WaClient
 
         if (account != string.Empty)
             AccountData = JsonConvert.DeserializeObject<AccountData>(File.ReadAllText($@"{account}\Data.json"))!;
+
+        if (!string.IsNullOrEmpty(phone))
+            Web = new WAWClient(phone.Remove(0, 1));
 
         _mem = deviceId == -1 ? new Client(0) : new Client(deviceId);
     }
@@ -77,9 +82,18 @@ public class WaClient
 
         s2:
             if (!await _mem.ExistsElement("//node[@text='ПРОПУСТИТЬ']"))
-                return;
+                goto s3;
 
             await _mem.Click("//node[@text='ПРОПУСТИТЬ']");
+            await Task.Delay(2_000);
+            await _mem.StopApk(PackageName);
+            await _mem.RunApk(PackageName);
+
+        s3:
+            if (!await _mem.ExistsElement("//node[@text='НЕ СЕЙЧАС']"))
+                return;
+
+            await _mem.Click("//node[@text='НЕ СЕЙЧАС']");
             await Task.Delay(2_000);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);
@@ -122,7 +136,12 @@ public class WaClient
         {
             if (!await _mem.ExistsElement("//node[@content-desc='Отправить']"))
             {
-                await Task.Delay(100);
+                if (await _mem.ExistsElement("//node[@text='ОК']"))
+                    await _mem.Click("//node[@text='ОК']");
+
+                if (await _mem.ExistsElement("//node[@text='OK']"))
+                    await _mem.Click("//node[@text='OK']");
+             
                 continue;
             }
 
@@ -144,7 +163,7 @@ public class WaClient
         if (deviceId is not null)
         {
             await _mem.Stop();
-            _mem = new Client((int) deviceId);
+            _mem = new Client((int)deviceId);
         }
 
         if (account is not null)
@@ -156,11 +175,14 @@ public class WaClient
         }
 
         if (phone is not null)
+        {
+            Web = new WAWClient(phone.Remove(0, 1));
             Phone = phone;
+        }
     }
 
     public async Task UpdateData()
     {
-        await File.WriteAllTextAsync($@"{Account}\Data.json", JsonConvert.SerializeObject(AccountData));
+        await File.WriteAllTextAsync($@"{Account}\Data.json", JsonConvert.SerializeObject(AccountData, Formatting.Indented));
     }
 }

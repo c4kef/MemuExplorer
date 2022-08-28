@@ -12,6 +12,7 @@ public class WAWClient
     private static List<int> QueueProcess = null!;
     public readonly int TaskId;
     public readonly string NameSession;
+    public bool IsConnected { get; private set; }
 
     /// <summary>
     /// Инициализация сессии
@@ -24,9 +25,12 @@ public class WAWClient
         _taskFinished = new Dictionary<int, JObject>();
         _random = new Random();
         TaskId = _random.Next(1_000_000, 10_000_000);
-
-        Queue.Add(TaskId);
     }
+    
+    /// <summary>
+    /// Добавление в очередь
+    /// </summary>
+    public void AddToQueue() => Queue.Add(TaskId);
 
     /// <summary>
     /// Обработчик запросов на сканирование
@@ -83,7 +87,8 @@ public class WAWClient
             builder.AppendLine(line.ToString());
 
         var data = JObject.Parse(builder.ToString());
-        var id = int.Parse(data["value"]![0]!.ToString());
+        var idTask = data["value"]![0]!.ToString();
+        var id = int.Parse(idTask);
 
         if (_taskFinished.ContainsKey(id))
             _taskFinished.Remove(id);
@@ -91,6 +96,22 @@ public class WAWClient
         _taskFinished.Add(id, data);
 
         _taskQueue.RemoveAll(task => task == id);
+    }
+
+    /// <summary>
+    /// Главный обработчик статуса с сервера
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Неверное значение</exception>
+    /// <exception cref="Exception">Ошибка сервера</exception>
+    private void HandlerStateRequests(object[] args, Action<string> callback)
+    {
+        var builder = new StringBuilder();
+        foreach (var line in args)
+            builder.AppendLine(line.ToString());
+
+        var data = JObject.Parse(builder.ToString());
+        var val = data["value"]![0]!.ToString();
+        IsConnected = val.Contains("CONNECTED");
     }
 
     /// <summary>
@@ -110,7 +131,7 @@ public class WAWClient
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>
-    public async Task Init(bool waitQr)
+    public async Task Init(bool waitQr, string pathToWeb)
     {
         _socketClient = new SocketIOClient();
         _socket = _socketClient.Connect("http://localhost:3000/");
@@ -129,12 +150,13 @@ public class WAWClient
             throw new Exception("Cant connect to server");
 
         _socket.On("data", HandlerDataRequests);
+        _socket.On("state", HandlerStateRequests);
 
         _taskQueue.Add(TaskId);
 
         _socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
-            { Type = "create", Values = new List<object>() { $"{NameSession}@{TaskId}" } }));
+            { Type = "create", Values = new List<object>() { $"{NameSession}@{TaskId}", pathToWeb, waitQr } }));
 
         if (waitQr)
         {
@@ -217,6 +239,9 @@ public class WAWClient
     /// <exception cref="Exception">Ошибка сервера</exception>
     public async Task<bool> SendText(string number, string text, FileInfo? image = null)
     {
+        if (!IsConnected)
+            return false;
+
         try
         {
             var id = _random.Next(1_000_000, 10_000_000);
@@ -274,6 +299,9 @@ public class WAWClient
         _taskFinished.Remove(id);
 
         _socket.RemoveListener("data", HandlerDataRequests);
+        _socket.RemoveListener("state", HandlerStateRequests);
+
+        IsConnected = false;
 
         _socketClient.Disconnect();
 
@@ -304,6 +332,9 @@ public class WAWClient
         _taskFinished.Remove(id);
 
         _socket.RemoveListener("data", HandlerDataRequests);
+        _socket.RemoveListener("state", HandlerStateRequests);
+        
+        IsConnected = false;
 
         _socketClient.Disconnect();
 
@@ -318,33 +349,28 @@ public class WAWClient
     /// <exception cref="Exception">Ошибка сервера</exception>
     public async Task<bool> CheckValidPhone(string phone)
     {
-        try
-        {
-            var id = _random.Next(1_000_000, 10_000_000);
-
-            _taskQueue.Add(id);
-
-            _socket.Emit("data",
-                JsonConvert.SerializeObject(new ServerData()
-                { Type = "checkValidPhone", Values = new List<object>() { $"{NameSession}@{id}", phone } }));
-
-            while (_taskQueue.Contains(id))
-                await Task.Delay(100);
-
-            var data = _taskFinished[id];
-
-            _taskFinished.Remove(id);
-
-            if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
-                throw new Exception($"Error: {data["value"]![1]}");
-
-            return (bool)(data["value"]![1] ?? false);
-        }
-        catch (Exception ex)
-        {
-            Log.Write($"Ошибка проверки номера:\n{ex.Message}\n");
+        if (!IsConnected)
             return false;
-        }
+
+        var id = _random.Next(1_000_000, 10_000_000);
+
+        _taskQueue.Add(id);
+
+        _socket.Emit("data",
+            JsonConvert.SerializeObject(new ServerData()
+            { Type = "checkValidPhone", Values = new List<object>() { $"{NameSession}@{id}", phone } }));
+
+        while (_taskQueue.Contains(id))
+            await Task.Delay(100);
+
+        var data = _taskFinished[id];
+
+        _taskFinished.Remove(id);
+
+        if ((int)(data["status"] ?? throw new InvalidOperationException()) != 200)
+            throw new Exception($"Error: {data["value"]![1]}");
+
+        return (bool)(data["value"]![1] ?? false);
     }
 
     /// <summary>
@@ -382,7 +408,7 @@ public class WAWClient
             async Task<bool> WaitRequest()
             {
                 var status = 0;
-                while (_taskQueue.Contains(id) && status++ < 120)
+                while (_taskQueue.Contains(id) && status++ < 60)
                     await Task.Delay(500);
 
                 return status < 60;

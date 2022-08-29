@@ -60,12 +60,10 @@ public class WaClient
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);
 
-            if (!await _mem.ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
+            if (!await _mem.ExistsElement("//node[@text='ПРОПУСТИТЬ']"))
                 goto s1;
 
-            await _mem.Click("//node[@text='Выберите частоту резервного копирования']");
-            await _mem.Click("//node[@text='Никогда']");
-            await _mem.Click("//node[@text='ГОТОВО']");
+            await _mem.Click("//node[@text='ПРОПУСТИТЬ']");
             await Task.Delay(2_000);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);
@@ -81,10 +79,12 @@ public class WaClient
             await _mem.RunApk(PackageName);
 
         s2:
-            if (!await _mem.ExistsElement("//node[@text='ПРОПУСТИТЬ']"))
+            if (!await _mem.ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
                 goto s3;
 
-            await _mem.Click("//node[@text='ПРОПУСТИТЬ']");
+            await _mem.Click("//node[@text='Выберите частоту резервного копирования']");
+            await _mem.Click("//node[@text='Никогда']");
+            await _mem.Click("//node[@text='ГОТОВО']");
             await Task.Delay(2_000);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);

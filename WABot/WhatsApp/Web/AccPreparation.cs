@@ -340,14 +340,14 @@ public class AccPreparation
             initAgain:
                 var initWithErrors = false;
 
-                if (Directory.GetFiles(client.Account).Any(_phone => _phone == phone))
+                if (Directory.GetFiles(client.Account).Any(_phone => _phone.Contains(phone)))
                 {
                     client.Web!.RemoveQueue();
                     Log.Write($"[{phone}] - Аккаунт уже был авторизован и мы положительно отвечаем на результат\n", _logFile.FullName);
                     return true;
                 }
 
-                if (!await IsValidCheck(client) || i > 3)
+                if (!await IsValidCheck(client) || i > 4)
                 {
                     client.Web!.RemoveQueue();
                     Log.Write($"[{phone}] - Аккаунт оказался не валидным\n", _logFile.FullName);

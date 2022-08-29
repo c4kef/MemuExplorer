@@ -487,7 +487,11 @@ public class AccPreparation
             await Task.Delay(MemuLib.Settings.WaitingSecs);
 
             if (await client.GetInstance().ExistsElement("//node[@text='Перезапустить приложение']"))
+            {
                 await client.GetInstance().Click("//node[@text='Перезапустить приложение']");
+                await client.GetInstance().StopApk(client.PackageName);
+                await client.GetInstance().RunApk(client.PackageName);
+            }
 
             if (await client.GetInstance().ExistsElement("//node[@text='ОК']"))
                 await client.GetInstance().Click("//node[@text='ОК']");
@@ -497,6 +501,13 @@ public class AccPreparation
 
             if (await client.GetInstance().ExistsElement("//node[@text='ПРОПУСТИТЬ']"))
                 await client.GetInstance().Click("//node[@text='ПРОПУСТИТЬ']");
+
+            if (await client.GetInstance().ExistsElement("//node[@text='Закрыть приложение']"))
+            {
+                await client.GetInstance().Click("//node[@text='Закрыть приложение']");
+                await client.GetInstance().StopApk(client.PackageName);
+                await client.GetInstance().RunApk(client.PackageName);
+            }
 
             await Task.Delay(MemuLib.Settings.WaitingSecs);
 

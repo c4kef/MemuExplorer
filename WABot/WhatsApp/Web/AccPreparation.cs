@@ -308,10 +308,18 @@ public class AccPreparation
 
         async Task<bool> TryLogin(WaClient client, string phone, string path)
         {
-            await client.ReCreate($"+{phone}", path);
-            await client.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
+            try
+            {
+                await client.ReCreate($"+{phone}", path);
+                await client.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
 
-            return await IsValidCheck(client);
+                return await IsValidCheck(client);
+            }
+            catch (Exception ex)
+            {
+                Log.Write($"[TryLogin] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
+                return false;
+            }
         }
 
         async Task<bool> IsValidCheck(WaClient client)
@@ -340,7 +348,7 @@ public class AccPreparation
             initAgain:
                 var initWithErrors = false;
 
-                if (Directory.GetFiles(client.Account).Any(_phone => _phone.Contains(phone)))
+                if (Directory.GetFiles(client.Account).Any(_phone => _phone.Contains(phone)) && i > 0)
                 {
                     client.Web!.RemoveQueue();
                     Log.Write($"[{phone}] - Аккаунт уже был авторизован и мы положительно отвечаем на результат\n", _logFile.FullName);

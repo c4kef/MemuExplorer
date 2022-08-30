@@ -1,4 +1,5 @@
-﻿using WABot.Pages;
+﻿using System.Diagnostics.Metrics;
+using WABot.Pages;
 
 namespace WABot.WhatsApp.Web;
 
@@ -44,21 +45,25 @@ public class AccPreparationWeb
             return;
         }
 
+    again:
+
         Dashboard.GetInstance().CountTasks = (await Globals.GetAccounts(_usedPhones.ToArray(), true)).Length;
 
         for (var i = 0; i < Globals.Setup.CountThreadsChrome / 2; i++)
         {
             var task = Handler(message.Split('\n'));
-
-            await Task.Delay(2_000);
+            await Task.Delay(1_000);
 
             tasks.Add(task);
         }
 
         Task.WaitAll(tasks.ToArray(), -1);
 
-        foreach (var device in Globals.Devices.ToArray())
-            device.InUsage = false;
+        if (!IsStop && ++_countWarms < Globals.Setup.CountWarmsOnWeb)
+        {
+            _usedPhones.Clear();
+            goto again;
+        }
 
         Log.Write($"Завершено\n", _logFile.FullName);
         Log.Write($"Проебов: {_removedAccounts}\n", _logFile.FullName);
@@ -77,165 +82,190 @@ public class AccPreparationWeb
     private async Task Handler(string[] messages)
     {
         Log.Write($"Поток запущен\n", _logFile.FullName);
+        await Task.Delay(1_500);
 
         WaClient c1 = null!, c2 = null!;
         bool c1Auth = false, c2Auth = false;
-        again:
-        while (!IsStop)
+        var tryRepeatCount = 0;
+    tryRepeat:
+        try
         {
-            var result = await Globals.GetAccounts(_usedPhones.ToArray(), true);
-
-            Dashboard.GetInstance().CountTasks = result.Length;
-
-            if (result.Length < 2)
+            while (!IsStop)
             {
-                Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
-                break;
-            }
+                var result = await Globals.GetAccounts(_usedPhones.ToArray(), true);
 
-            var (phone, path) = result[0];
+                Dashboard.GetInstance().CountTasks = result.Length;
 
-            if (_usedPhones.Contains(phone))
-                continue;
-
-            _usedPhones.Add(phone);
-
-            if (!c1Auth)
-            {
-                var countTryLogin = 0;
-            tryAgain:
-                c1 = new WaClient($"+{phone}", path);
-
-                try
+                if (result.Length < 2)
                 {
-                    await c1.Web!.Init(false, path);
-                    if (!await c1.Web!.WaitForInChat())
-                        throw new Exception("Cant connect");
-                    if (!c1.Web!.IsConnected)
-                        throw new Exception("Is not connected");
-                    c1Auth = true;
-                }
-                catch (Exception)//Скорее всего аккаунт уже не валидный
-                {
-                    await c1.Web!.Free();
-                    Directory.Move(path, $@"{Globals.LogoutAccountsDirectory}\{phone}");
-                    c1.Web!.RemoveQueue();
-                    if (countTryLogin++ > 2)
-                        goto tryAgain;
+                    Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
+                    break;
                 }
 
-                Log.Write($"[{phone}] - {(c1Auth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
+                var (phone, path) = result[0];
+
+                if (_usedPhones.Contains(phone))
+                    continue;
+
+                _usedPhones.Add(phone);
 
                 if (!c1Auth)
-                    Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
-
-                continue;
-            }
-
-
-            if (!c2Auth)
-            {
-                var countTryLogin = 0;
-            tryAgain:
-                c2 = new WaClient($"+{phone}", path);
-
-                try
                 {
-                    await c2.Web!.Init(false, path);
-                    if (!await c2.Web!.WaitForInChat())
-                        throw new Exception("Cant connect");
-                    if (!c2.Web!.IsConnected)
-                        throw new Exception("Is not connected");
-                    c2Auth = true;
-                }
-                catch (Exception)//Скорее всего аккаунт уже не валидный
-                {
-                    await c2.Web!.Free();
-                    Directory.Move(path, $@"{Globals.LogoutAccountsDirectory}\{phone}");
-                    c2.Web!.RemoveQueue();
-                    if (countTryLogin++ > 2)
-                        goto tryAgain;
+                    c1 = new WaClient($"+{phone}", path);
+
+                    try
+                    {
+                        await c1.Web!.Init(false, path);
+                        if (!await c1.Web!.WaitForInChat())
+                            throw new Exception("Cant connect");
+                        if (!c1.Web!.IsConnected)
+                            throw new Exception("Is not connected");
+                        c1Auth = true;
+                    }
+                    catch (Exception)//Скорее всего аккаунт уже не валидный
+                    {
+                        await c1.Web!.Free();
+                        c1.Web!.RemoveQueue();
+                        var countTry = 0;
+                        while (!TryMove(path, $@"{Globals.LogoutAccountsDirectory}\{phone}") && ++countTry > 75)
+                            await Task.Delay(500);
+                    }
+
+                    Log.Write($"[{phone}] - {(c1Auth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
+
+                    if (!c1Auth)
+                        Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+
+                    continue;
                 }
 
-                Log.Write($"[{phone}] - {(c2Auth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
 
                 if (!c2Auth)
-                    Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
-            }
-
-            var countMessages = new Random().Next(5, 10);
-
-            var rnd = new Random();
-
-            for (var i = 0; i < countMessages; i++)
-            {
-                if (!c1Auth || !c2Auth || !c1.Web!.IsConnected || !c2.Web!.IsConnected)
-                    break;
-
-                if (i == 0)
                 {
-                    if (!await c1.Web!.SendText(c2.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
+                    c2 = new WaClient($"+{phone}", path);
+
+                    try
                     {
-                        i = -1;
-                        continue;
+                        await c2.Web!.Init(false, path);
+                        if (!await c2.Web!.WaitForInChat())
+                            throw new Exception("Cant connect");
+                        if (!c2.Web!.IsConnected)
+                            throw new Exception("Is not connected");
+                        c2Auth = true;
+                    }
+                    catch (Exception)//Скорее всего аккаунт уже не валидный
+                    {
+                        await c2.Web!.Free();
+                        c2.Web!.RemoveQueue();
+                        var countTry = 0;
+                        while (!TryMove(path, $@"{Globals.LogoutAccountsDirectory}\{phone}") && ++countTry > 75)
+                            await Task.Delay(500);
                     }
 
-                    await Task.Delay(rnd.Next(2_000, 10_000));
+                    Log.Write($"[{phone}] - {(c2Auth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
 
-                    if (!await c2.Web!.SendText(c1.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
+                    if (!c2Auth)
                     {
-                        i = -1;
+                        Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
                         continue;
                     }
                 }
-                else
+
+                if (Globals.Setup.EnableMinWarm)
                 {
-                    var mc1 = rnd.Next(2, 4);
-                    var mc2 = rnd.Next(2, 4);
+                    var countMessages = new Random().Next(5, 10);
 
-                    for (var mcc = 0; mcc < mc1; mcc++)
+                    var rnd = new Random();
+
+                    for (var i = 0; i < countMessages; i++)
                     {
-                        if (!await c1.Web!.SendText(c2.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
-                        {
-                            c1Auth = false;
-                            Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                        if (!c1Auth || !c2Auth || !c1.Web!.IsConnected || !c2.Web!.IsConnected)
                             break;
-                        }
 
-                        await Task.Delay(rnd.Next(2_000, 10_000));
+                        if (i == 0)
+                        {
+                            if (!await c1.Web!.SendText(c2.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
+                            {
+                                i = -1;
+                                continue;
+                            }
+
+                            await Task.Delay(rnd.Next(2_000, 10_000));
+
+                            if (!await c2.Web!.SendText(c1.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
+                            {
+                                i = -1;
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            var mc1 = rnd.Next(2, 4);
+                            var mc2 = rnd.Next(2, 4);
+
+                            for (var mcc = 0; mcc < mc1; mcc++)
+                            {
+                                if (!await c1.Web!.SendText(c2.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
+                                {
+                                    c1Auth = false;
+                                    Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                                    break;
+                                }
+
+                                await Task.Delay(rnd.Next(2_000, 10_000));
+                            }
+
+                            for (var mcc = 0; mcc < mc2; mcc++)
+                            {
+                                if (!await c2.Web!.SendText(c1.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
+                                {
+                                    c2Auth = false;
+                                    Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                                    break;
+                                }
+
+                                await Task.Delay(rnd.Next(2_000, 10_000));
+                            }
+                        }
                     }
 
-                    for (var mcc = 0; mcc < mc2; mcc++)
-                    {
-                        if (!await c2.Web!.SendText(c1.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
-                        {
-                            c2Auth = false;
-                            Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
-                            break;
-                        }
+                    c1.AccountData.TrustLevelAccount++;
+                    c2.AccountData.TrustLevelAccount++;
 
-                        await Task.Delay(rnd.Next(2_000, 10_000));
-                    }
+                    await c1.UpdateData();
+                    await c2.UpdateData();
                 }
+
+                c1Auth = c2Auth = false;
+
+                await c1.Web!.Free();
+                await c2.Web!.Free();
+
+                await Task.Delay(2_000);
+
+                Dashboard.GetInstance().CompletedTasks = _alivesAccounts += 2;
             }
-
-            c1Auth = c2Auth = false;
-            
-            await c1.Web!.Free();
-            await c2.Web!.Free();
-
-            c1.AccountData.TrustLevelAccount++;
-            c2.AccountData.TrustLevelAccount++;
-
-            await c1.UpdateData();
-            await c2.UpdateData();
-
-            await Task.Delay(2_000);
-
-            Dashboard.GetInstance().CompletedTasks = _alivesAccounts += 2;
+        }
+        catch (Exception ex)
+        {
+            Log.Write($"[MAIN] - Error: {ex.Message}\n", _logFile.FullName);
+            if (++tryRepeatCount < 3)
+                goto tryRepeat;
         }
 
-        if (!IsStop && ++_countWarms < Globals.Setup.CountWarmsOnWeb)
-            goto again;
+        bool TryMove(string from, string to)
+        {
+            try
+            {
+                if (Directory.Exists(from))
+                    Directory.Move(from, to);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }

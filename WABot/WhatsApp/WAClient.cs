@@ -27,7 +27,7 @@ public class WaClient
             AccountData = JsonConvert.DeserializeObject<AccountData>(File.ReadAllText($@"{account}\Data.json"))!;
 
         if (!string.IsNullOrEmpty(phone))
-            Web = new WAWClient(phone.Remove(0, 1));
+            Web = new WAWClient(phone[0] == '+' ? phone.Remove(0, 1) : phone);
 
         _mem = deviceId == -1 ? new Client(0) : new Client(deviceId);
     }

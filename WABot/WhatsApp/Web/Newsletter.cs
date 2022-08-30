@@ -144,12 +144,16 @@ public class Newsletter
             catch (Exception)//Скорее всего аккаунт уже не валидный
             {
                 await waw.Web!.Free();
-                Directory.Move(path, $@"{Globals.LogoutAccountsDirectory}\{phone}");
                 waw.Web!.RemoveQueue();
                 if (countTryLogin++ > 2)
                     goto tryAgain;
                 else
+                {
+                    var countTry = 0;
+                    while (!TryMove(path, $@"{Globals.LogoutAccountsDirectory}\{phone}") && ++countTry > 75)
+                        await Task.Delay(500);
                     continue;
+                }
             }
 
             var countMsg = 0;
@@ -272,6 +276,21 @@ public class Newsletter
                 }
 
             return string.Empty;
+        }
+
+        bool TryMove(string from, string to)
+        {
+            try
+            {
+                if (Directory.Exists(from))
+                    Directory.Move(from, to);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

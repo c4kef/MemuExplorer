@@ -187,6 +187,7 @@ public class AccPreparationWeb
                             if (!await c1.Web!.SendText(c2.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
                             {
                                 i = -1;
+                                TryMove(c1.Account, $@"{Globals.LogoutAccountsDirectory}\{c1.Web!.NameSession}");
                                 continue;
                             }
 
@@ -195,6 +196,7 @@ public class AccPreparationWeb
                             if (!await c2.Web!.SendText(c1.Web!.NameSession, messages[rnd.Next(0, messages.Length - 1)]))
                             {
                                 i = -1;
+                                TryMove(c2.Account, $@"{Globals.LogoutAccountsDirectory}\{c2.Web!.NameSession}");
                                 continue;
                             }
                         }
@@ -209,6 +211,7 @@ public class AccPreparationWeb
                                 {
                                     c1Auth = false;
                                     Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                                    TryMove(c1.Account, $@"{Globals.LogoutAccountsDirectory}\{c1.Web!.NameSession}");
                                     break;
                                 }
 
@@ -221,6 +224,7 @@ public class AccPreparationWeb
                                 {
                                     c2Auth = false;
                                     Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                                    TryMove(c2.Account, $@"{Globals.LogoutAccountsDirectory}\{c2.Web!.NameSession}");
                                     break;
                                 }
 

@@ -348,19 +348,22 @@ public class AccPreparation
             initAgain:
                 var initWithErrors = false;
 
-                if (Directory.GetFiles(client.Account).Any(_phone => _phone.Contains(phone)) && i > 0)
+                if (Directory.GetFiles(client.Account).Any(_phone => _phone == phone) && i > 0)
                 {
                     client.Web!.RemoveQueue();
                     Log.Write($"[{phone}] - Аккаунт уже был авторизован и мы положительно отвечаем на результат\n", _logFile.FullName);
                     return true;
                 }
 
-                if (!await IsValidCheck(client) || i > 4)
+                if (!await IsValidCheck(client) || i >= 3)
                 {
                     client.Web!.RemoveQueue();
                     Log.Write($"[{phone}] - Аккаунт оказался не валидным\n", _logFile.FullName);
                     return false;
                 }
+
+                if (i > 0)
+                    await MoveToScan(client, false);
 
                 initWithErrors = true;
 
@@ -386,7 +389,7 @@ public class AccPreparation
                 if (await client.GetInstance().ExistsElement("//node[@text='OK']", isWait: false))
                 {
                     //await client.GetInstance().Click("//node[@text='OK']");
-                    i++;
+                    ++i;
 
                     if (await client.GetInstance().ExistsElement("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']"))
                     {
@@ -397,20 +400,18 @@ public class AccPreparation
 
                     await client.GetInstance().StopApk(c1.PackageName);
                     await client.GetInstance().RunApk(c1.PackageName);
-                    await MoveToScan(client, false);
 
                     goto initAgain;
                 }
 
                 if (initWithErrors)
                 {
-                    i++;
+                    ++i;
                     await SetZero(client.Web);
                     Log.Write($"[{phone}] - Инициализировалось с ошибками\n", _logFile.FullName);
 
                     await client.GetInstance().StopApk(c1.PackageName);
                     await client.GetInstance().RunApk(c1.PackageName);
-                    await MoveToScan(client, false);
                     
                     goto initAgain;
                 }

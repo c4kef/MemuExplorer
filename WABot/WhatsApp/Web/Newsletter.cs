@@ -226,6 +226,11 @@ public class Newsletter
             {
                 await waw.UpdateData();
                 await BanAccount(waw.Web!, contact);
+
+                var countTry = 0;
+                while (!TryMove(path, $@"{Globals.LogoutAccountsDirectory}\{phone}") && ++countTry > 75)
+                    await Task.Delay(500);
+
                 continue;
             }
 

@@ -185,7 +185,7 @@ public class AccPreparation
 
                 for (var i = 0; i < countMessages; i++)
                 {
-                    if (!c1Auth || !c2Auth)
+                    if (!c1Auth || !c2Auth || IsStop)
                         break;
 
                     if (!await IsValid(c1))
@@ -263,7 +263,7 @@ public class AccPreparation
             await c2.GetInstance().StopApk(c2.PackageName);
             await c2.GetInstance().RunApk(c2.PackageName);
 
-            if (!c1Auth || !c2Auth)
+            if (!c1Auth || !c2Auth || IsStop)
                 continue;
 
             if (Globals.Setup.EnableScanQr)
@@ -306,6 +306,17 @@ public class AccPreparation
                     @$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
         }
 
+        async Task DeleteAccount(WaClient client)
+        {
+            await client.UpdateData();
+            if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") &&
+                Directory.Exists(client.Account))
+                Directory.Delete(client.Account, true);
+            else if (Directory.Exists(client.Account))
+                Directory.Move(client.Account,
+                    @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+        }
+
         async Task<bool> TryLogin(WaClient client, string phone, string path)
         {
             try
@@ -326,13 +337,7 @@ public class AccPreparation
         {
             if (!await IsValid(client))
             {
-                if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") &&
-                    Directory.Exists(client.Account))
-                    Directory.Delete(client.Account, true);
-                else if (Directory.Exists(client.Account))
-                    Directory.Move(client.Account,
-                        @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
-
+                await DeleteAccount(client);
                 return false;
             }
 

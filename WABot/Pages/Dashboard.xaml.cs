@@ -1,4 +1,5 @@
-﻿using MS.WindowsAPICodePack.Internal;
+﻿using MemuLib.Core.SimServices;
+using MS.WindowsAPICodePack.Internal;
 using System.Drawing;
 using System.Drawing.Imaging;
 using VirtualCameraOutput;
@@ -17,6 +18,7 @@ public partial class Dashboard : INotifyPropertyChanged
         _preparationWeb = new AccPreparationWeb();
         _newsletterWeb = new WhatsApp.Web.Newsletter();
         _checkerWeb = new WhatsApp.Web.Checker();
+        _register = new Register();
         _dashboard = this;
 
         if (!_managerDevicesIsRuning)
@@ -41,6 +43,11 @@ public partial class Dashboard : INotifyPropertyChanged
     /// Подготовка аккаунтов
     /// </summary>
     private readonly AccPreparation _preparation;
+
+    /// <summary>
+    /// Регистрация аккаунтов
+    /// </summary>
+    private readonly Register _register;
 
     /// <summary>
     /// Подготовка аккаунтов
@@ -242,6 +249,26 @@ public partial class Dashboard : INotifyPropertyChanged
     /// <param name="e"></param>
     private async void NewsletterWeb(object sender, RoutedEventArgs e)
     {
+        /*var service = await OnlineSim.Create("232", "WhatsApp");
+        var phone = (await service!.GetMessage())["number"]!.ToString();
+        Clipboard.SetText(phone);
+        MessageBox.Show(phone);
+        while (true)
+        {
+            var result = await service!.GetMessage();
+            if (result["response"]!.ToString() != "TZ_NUM_ANSWER")
+            {
+                await Task.Delay(1_500);
+                continue;
+            }
+
+            MessageBox.Show(result["msg"]!.ToString());
+        }*/
+
+        var client = new WaClient(deviceId: 0, isW4B: true);
+        await client.Start();
+
+        await client.Register();
         if (_isBusy)
         {
             _newsletterWeb.IsStop = true;
@@ -271,6 +298,46 @@ public partial class Dashboard : INotifyPropertyChanged
         }
 
         AverageMessages = AverageMessagesAll = BannedAccounts = CountTasks = CompletedTasks = 0;
+        _isBusy = false;
+    }
+
+    /// <summary>
+    /// Запуск регистрации
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private async void RegAccounts(object sender, RoutedEventArgs e)
+    {
+        if (_isBusy)
+        {
+            _register.IsStop = true;
+            MessageBox.Show("Дождитесь завершения задачи");
+            return;
+        }
+
+        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive))
+        {
+            MessageBox.Show("Запустите устройства и включите режим прогрева");
+            return;
+        }
+
+        _isBusy = true;
+
+        try
+        {
+            _activeTask = Task.Run(async () => await _register.Start());
+            await _activeTask;
+
+            MessageBox.Show("Регистрация завершена");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Произошла ошибка, лог создан на рабочем столе");
+            await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
+        }
+
+        AverageMessages = AverageMessagesAll = BannedAccounts = CountTasks = CompletedTasks = 0;
+
         _isBusy = false;
     }
 

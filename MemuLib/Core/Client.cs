@@ -386,17 +386,16 @@ public class Client
     /// </summary>
     /// <param name="local">путь на локальной машине</param>
     /// <param name="remote">путь на удаленной машине</param>
-    public async Task Pull(string local, string remote)
+    public async Task<string> Pull(string local, string remote)
     {
         if (!await Memu.Exists(_index))
         {
             Log.Write($"[{_index}] -> VM not found");
-            return;
+            return "";
         }
 
-        await Memu.Pull(_index, local, remote);
-
         Log.Write($"[{_index}] -> files pulled");
+        return await Memu.Pull(_index, local, remote);
     }
 
     /// <summary>

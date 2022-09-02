@@ -45,13 +45,13 @@ public static class Globals
     /// <returns>новая строка</returns>
     private static string RandomNumberString(int length) => new string(Enumerable.Repeat("0123456789", length)
         .Select(s => s[new Random().Next(s.Length)]).ToArray());
-    
+
     /// <summary>
     /// Сгенирировать случайную строчку
     /// </summary>
     /// <param name="length">длина строки</param>
     /// <returns>новая строка</returns>
-    public static string RandomString(int length) => new string(Enumerable.Repeat("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", length)
+    public static string RandomString(int length, bool onlyLetter = false) => new string(Enumerable.Repeat((onlyLetter) ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", length)
         .Select(s => s[new Random().Next(s.Length)]).ToArray());
 
     /// <summary>

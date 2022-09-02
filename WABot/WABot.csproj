@@ -9,6 +9,7 @@
         <Platforms>AnyCPU</Platforms>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <SupportedOSPlatformVersion>10.0.18362.0</SupportedOSPlatformVersion>
+        <ApplicationIcon>Logo.ico</ApplicationIcon>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -19,6 +20,10 @@
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <PlatformTarget>x86</PlatformTarget>
     </PropertyGroup>
+
+    <ItemGroup>
+      <Content Include="Logo.ico" />
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />

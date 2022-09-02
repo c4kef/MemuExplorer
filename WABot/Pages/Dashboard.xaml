@@ -74,6 +74,17 @@
                             </ToolTip>
                         </Button.ToolTip>
                     </Button>
+                    <Button HorizontalAlignment="Center"
+                            Margin="10,0,0,0"
+                            ui:ControlHelper.CornerRadius="5"
+                            Content="Регистрация"
+                            Click="RegAccounts">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                Начнет процесс регистрации аккаунтов
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
                     <!--<Button HorizontalAlignment="Center" Margin="0,0,0,0" ui:ControlHelper.CornerRadius="5"
                             Content="Прогрев" Click="Warming">
                         <Button.ToolTip>

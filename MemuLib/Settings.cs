@@ -13,9 +13,9 @@ public static class Settings
     public const string DatasDir = @"D:\C4ke\Whatsapp\MemuExplorer\Data\Accounts";//D:\C4ke\Whatsapp\MemuExplorer\Data\Accounts//C:\Users\artem\source\repos\MVP\MemuExplorer\Data
 
     /// <summary>
-    /// API ключ от сервиса 5SIM
+    /// API ключ от сервиса для приема смс
     /// </summary>
-    public const string SimApi = "jXI40cCsDCEgl10ZMT6N3xq1TonSECkA";
+    public const string SimApi = "72deadac6b4f05dcd06f65534a0eeec2";
 
     /// <summary>
     /// Таймер операций (в секундах)

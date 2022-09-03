@@ -243,45 +243,6 @@ public partial class Dashboard : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Запуск рассылки Web
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private async void NewsletterWeb(object sender, RoutedEventArgs e)
-    {
-        if (_isBusy)
-        {
-            _newsletterWeb.IsStop = true;
-            MessageBox.Show("Дождитесь завершения задачи");
-            return;
-        }
-        
-        if (string.IsNullOrEmpty(TextMessage))
-        {
-            MessageBox.Show("Укажите текст сообщения");
-            return;
-        }
-
-        _isBusy = true;
-
-        try
-        {
-            _activeTask = Task.Run(() => _newsletterWeb.Start(TextMessage));
-            await _activeTask;
-
-            MessageBox.Show("Рассылка завершена");
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show("Произошла ошибка, лог создан на рабочем столе");
-            await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
-        }
-
-        AverageMessages = AverageMessagesAll = BannedAccounts = CountTasks = CompletedTasks = 0;
-        _isBusy = false;
-    }
-
-    /// <summary>
     /// Запуск рассылки
     /// </summary>
     /// <param name="sender"></param>

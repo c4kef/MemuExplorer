@@ -20,7 +20,7 @@ public class WaClient
 
     public WaClient(string phone = "", string account = "", int deviceId = -1, bool isW4B = false)
     {
-        Phone = phone[0] == '+' ? phone : "+" + phone;
+        Phone = string.IsNullOrEmpty(phone) ? string.Empty : phone[0] == '+' ? phone : "+" + phone;
         Account = account;
 
         IsW4B = isW4B;

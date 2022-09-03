@@ -20,7 +20,7 @@ public class WaClient
 
     public WaClient(string phone = "", string account = "", int deviceId = -1, bool isW4B = false)
     {
-        Phone = phone;
+        Phone = phone[0] == '+' ? phone : "+" + phone;
         Account = account;
 
         IsW4B = isW4B;
@@ -254,7 +254,7 @@ public class WaClient
                !await _mem.ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", dump, false);
     }
 
-    public async Task LoginFile([Optional] string path, [Optional] string name)
+    public async Task<bool> LoginFile([Optional] string path, [Optional] string name)
     {
         try
         {
@@ -298,16 +298,18 @@ public class WaClient
 
         s3:
             if (!await _mem.ExistsElement("//node[@text='НЕ СЕЙЧАС']"))
-                return;
+                return true;
 
             await _mem.Click("//node[@text='НЕ СЕЙЧАС']");
             await Task.Delay(2_000);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);
+            return true;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Log.Write(ex.Message);
+            return false;
         }
     }
 

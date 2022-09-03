@@ -78,10 +78,10 @@ public partial class Settings : INotifyPropertyChanged
     /// <summary>
     /// Включить подготовку через веб?
     /// </summary>
-    public bool EnableWarm
+    public bool EnableWeb
     {
-        get => Globals.Setup.EnableWarm;
-        set => Globals.Setup.EnableWarm = value;
+        get => Globals.Setup.EnableWeb;
+        set => Globals.Setup.EnableWeb = value;
     }
 
     /// <summary>
@@ -213,10 +213,10 @@ public partial class Settings : INotifyPropertyChanged
         }
     }
 
-    private async void EnableWarmClicked(object sender, RoutedEventArgs e)
+    private async void EnableWebClicked(object sender, RoutedEventArgs e)
     {
-        EnableWarm = (sender as CheckBox)!.IsChecked!.Value;
-        OnPropertyChanged("EnableWarm");
+        EnableWeb = (sender as CheckBox)!.IsChecked!.Value;
+        OnPropertyChanged("EnableWeb");
 
         await Globals.SaveSetup();
     }

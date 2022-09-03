@@ -181,7 +181,7 @@ public class Setup
     /// <summary>
     /// Включить подготовку аккаунта через веб?
     /// </summary>
-    public bool EnableWarm = false;
+    public bool EnableWeb = false;
 
     /// <summary>
     /// Включить сканирование qr кода?

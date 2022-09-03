@@ -28,38 +28,6 @@ public class Newsletter
         _checkReadyThreads = false;
     }
 
-    private async Task HandlerNumberRewrite()
-    {
-        var contacts = _contacts.ToList();
-        var removedPhone = new List<string>();
-
-        while (!IsStop)
-        {
-            await Task.Delay(5_000);
-
-            if (_usedPhonesUsers.Count == 0)
-                continue;
-
-            var contact = string.Empty;
-
-            foreach (var phone in _usedPhonesUsers)
-                if (!removedPhone.Contains(phone))
-                {
-                    if (string.IsNullOrEmpty(phone))
-                        continue;
-
-                    contact = phone;
-                    break;
-                }
-
-            contacts.RemoveAll(phone => phone == contact);
-
-            await File.WriteAllLinesAsync(Globals.Setup.PathToPhonesUsers, contacts);
-
-            removedPhone.Add(contact);
-        }
-    }
-
     public async Task Start(string text)
     {
         var tasks = new List<Task>();
@@ -72,8 +40,6 @@ public class Newsletter
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
 
         Dashboard.GetInstance().CountTasks = _contacts.Length;
-
-        _ = Task.Factory.StartNew(HandlerNumberRewrite);
 
         Log.Write($"Добро пожаловать в логи, текст рассылки:\n{text}\n\n", _logFile.FullName);
 

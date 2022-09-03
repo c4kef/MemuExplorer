@@ -8,7 +8,7 @@ public class AccPreparation
     private readonly Dictionary<int, Device[]> _tetheredDevices;
     private readonly List<string> _usedPhones;
     private readonly List<string> _usedPhonesUsers;
-  
+
     private FileInfo _logFile;
     private string[] _names;
     private int _removedAccounts;
@@ -192,6 +192,7 @@ public class AccPreparation
                     {
                         c1Auth = false;
                         Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                        await DeleteAccount(c1);
                         break;
                     }
 
@@ -199,6 +200,7 @@ public class AccPreparation
                     {
                         c2Auth = false;
                         Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                        await DeleteAccount(c2);
                         break;
                     }
 
@@ -231,6 +233,7 @@ public class AccPreparation
                             {
                                 c1Auth = false;
                                 Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                                await DeleteAccount(c1);
                                 break;
                             }
                         }
@@ -245,6 +248,7 @@ public class AccPreparation
                             {
                                 c2Auth = false;
                                 Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                                await DeleteAccount(c2);
                                 break;
                             }
                         }
@@ -274,12 +278,16 @@ public class AccPreparation
                     {
                         c2Auth = false;
                         Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                        await DeleteAccount(c2);
                         continue;
                     }
                     Dashboard.GetInstance().CompletedTasks = ++_alivesAccounts;
 
                     if (await TryLoginWeb(c1, c1.Phone.Remove(0, 1)))
+                    {
                         Dashboard.GetInstance().CompletedTasks = ++_alivesAccounts;
+                        await DeleteAccount(c1);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -298,23 +306,53 @@ public class AccPreparation
 
         async Task SuccesfulMoveAccount(WaClient client)
         {
-            await client.UpdateData();
-            if (Directory.Exists(@$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
-                Directory.Delete(client.Account, true);
-            else if (Directory.Exists(client.Account))
-                Directory.Move(client.Account,
-                    @$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+            var countTry = 0;
+            while (countTry++ < 3)
+            {
+                try
+                {
+                    if (Directory.Exists(@$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
+                        Directory.Delete(client.Account, true);
+                    else if (Directory.Exists(client.Account))
+                    {
+                        await client.UpdateData();
+                        Directory.Move(client.Account,
+                            @$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Write($"[SuccesfulMoveAccount] - Произошла ошибка, попытка {countTry}: {ex.Message}\n", _logFile.FullName);
+                }
+
+                await Task.Delay(1_000);
+            }
         }
 
         async Task DeleteAccount(WaClient client)
         {
-            await client.UpdateData();
-            if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") &&
-                Directory.Exists(client.Account))
-                Directory.Delete(client.Account, true);
-            else if (Directory.Exists(client.Account))
-                Directory.Move(client.Account,
-                    @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+            var countTry = 0;
+            while (countTry++ < 3)
+            {
+                try
+                {
+                    if (Directory.Exists(@$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}") &&
+                        Directory.Exists(client.Account))
+                        Directory.Delete(client.Account, true);
+                    else if (Directory.Exists(client.Account))
+                    {
+                        await client.UpdateData();
+                        Directory.Move(client.Account,
+                            @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Write($"[DeleteAccount] - Произошла ошибка, попытка {countTry}: {ex.Message}\n", _logFile.FullName);
+                }
+
+                await Task.Delay(1_000);
+            }
         }
 
         async Task<bool> TryLogin(WaClient client, string phone, string path)
@@ -322,7 +360,11 @@ public class AccPreparation
             try
             {
                 await client.ReCreate($"+{phone}", path);
-                await client.LoginFile(name: _names[new Random().Next(0, _names.Length)]);
+                if (!await client.LoginFile(name: _names[new Random().Next(0, _names.Length)]))
+                {
+                    await DeleteAccount(client);
+                    return false;
+                }
 
                 return await IsValidCheck(client);
             }

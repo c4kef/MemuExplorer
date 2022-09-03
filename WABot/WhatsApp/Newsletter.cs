@@ -28,38 +28,6 @@ public class Newsletter
         _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_log.txt");
     }
 
-    private async Task HandlerNumberRewrite()
-    {
-        var contacts = _contacts.ToList();
-        var removedPhone = new List<string>();
-
-        while (!IsStop)
-        {
-            await Task.Delay(5_000);
-
-            if (_usedPhonesUsers.Count == 0)
-                continue;
-
-            var contact = string.Empty;
-
-            foreach (var phone in _usedPhonesUsers)
-                if (!removedPhone.Contains(phone))
-                {
-                    if (string.IsNullOrEmpty(phone))
-                        continue;
-
-                    contact = phone;
-                    break;
-                }
-
-            contacts.RemoveAll(phone => phone == contact);
-
-            await File.WriteAllLinesAsync(Globals.Setup.PathToPhonesUsers, contacts);
-
-            removedPhone.Add(contact);
-        }
-    }
-
     public async Task Start(string text)
     {
         var tasks = new List<Task>();
@@ -73,8 +41,6 @@ public class Newsletter
             .Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
-
-        //_ = Task.Factory.StartNew(HandlerNumberRewrite);
 
         var cObjs = new List<CObj>();
 

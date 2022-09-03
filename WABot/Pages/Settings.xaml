@@ -31,12 +31,12 @@
                            HorizontalAlignment="Center" />
                     <CheckBox Margin="0,10,0,0"
                               ui:ControlHelper.CornerRadius="5"
-                              Content="Подготовка в веб"
-                              IsChecked="{Binding EnableWarm}"
-                              Click="EnableWarmClicked">
+                              Content="Использовать веб"
+                              IsChecked="{Binding EnableWeb}"
+                              Click="EnableWebClicked">
                         <CheckBox.ToolTip>
                             <ToolTip>
-                                Включить подготовку аккаунтов для рассылки через веб?
+                                Включить прогрев аккаунтов и рассылку через веб?
                             </ToolTip>
                         </CheckBox.ToolTip>
                     </CheckBox>

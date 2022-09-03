@@ -249,26 +249,6 @@ public partial class Dashboard : INotifyPropertyChanged
     /// <param name="e"></param>
     private async void NewsletterWeb(object sender, RoutedEventArgs e)
     {
-        /*var service = await OnlineSim.Create("232", "WhatsApp");
-        var phone = (await service!.GetMessage())["number"]!.ToString();
-        Clipboard.SetText(phone);
-        MessageBox.Show(phone);
-        while (true)
-        {
-            var result = await service!.GetMessage();
-            if (result["response"]!.ToString() != "TZ_NUM_ANSWER")
-            {
-                await Task.Delay(1_500);
-                continue;
-            }
-
-            MessageBox.Show(result["msg"]!.ToString());
-        }*/
-
-        var client = new WaClient(deviceId: 0, isW4B: true);
-        await client.Start();
-
-        await client.Register();
         if (_isBusy)
         {
             _newsletterWeb.IsStop = true;
@@ -290,6 +270,62 @@ public partial class Dashboard : INotifyPropertyChanged
             await _activeTask;
 
             MessageBox.Show("Рассылка завершена");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Произошла ошибка, лог создан на рабочем столе");
+            await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
+        }
+
+        AverageMessages = AverageMessagesAll = BannedAccounts = CountTasks = CompletedTasks = 0;
+        _isBusy = false;
+    }
+
+    /// <summary>
+    /// Запуск рассылки
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private async void Newsletter(object sender, RoutedEventArgs e)
+    {
+        if (_isBusy)
+        {
+            _newsletterWeb.IsStop = true;
+            _newsletter.IsStop = true;
+            MessageBox.Show("Дождитесь завершения задачи");
+            return;
+        }
+
+        if (!Globals.Setup.EnableWeb)
+            if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive))
+            {
+                MessageBox.Show("Запустите устройства");
+                return;
+            }
+
+        if (string.IsNullOrEmpty(TextMessage))
+        {
+            MessageBox.Show("Укажите текст сообщения");
+            return;
+        }
+
+        _isBusy = true;
+
+        try
+        {
+            _activeTask = Task.Run(async () =>
+            {
+                if (Globals.Setup.EnableWeb)
+                    await _newsletterWeb.Start(TextMessage);
+
+                else
+                    await _newsletter.Start(TextMessage);
+            });
+
+            await _activeTask;
+
+            MessageBox.Show("Рассылка завершена");
+
         }
         catch (Exception ex)
         {
@@ -356,7 +392,7 @@ public partial class Dashboard : INotifyPropertyChanged
             return;
         }
 
-        if (!Globals.Setup.EnableWarm)
+        if (!Globals.Setup.EnableWeb)
             if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive))
             {
                 MessageBox.Show("Запустите устройства");
@@ -381,7 +417,7 @@ public partial class Dashboard : INotifyPropertyChanged
         {
             _activeTask = Task.Run(async () =>
             {
-                if (Globals.Setup.EnableWarm)
+                if (Globals.Setup.EnableWeb)
                     await _preparationWeb.Start(string.IsNullOrEmpty(TextMessage) ? await File.ReadAllTextAsync(Globals.Setup.PathToTextForWarm) : TextMessage);
 
                 else
@@ -391,46 +427,6 @@ public partial class Dashboard : INotifyPropertyChanged
             await _activeTask;
 
             MessageBox.Show("Настройка завершена");
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show("Произошла ошибка, лог создан на рабочем столе");
-            await File.WriteAllTextAsync("Error.txt", $"{ex.Message}");
-        }
-
-        AverageMessages = AverageMessagesAll = BannedAccounts = CountTasks = CompletedTasks = 0;
-        _isBusy = false;
-    }
-
-    /// <summary>
-    /// Запуск рассылки
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private async void Newsletter(object sender, RoutedEventArgs e)
-    {
-        if (_isBusy)
-        {
-            _newsletter.IsStop = true;
-            MessageBox.Show("Дождитесь завершения задачи");
-            return;
-        }
-
-        if (Globals.Devices.Count == 0 || !Globals.Devices.Any(device => device.IsActive) )
-        {
-            MessageBox.Show("Запустите устройства");
-            return;
-        }
-
-        _isBusy = true;
-
-        try
-        {
-            _activeTask = Task.Run(() => _newsletter.Start(TextMessage));
-            await _activeTask;
-
-            MessageBox.Show("Рассылка завершена");
-
         }
         catch (Exception ex)
         {

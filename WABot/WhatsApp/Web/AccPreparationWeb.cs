@@ -124,7 +124,7 @@ public class AccPreparationWeb
                     }
                     catch (Exception)//Скорее всего аккаунт уже не валидный
                     {
-                        await c1.Web!.Free();
+                        await c1.Web!.Free(false);
                         c1.Web!.RemoveQueue();
                         var countTry = 0;
                         while (!TryMove(path, $@"{Globals.LogoutAccountsDirectory}\{phone}") && ++countTry > 75)
@@ -155,7 +155,7 @@ public class AccPreparationWeb
                     }
                     catch (Exception)//Скорее всего аккаунт уже не валидный
                     {
-                        await c2.Web!.Free();
+                        await c2.Web!.Free(false);
                         c2.Web!.RemoveQueue();
                         var countTry = 0;
                         while (!TryMove(path, $@"{Globals.LogoutAccountsDirectory}\{phone}") && ++countTry > 75)
@@ -242,8 +242,8 @@ public class AccPreparationWeb
 
                 c1Auth = c2Auth = false;
 
-                await c1.Web!.Free();
-                await c2.Web!.Free();
+                await c1.Web!.Free(false);
+                await c2.Web!.Free(false);
 
                 await Task.Delay(2_000);
 

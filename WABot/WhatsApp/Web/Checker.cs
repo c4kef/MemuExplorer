@@ -66,7 +66,7 @@ public class Checker
             }
             catch (Exception)
             {
-                await waw.Web!.Free();
+                await waw.Web!.Free(true);
                 Directory.Move(path, $@"{Globals.LogoutAccountsDirectory}\{phone}");
                 waw.Web!.RemoveQueue();
                 ++Dashboard.GetInstance().BannedAccounts;
@@ -78,7 +78,7 @@ public class Checker
             }
 
             ++Dashboard.GetInstance().CompletedTasks;
-            await waw.Web!.Free();
+            await waw.Web!.Free(false);
             waw.Web!.RemoveQueue();
         }
     }

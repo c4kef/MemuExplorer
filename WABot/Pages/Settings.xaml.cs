@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using MemuLib.Core;
+using System.Diagnostics;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 
@@ -256,5 +257,40 @@ public partial class Settings : INotifyPropertyChanged
         }
 
         OnPropertyChanged("ColorPathToTextForWarm");
+    }
+
+    private async void ClearFolder(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(Globals.Setup.PathToDirectoryAccounts))
+        {
+            MessageBox.Show("Вы не указали путь до аккаунтов");
+            return;
+        }
+
+        var cantMoveAccountsCount = 0;
+
+        var logoutAccounts = Directory.GetDirectories(Globals.Setup.PathToDirectoryAccounts).ToList();
+        logoutAccounts.RemoveAll(accountPath => Directory.GetFiles(accountPath).Any(file => file.Contains("data.json")));
+
+        foreach (var dir in logoutAccounts)
+        {
+            var countTry = 0;
+            while (countTry++ < 3)
+            {
+                try
+                {
+                    Directory.Move(dir, $@"{Globals.LogoutAccountsDirectory}\{new DirectoryInfo(dir).Name}");
+                    break;
+                }
+                catch
+                {
+                    ++cantMoveAccountsCount;
+                }
+
+                await Task.Delay(1_000);
+            }
+        }
+
+        MessageBox.Show($"Аккаунты перенесены\nНе перенесено: {cantMoveAccountsCount}");
     }
 }

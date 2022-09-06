@@ -109,7 +109,7 @@ public class Newsletter
             }
             catch (Exception)//Скорее всего аккаунт уже не валидный
             {
-                await waw.Web!.Free();
+                await waw.Web!.Free(false);
                 waw.Web!.RemoveQueue();
                 if (countTryLogin++ > 2)
                     goto tryAgain;
@@ -128,7 +128,7 @@ public class Newsletter
 
             if (IsStop)
             {
-                await waw.Web!.Free();
+                await waw.Web!.Free(false);
                 break;
             }
 
@@ -139,7 +139,7 @@ public class Newsletter
 
             if (string.IsNullOrEmpty(contact))
             {
-                await waw.Web!.Free();
+                await waw.Web!.Free(false);
                 break;
             }
 
@@ -184,7 +184,7 @@ public class Newsletter
                 if (++countMsg > Globals.Setup.CountMessagesFromAccount)
                 {
                     await waw.UpdateData();
-                    await waw.Web!.Free();
+                    await waw.Web!.Free(false);
                     continue;
                 }
             }
@@ -207,7 +207,7 @@ public class Newsletter
 
         async Task BanAccount(WAWClient waw, string contact)
         {
-            await waw.Free();
+            await waw.Free(false);
 
             _usedPhonesUsers.Remove(contact);
 

@@ -319,6 +319,7 @@ public class AccPreparation
                         Directory.Move(client.Account,
                             @$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
                     }
+                    break;
                 }
                 catch (Exception ex)
                 {
@@ -345,6 +346,7 @@ public class AccPreparation
                         Directory.Move(client.Account,
                             @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
                     }
+                    break;
                 }
                 catch (Exception ex)
                 {
@@ -428,7 +430,7 @@ public class AccPreparation
                     Log.Write($"[{phone}] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
                 }
 
-                await client.Web!.Free();
+                await client.Web!.Free(initWithErrors);
 
                 if (await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", isWait: false))
                     return false;
@@ -475,7 +477,7 @@ public class AccPreparation
                 Log.Write($"[main] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
                 await SetZero(client.Web);
                 client.Web.RemoveQueue();
-                await client.Web.Free();
+                await client.Web.Free(true);
                 return false;
             }
 

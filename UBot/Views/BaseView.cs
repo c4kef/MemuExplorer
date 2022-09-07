@@ -42,7 +42,7 @@ namespace UBot.Views
             return true;
         }
 
-        private string _title;
+        /*private string _title;
         public string Title
         {
             get { return _title; }
@@ -50,6 +50,6 @@ namespace UBot.Views
             {
                 SetProperty(ref _title, value);
             }
-        }
+        }*/
     }
 }

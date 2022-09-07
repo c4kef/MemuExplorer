@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+               xmlns:btbAnimate="clr-namespace:UBot.Controls"
+               Color="Transparent"
+               CanBeDismissedByTappingOutsideOfPopup="False"
+               Size="600,320"
+               x:Class="UBot.Pages.Dialogs.Message">
+
+    <Frame Background="{StaticResource BlackDialog}"
+           CornerRadius="11"
+           HeightRequest="320"
+           BorderColor="{StaticResource NotActive}">
+        <Grid >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="200" />
+                <RowDefinition Height="100" />
+            </Grid.RowDefinitions>
+            <VerticalStackLayout Background="Transparent"
+                                 Grid.Row="0">
+                <Label Text="{Binding Path=Title}"
+                       FontFamily="SegoeUIBold"
+                       TextColor="{StaticResource White}"
+                       FontSize="30"
+                       VerticalOptions="Center"
+                       HorizontalOptions="Center" />
+                <Label Text="{Binding Path=Content}"
+                       Margin="0,30,0,0"
+                       FontFamily="SegoeUI"
+                       TextColor="{StaticResource White}"
+                       FontSize="18"
+                       HorizontalOptions="Start" />
+            </VerticalStackLayout>
+            <HorizontalStackLayout
+                HorizontalOptions="Center"
+                Spacing="10"
+                Grid.Row="1">
+                <Button Text="НЕТ"
+                        HeightRequest="56"
+                        WidthRequest="177"
+                        FontFamily="SegoeUI"
+                        FontSize="20"
+                        VerticalOptions="Center"
+                        TextColor="{StaticResource White}"
+                        BackgroundColor="{StaticResource Active}"
+                        Clicked="ClickNo"
+                        IsVisible="{Binding IsNoVisible}"
+                        CornerRadius="11">
+                    <Button.Triggers>
+                        <EventTrigger Event="Pressed">
+                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource NotActive}" />
+                        </EventTrigger>
+                        <EventTrigger Event="Released">
+                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Active}" />
+                        </EventTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="ОК"
+                        HeightRequest="56"
+                        WidthRequest="177"
+                        FontFamily="SegoeUI"
+                        FontSize="20"
+                        VerticalOptions="Center"
+                        TextColor="{StaticResource White}"
+                        BackgroundColor="{StaticResource Active}"
+                        Clicked="ClickOk"
+                        CornerRadius="11">
+                    <Button.Triggers>
+                        <EventTrigger Event="Pressed">
+                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource NotActive}" />
+                        </EventTrigger>
+                        <EventTrigger Event="Released">
+                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Active}" />
+                        </EventTrigger>
+                    </Button.Triggers>
+                </Button>
+            </HorizontalStackLayout>
+        </Grid>
+    </Frame>
+</toolkit:Popup>

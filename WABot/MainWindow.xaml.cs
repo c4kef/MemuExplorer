@@ -11,7 +11,6 @@ public partial class MainWindow
         Task.Run(Globals.Init).Wait();
 
         InitializeComponent();
-        
         ThemeManager.Current.ApplicationTheme = ApplicationTheme.Dark;
     }
 }

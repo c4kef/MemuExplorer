@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="UBot.Pages.Welcome"
+             xmlns:btbAnimate="clr-namespace:UBot.Controls"
+             BackgroundColor="{StaticResource Black}"
+             Title="Welcome">
+    <ScrollView>
+        <VerticalStackLayout VerticalOptions="Center">
+            <Label Text="UNI"
+                   FontFamily="SegoeUI"
+                   TextColor="{StaticResource White}"
+                   FontSize="96"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center" />
+
+            <Label Text="Доброе утро"
+                   FontFamily="SegoeUI"
+                   TextColor="{StaticResource White}"
+                   FontSize="36"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center" />
+
+            <Button Text="Продолжить"
+                    HeightRequest="56"
+                    WidthRequest="177"
+                    Margin="0,100,0,0"
+                    FontFamily="SegoeUI"
+                    FontSize="20"
+                    TextColor="{StaticResource White}"
+                    BackgroundColor="{StaticResource Active}"
+                    CornerRadius="11">
+                <Button.Triggers>
+                    <EventTrigger Event="Pressed">
+                        <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource NotActive}" />
+                    </EventTrigger>
+                    <EventTrigger Event="Released">
+                        <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Active}" />
+                    </EventTrigger>
+                </Button.Triggers>
+            </Button>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

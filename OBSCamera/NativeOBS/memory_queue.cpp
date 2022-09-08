@@ -2,6 +2,7 @@
 #include "memory_queue.h"
 //#include "tiny-nv12-scale.h"
 
+//#define VIDEO_NAME L"OBSVirtualCamVideo"
 #define VIDEO_NAME L"OBSVirtualCamVideo"
 
 enum queue_type {

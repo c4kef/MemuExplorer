@@ -88,6 +88,17 @@
                             </ToolTip>
                         </CheckBox.ToolTip>
                     </CheckBox>
+                    <CheckBox Margin="0,10,0,0"
+                              ui:ControlHelper.CornerRadius="5"
+                              Content="Проверка номеров"
+                              IsChecked="{Binding EnablePhoneCheck}"
+                              Click="EnableCheckPhoneClicked">
+                        <CheckBox.ToolTip>
+                            <ToolTip>
+                                Включить проверку номеров? (нужен веб)
+                            </ToolTip>
+                        </CheckBox.ToolTip>
+                    </CheckBox>
                     <Button HorizontalAlignment="Center"
                             Margin="0,10,0,0"
                             ui:ControlHelper.CornerRadius="5"

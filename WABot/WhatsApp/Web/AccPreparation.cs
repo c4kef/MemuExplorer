@@ -1,4 +1,5 @@
 ﻿using MemuLib.Core;
+using System.Xml.Linq;
 using WABot.Pages;
 
 namespace WABot.WhatsApp.Web;
@@ -463,6 +464,14 @@ public class AccPreparation
                     await client.GetInstance().RunApk(c1.PackageName);
                     
                     goto initAgain;
+                }
+
+                await Task.Delay(2_000);
+                //resource-id="com.whatsapp.w4b:id/device_name_edit_text"
+                if (await client.GetInstance().ExistsElement("//node[@resource-id='com.whatsapp.w4b:id/device_name_edit_text']"))
+                {
+                    await client.GetInstance().Input("//node[@resource-id='com.whatsapp.w4b:id/device_name_edit_text']", _names[new Random().Next(0, _names.Length)].Replace(' ', 'I'));
+                    await client.GetInstance().Click("//node[@text='СОХРАНИТЬ']");
                 }
 
                 client.Web.RemoveQueue();

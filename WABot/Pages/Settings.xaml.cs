@@ -95,6 +95,15 @@ public partial class Settings : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// Включить проверку номера пользователя?
+    /// </summary>
+    public bool EnablePhoneCheck
+    {
+        get => Globals.Setup.EnablePhoneCheck;
+        set => Globals.Setup.EnablePhoneCheck = value;
+    }
+
+    /// <summary>
     /// Включить подготовку через веб?
     /// </summary>
     public bool EnableCheckBan
@@ -242,6 +251,14 @@ public partial class Settings : INotifyPropertyChanged
     {
         EnableMinWarm = (sender as CheckBox)!.IsChecked!.Value;
         OnPropertyChanged("EnableMinWarm");
+
+        await Globals.SaveSetup();
+    }
+
+    private async void EnableCheckPhoneClicked(object sender, RoutedEventArgs e)
+    {
+        EnablePhoneCheck = (sender as CheckBox)!.IsChecked!.Value;
+        OnPropertyChanged("EnablePhoneCheck");
 
         await Globals.SaveSetup();
     }

@@ -262,7 +262,7 @@ public class WaClient
             await _mem.RunApk(PackageName);
             await _mem.StopApk(PackageName);
             await _mem.Push($@"{(Account == string.Empty ? path : Account)}\{PackageName}\.", @$"/data/data/{PackageName}/");
-            await _mem.Shell($"rm /data/data/{PackageName}/databases/*msgstore*");
+            //await _mem.Shell($"rm /data/data/{PackageName}/databases/*msgstore*");
             await _mem.RunApk(PackageName);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);

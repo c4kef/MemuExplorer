@@ -1,5 +1,4 @@
-﻿using MemuLib.Core;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 
@@ -92,15 +91,6 @@ public partial class Settings : INotifyPropertyChanged
     {
         get => Globals.Setup.EnableMinWarm;
         set => Globals.Setup.EnableMinWarm = value;
-    }
-
-    /// <summary>
-    /// Включить проверку номера пользователя?
-    /// </summary>
-    public bool EnablePhoneCheck
-    {
-        get => Globals.Setup.EnablePhoneCheck;
-        set => Globals.Setup.EnablePhoneCheck = value;
     }
 
     /// <summary>
@@ -255,14 +245,6 @@ public partial class Settings : INotifyPropertyChanged
         await Globals.SaveSetup();
     }
 
-    private async void EnableCheckPhoneClicked(object sender, RoutedEventArgs e)
-    {
-        EnablePhoneCheck = (sender as CheckBox)!.IsChecked!.Value;
-        OnPropertyChanged("EnablePhoneCheck");
-
-        await Globals.SaveSetup();
-    }
-
     private async void SelectFileTextForWarm(object sender, RoutedEventArgs e)
     {
         var dialog = new CommonOpenFileDialog();
@@ -274,40 +256,5 @@ public partial class Settings : INotifyPropertyChanged
         }
 
         OnPropertyChanged("ColorPathToTextForWarm");
-    }
-
-    private async void ClearFolder(object sender, RoutedEventArgs e)
-    {
-        if (string.IsNullOrEmpty(Globals.Setup.PathToDirectoryAccounts))
-        {
-            MessageBox.Show("Вы не указали путь до аккаунтов");
-            return;
-        }
-
-        var cantMoveAccountsCount = 0;
-
-        var logoutAccounts = Directory.GetDirectories(Globals.Setup.PathToDirectoryAccounts).ToList();
-        logoutAccounts.RemoveAll(accountPath => Directory.GetFiles(accountPath).Any(file => file.Contains("data.json")));
-
-        foreach (var dir in logoutAccounts)
-        {
-            var countTry = 0;
-            while (countTry++ < 3)
-            {
-                try
-                {
-                    Directory.Move(dir, $@"{Globals.LogoutAccountsDirectory}\{new DirectoryInfo(dir).Name}");
-                    break;
-                }
-                catch
-                {
-                    ++cantMoveAccountsCount;
-                }
-
-                await Task.Delay(1_000);
-            }
-        }
-
-        MessageBox.Show($"Аккаунты перенесены\nНе перенесено: {cantMoveAccountsCount}");
     }
 }

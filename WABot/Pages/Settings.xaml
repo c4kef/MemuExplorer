@@ -88,17 +88,6 @@
                             </ToolTip>
                         </CheckBox.ToolTip>
                     </CheckBox>
-                    <CheckBox Margin="0,10,0,0"
-                              ui:ControlHelper.CornerRadius="5"
-                              Content="Проверка номеров"
-                              IsChecked="{Binding EnablePhoneCheck}"
-                              Click="EnableCheckPhoneClicked">
-                        <CheckBox.ToolTip>
-                            <ToolTip>
-                                Включить проверку номеров? (нужен веб)
-                            </ToolTip>
-                        </CheckBox.ToolTip>
-                    </CheckBox>
                     <Button HorizontalAlignment="Center"
                             Margin="0,10,0,0"
                             ui:ControlHelper.CornerRadius="5"
@@ -144,17 +133,6 @@
                         <Button.ToolTip>
                             <ToolTip>
                                 Укажите путь на csv файл с именами юзверей
-                            </ToolTip>
-                        </Button.ToolTip>
-                    </Button>
-                    <Button HorizontalAlignment="Center"
-                            Margin="0,10,0,0"
-                            ui:ControlHelper.CornerRadius="5"
-                            Content="Очистка"
-                            Click="ClearFolder">
-                        <Button.ToolTip>
-                            <ToolTip>
-                                Переносит аккаунты которые оказались не готовые к вебке в папку LogoutAccounts
                             </ToolTip>
                         </Button.ToolTip>
                     </Button>

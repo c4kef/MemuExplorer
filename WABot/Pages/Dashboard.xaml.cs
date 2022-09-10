@@ -33,7 +33,7 @@ public partial class Dashboard : INotifyPropertyChanged
     /// Активный таск (определяем завершение работы)
     /// </summary>
     private static Task _activeTask = null!;
-
+    
     /// <summary>
     /// Активна задача?
     /// </summary>
@@ -206,15 +206,15 @@ public partial class Dashboard : INotifyPropertyChanged
         while (_managerDevicesIsRuning)
         {
             await Task.Delay(1_500);
-
+            
             Dispatcher.Invoke(() =>
             {
                 if (DataGrid.IsEditing())
                     return;
-
+                
                 DataGrid.Items.Refresh();
             });
-
+            
             var indexDevices = (await MemuCmd.ExecMemuc("listvms -r")).Split('\n').Select(line => line.Split(',')[0]).Where(index => int.TryParse(index, out _)).Select(int.Parse).ToArray();
 
             if (indexDevices.Length == 0)
@@ -230,8 +230,7 @@ public partial class Dashboard : INotifyPropertyChanged
                         Globals.Devices.Add(
                             new Device()
                             {
-                                Index = newDeviceIndex,
-                                Client = new WaClient(deviceId: newDeviceIndex),
+                                Index = newDeviceIndex, Client = new WaClient(deviceId: newDeviceIndex),
                                 IsActive = false
                             });
 
@@ -239,7 +238,7 @@ public partial class Dashboard : INotifyPropertyChanged
             }
             else
                 Globals.Devices.Add(
-                    new Device() { Index = indexDevices[0], Client = new WaClient(deviceId: indexDevices[0]), IsActive = false });
+                    new Device() {Index = indexDevices[0], Client = new WaClient(deviceId: indexDevices[0]), IsActive = false});
         }
     }
 
@@ -385,7 +384,7 @@ public partial class Dashboard : INotifyPropertyChanged
                 else
                     await _preparation.Start(string.IsNullOrEmpty(TextMessage) ? await File.ReadAllTextAsync(Globals.Setup.PathToTextForWarm) : TextMessage);
             });
-
+         
             await _activeTask;
 
             MessageBox.Show("Настройка завершена");

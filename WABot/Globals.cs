@@ -174,11 +174,6 @@ public class Setup
     public int CountThreadsChrome = 1;
 
     /// <summary>
-    /// Включить проверку номера пользователя?
-    /// </summary>
-    public bool EnablePhoneCheck = false;
-
-    /// <summary>
     /// Уровень прогрева при рассылке
     /// </summary>
     public int WarmLevelForNewsletter = 0;

@@ -13,14 +13,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\MemuLib\MemuLib.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
       <Reference Include="SocketIO.Client, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
         <HintPath>..\Libs\SocketIO.Client.dll</HintPath>
       </Reference>

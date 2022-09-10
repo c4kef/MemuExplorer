@@ -279,10 +279,9 @@ public class WAWClient
     /// <summary>
     /// Разлогиниться
     /// </summary>
-    /// <param name="removeDir">очищать кеш после закрытия?</param>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>
-    public async Task Logout(bool removeDir)
+    public async Task Logout()
     {
         var id = _random.Next(1_000_000, 10_000_000);
 
@@ -290,7 +289,7 @@ public class WAWClient
 
         _socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
-            { Type = "logout", Values = new List<object>() { $"{NameSession}@{id}", removeDir } }));
+            { Type = "logout", Values = new List<object>() { $"{NameSession}@{id}" } }));
 
         while (_taskQueue.Contains(id))
             await Task.Delay(100);
@@ -313,10 +312,9 @@ public class WAWClient
     /// <summary>
     /// Освобождает текущею сессию из пула на сервере
     /// </summary>
-    /// <param name="removeDir">очищать кеш после закрытия?</param>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>
-    public async Task Free(bool removeDir)
+    public async Task Free()
     {
         var id = _random.Next(1_000_000, 10_000_000);
 
@@ -324,7 +322,7 @@ public class WAWClient
 
         _socket.Emit("data",
             JsonConvert.SerializeObject(new ServerData()
-            { Type = "free", Values = new List<object>() { $"{NameSession}@{id}", removeDir } }));
+            { Type = "free", Values = new List<object>() { $"{NameSession}@{id}" } }));
 
         while (_taskQueue.Contains(id))
             await Task.Delay(100);

@@ -1,5 +1,5 @@
 ﻿using MemuLib.Core;
-using System.Xml.Linq;
+using System.Security.Principal;
 using WABot.Pages;
 
 namespace WABot.WhatsApp.Web;
@@ -320,7 +320,6 @@ public class AccPreparation
                         Directory.Move(client.Account,
                             @$"{Globals.ScannedAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
                     }
-                    break;
                 }
                 catch (Exception ex)
                 {
@@ -347,7 +346,6 @@ public class AccPreparation
                         Directory.Move(client.Account,
                             @$"{Globals.RemoveAccountsDirectory.FullName}\{client.Phone.Remove(0, 1)}");
                     }
-                    break;
                 }
                 catch (Exception ex)
                 {
@@ -398,11 +396,20 @@ public class AccPreparation
             initAgain:
                 var initWithErrors = false;
 
-                if (Directory.GetFiles(client.Account).Any(_phone => _phone == phone) && i > 0)
+                try
                 {
-                    client.Web!.RemoveQueue();
-                    Log.Write($"[{phone}] - Аккаунт уже был авторизован и мы положительно отвечаем на результат\n", _logFile.FullName);
-                    return true;
+                    Log.Write($@"[{phone}] - {client.Account}\{client.Phone.Remove(0, 1)}\n", _logFile.FullName);
+                    Log.Write($@"[{phone}] - {client.Account}\{client.Phone.Remove(0, 1)}.data.json\n", _logFile.FullName);
+
+                    if (Directory.Exists($@"{client.Account}\{client.Phone.Remove(0, 1)}"))
+                        Directory.Delete($@"{client.Account}\{client.Phone.Remove(0, 1)}", true);
+
+                    if (File.Exists($@"{client.Account}\{client.Phone.Remove(0, 1)}.data.json"))
+                        File.Delete($@"{client.Account}\{client.Phone.Remove(0, 1)}.data.json");
+                }
+                catch
+                {
+
                 }
 
                 if (!await IsValidCheck(client) || i >= 3)
@@ -416,6 +423,8 @@ public class AccPreparation
                     await MoveToScan(client, false);
 
                 initWithErrors = true;
+
+                await Task.Delay(3_000);
 
                 if (await client.GetInstance().ExistsElement("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']"))
                     await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
@@ -431,7 +440,10 @@ public class AccPreparation
                     Log.Write($"[{phone}] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
                 }
 
-                await client.Web!.Free(initWithErrors);
+                if (!initWithErrors)
+                    await Task.Delay(6_500);
+
+                await client.Web!.Free();
 
                 if (await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", isWait: false))
                     return false;
@@ -466,7 +478,7 @@ public class AccPreparation
                     goto initAgain;
                 }
 
-                await Task.Delay(2_000);
+                await Task.Delay(3_000);
                 //resource-id="com.whatsapp.w4b:id/device_name_edit_text"
                 if (await client.GetInstance().ExistsElement("//node[@resource-id='com.whatsapp.w4b:id/device_name_edit_text']"))
                 {
@@ -486,7 +498,7 @@ public class AccPreparation
                 Log.Write($"[main] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
                 await SetZero(client.Web);
                 client.Web.RemoveQueue();
-                await client.Web.Free(true);
+                await client.Web.Free();
                 return false;
             }
 
@@ -532,6 +544,7 @@ public class AccPreparation
                 await client.GetInstance().RunApk(client.PackageName);
             }
 
+            await Task.Delay(3_000);
             await client.GetInstance().Click("//node[@content-desc='Ещё']");
             await client.GetInstance().Click("//node[@text='Связанные устройства']");
 

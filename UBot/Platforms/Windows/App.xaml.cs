@@ -35,7 +35,6 @@ namespace UBot.WinUI
         public App()
         {
             this.InitializeComponent();
-
             Microsoft.Maui.Handlers.WindowHandler.Mapper.AppendToMapping(nameof(IWindow), (handler, view) =>
             {
                 var mauiWindow = handler.VirtualView;

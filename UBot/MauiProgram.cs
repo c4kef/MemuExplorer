@@ -6,6 +6,9 @@ using System.Runtime.InteropServices;
 using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Maui.Markup;
+using UBot.Pages;
+using UBot.Pages.Dialogs;
+using UBot.Views.Dialogs;
 
 #if WINDOWS
 using Microsoft.UI;
@@ -34,6 +37,7 @@ namespace UBot
                 .UseMauiCommunityToolkit()
                 .UseMauiCommunityToolkitCore()
                 .UseMauiCommunityToolkitMarkup();
+
 #if WINDOWS
             builder.ConfigureLifecycleEvents(events =>
             {

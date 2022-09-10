@@ -4,24 +4,18 @@ namespace WABot.WhatsApp.Web;
 public class Checker
 {
     private readonly List<string> _usedPhones;
-    private readonly List<string> _usedPhonesUsers;
-    private string[] _contacts;
-    
-    private FileInfo _logFile;
+
     public bool IsStop;
 
-    public Checker() => _usedPhonesUsers = _usedPhones = new List<string>();
+    public Checker() => _usedPhones = new List<string>();
 
     public async Task Start()
     {
         var tasks = new List<Task>();
 
-        IsStop = false; 
-        
-        _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToPhonesUsers);
-        _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_phones.txt");
-        
-        Dashboard.GetInstance().CountTasks = (Globals.Setup.EnablePhoneCheck) ? _contacts.Length : (await Globals.GetAccounts(_usedPhones.ToArray(), true)).Length;
+        IsStop = false;
+
+        Dashboard.GetInstance().CountTasks = (await Globals.GetAccounts(_usedPhones.ToArray(), true)).Length;
 
         for (var i = 0; i < Globals.Setup.CountThreadsChrome; i++)
         {
@@ -41,7 +35,6 @@ public class Checker
     public void Stop()
     {
         _usedPhones.Clear();
-        _usedPhonesUsers.Clear();
     }
 
     private async Task Handler()
@@ -73,7 +66,7 @@ public class Checker
             }
             catch (Exception)
             {
-                await waw.Web!.Free(true);
+                await waw.Web!.Free();
                 Directory.Move(path, $@"{Globals.LogoutAccountsDirectory}\{phone}");
                 waw.Web!.RemoveQueue();
                 ++Dashboard.GetInstance().BannedAccounts;
@@ -84,64 +77,9 @@ public class Checker
                     continue;
             }
 
-
-            if (Globals.Setup.EnablePhoneCheck)
-            {
-            recurseSendMessageToContact:
-                var contact = GetFreeNumberUser();
-
-                if (string.IsNullOrEmpty(contact))
-                {
-                    await waw.Web!.Free(false);
-                    break;
-                }
-
-                if (!waw.Web!.IsConnected)
-                {
-                    await BanAccount(waw.Web!, contact);
-                    continue;
-                }
-
-                try
-                {
-                    if (await waw.Web!.CheckValidPhone(contact))
-                    {
-                        Log.Write(
-                        $"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{contact}",
-                        _logFile.FullName);
-                        ++Dashboard.GetInstance().CompletedTasks;
-                    }
-
-                    goto recurseSendMessageToContact;
-                }
-                catch
-                {
-                    await BanAccount(waw.Web!, contact);
-                    continue;
-                }
-            }
-            
-            await waw.Web!.Free(false);
+            ++Dashboard.GetInstance().CompletedTasks;
+            await waw.Web!.Free();
             waw.Web!.RemoveQueue();
-        }
-
-        string GetFreeNumberUser()
-        {
-            foreach (var contact in _contacts)
-                if (!_usedPhonesUsers.Contains(contact))
-                {
-                    _usedPhonesUsers.Add(contact);
-                    return contact[0] == '+' ? contact.Remove(0, 1) : contact;
-                }
-
-            return string.Empty;
-        }
-
-        async Task BanAccount(WAWClient waw, string contact)
-        {
-            await waw.Free(false);
-            waw.RemoveQueue();
-            _usedPhonesUsers.Remove(contact);
         }
     }
 }

@@ -261,8 +261,12 @@ public class WaClient
             await _mem.Shell($"pm clear {PackageName}");
             await _mem.RunApk(PackageName);
             await _mem.StopApk(PackageName);
-            await _mem.Push($@"{(Account == string.Empty ? path : Account)}\{PackageName}\.", @$"/data/data/{PackageName}/");
+            await _mem.RunApk(PackageName);
+            //await Task.Delay(2_000);
+            //memuc -i 0 adb push "D:\Data\Ru\79361879319\com.whatsapp.w4b" "/data/data/com.whatsapp.w4b/"
+            await _mem.Push($@"{(Account == string.Empty ? path : Account)}\{PackageName}", @$"/data/data/");//{PackageName}/");
             //await _mem.Shell($"rm /data/data/{PackageName}/databases/*msgstore*");
+            await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);

@@ -2,6 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="UBot.Pages.Welcome"
+             NavigationPage.HasBackButton="False"
+             NavigationPage.HasNavigationBar="False"
              xmlns:btbAnimate="clr-namespace:UBot.Controls"
              BackgroundColor="{StaticResource Black}"
              Title="Welcome">
@@ -28,6 +30,7 @@
                     FontFamily="SegoeUI"
                     FontSize="20"
                     TextColor="{StaticResource White}"
+                    Clicked="test"
                     BackgroundColor="{StaticResource Active}"
                     CornerRadius="11">
                 <Button.Triggers>

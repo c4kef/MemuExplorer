@@ -4,11 +4,11 @@
                xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
                xmlns:btbAnimate="clr-namespace:UBot.Controls"
                Color="Transparent"
-               Size="800,420"
+               Size="800,440"
                x:Class="UBot.Pages.Dialogs.ControlPanel">
     <Frame Background="{StaticResource BlackDialog}"
            CornerRadius="11"
-           HeightRequest="420"
+           HeightRequest="440"
            WidthRequest="800"
            BorderColor="{StaticResource NotActive}">
         <Grid RowSpacing="15">
@@ -17,6 +17,8 @@
                 <RowDefinition Height="56" />
                 <RowDefinition Height="56" />
                 <RowDefinition Height="56" />
+                <RowDefinition Height="20" />
+                <RowDefinition Height="66" />
             </Grid.RowDefinitions>
             <VerticalStackLayout Background="Transparent"
                                  Grid.Row="0">
@@ -32,126 +34,131 @@
                                    Spacing="10"
                                    Grid.Row="1">
                 <Button Text="Подготовка"
+                        ClassId="1"
                         HeightRequest="56"
                         WidthRequest="177"
                         FontFamily="SegoeUI"
+                        Clicked="PressRadioButton"
                         FontSize="20"
                         VerticalOptions="Center"
                         TextColor="{StaticResource White}"
                         BackgroundColor="{StaticResource NotActive}"
                         IsVisible="{Binding IsNoVisible}"
                         CornerRadius="11">
-                    <Button.Triggers>
-                        <EventTrigger Event="Pressed">
-                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Active}" />
-                        </EventTrigger>
-                        <EventTrigger Event="Released">
-                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Busy}" />
-                        </EventTrigger>
-                    </Button.Triggers>
                 </Button>
                 <Button Text="Рассылка"
+                        ClassId="1"
                         HeightRequest="56"
                         WidthRequest="177"
                         FontFamily="SegoeUI"
                         FontSize="20"
                         VerticalOptions="Center"
+                        Clicked="PressRadioButton"
                         TextColor="{StaticResource White}"
                         BackgroundColor="{StaticResource NotActive}"
                         IsVisible="{Binding IsNoVisible}"
-                        CornerRadius="11">
-                    <Button.Triggers>
-                        <EventTrigger Event="Pressed">
-                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Active}" />
-                        </EventTrigger>
-                        <EventTrigger Event="Released">
-                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Busy}" />
-                        </EventTrigger>
-                    </Button.Triggers>
-                </Button>
+                        CornerRadius="11" />
             </HorizontalStackLayout>
 
             <HorizontalStackLayout HorizontalOptions="Center"
                                    Spacing="10"
                                    Grid.Row="2">
-                <Button Text="Подготовка"
+                <Button Text="Через Web"
+                        ClassId="2"
                         HeightRequest="56"
                         WidthRequest="177"
                         FontFamily="SegoeUI"
+                        Clicked="PressRadioButton"
                         FontSize="20"
                         VerticalOptions="Center"
                         TextColor="{StaticResource White}"
                         BackgroundColor="{StaticResource NotActive}"
                         IsVisible="{Binding IsNoVisible}"
                         CornerRadius="11">
-                    <Button.Triggers>
-                        <EventTrigger Event="Pressed">
-                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Active}" />
-                        </EventTrigger>
-                        <EventTrigger Event="Released">
-                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Busy}" />
-                        </EventTrigger>
-                    </Button.Triggers>
                 </Button>
-                <Button Text="Рассылка"
+                <Button Text="Через телефон"
+                        ClassId="2"
                         HeightRequest="56"
                         WidthRequest="177"
                         FontFamily="SegoeUI"
                         FontSize="20"
                         VerticalOptions="Center"
+                        Clicked="PressRadioButton"
                         TextColor="{StaticResource White}"
                         BackgroundColor="{StaticResource NotActive}"
                         IsVisible="{Binding IsNoVisible}"
-                        CornerRadius="11">
-                    <Button.Triggers>
-                        <EventTrigger Event="Pressed">
-                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Active}" />
-                        </EventTrigger>
-                        <EventTrigger Event="Released">
-                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Busy}" />
-                        </EventTrigger>
-                    </Button.Triggers>
-                </Button>
+                        CornerRadius="11" />
             </HorizontalStackLayout>
 
             <HorizontalStackLayout HorizontalOptions="Center"
                                    Spacing="10"
                                    Grid.Row="3">
-                <Button Text="Подготовка"
+                <Button Text="Проверка"
+                        ClassId="33"
                         HeightRequest="56"
                         WidthRequest="177"
                         FontFamily="SegoeUI"
+                        Clicked="PressCheckBox"
                         FontSize="20"
                         VerticalOptions="Center"
                         TextColor="{StaticResource White}"
                         BackgroundColor="{StaticResource NotActive}"
                         IsVisible="{Binding IsNoVisible}"
                         CornerRadius="11">
-                    <Button.Triggers>
-                        <EventTrigger Event="Pressed">
-                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Active}" />
-                        </EventTrigger>
-                        <EventTrigger Event="Released">
-                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Busy}" />
-                        </EventTrigger>
-                    </Button.Triggers>
                 </Button>
-                <Button Text="Рассылка"
+                <Button Text="Прогрев"
                         HeightRequest="56"
                         WidthRequest="177"
                         FontFamily="SegoeUI"
+                        FontSize="20"
+                        VerticalOptions="Center"
+                        Clicked="PressCheckBox"
+                        TextColor="{StaticResource White}"
+                        BackgroundColor="{StaticResource NotActive}"
+                        IsVisible="{Binding IsNoVisible}"
+                        CornerRadius="11" />
+                <Button Text="Регистрация"
+                        HeightRequest="56"
+                        WidthRequest="177"
+                        FontFamily="SegoeUI"
+                        Clicked="PressCheckBox"
                         FontSize="20"
                         VerticalOptions="Center"
                         TextColor="{StaticResource White}"
                         BackgroundColor="{StaticResource NotActive}"
                         IsVisible="{Binding IsNoVisible}"
                         CornerRadius="11">
+                </Button>
+                <Button Text="Сканирование"
+                        HeightRequest="56"
+                        WidthRequest="177"
+                        FontFamily="SegoeUI"
+                        FontSize="20"
+                        VerticalOptions="Center"
+                        Clicked="PressCheckBox"
+                        TextColor="{StaticResource White}"
+                        BackgroundColor="{StaticResource NotActive}"
+                        IsVisible="{Binding IsNoVisible}"
+                        CornerRadius="11" />
+            </HorizontalStackLayout>
+            <HorizontalStackLayout HorizontalOptions="Center"
+                                   Spacing="10"
+                                   Grid.Row="5">
+                <Button Text="Начать"
+                        HeightRequest="56"
+                        WidthRequest="177"
+                        FontFamily="SegoeUI"
+                        FontSize="20"
+                        VerticalOptions="Center"
+                        TextColor="{StaticResource White}"
+                        BackgroundColor="{StaticResource Active}"
+                        CornerRadius="11">
                     <Button.Triggers>
                         <EventTrigger Event="Pressed">
-                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Active}" />
+                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource NotActive}" />
                         </EventTrigger>
                         <EventTrigger Event="Released">
-                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Busy}" />
+                            <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Active}" />
                         </EventTrigger>
                     </Button.Triggers>
                 </Button>

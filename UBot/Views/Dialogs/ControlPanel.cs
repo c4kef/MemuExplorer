@@ -12,5 +12,6 @@ namespace UBot.Views.Dialogs
         public ControlPanel()
         {
         }
+
     }
 }

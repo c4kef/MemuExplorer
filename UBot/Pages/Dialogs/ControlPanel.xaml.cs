@@ -17,6 +17,8 @@ public partial class ControlPanel : Popup
         _selectedRadio = new Dictionary<Button, bool>();
     }
 
+    private void PressStart(object sender, EventArgs e) => this.Close(null);
+
 
     private void PressRadioButton(object sender, EventArgs e)
     {

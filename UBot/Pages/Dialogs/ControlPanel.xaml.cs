@@ -13,7 +13,8 @@ public partial class ControlPanel : Popup
 	{
 		InitializeComponent();
 
-        _selectedCheckBox = _selectedRadio = new Dictionary<Button, bool>();
+        _selectedCheckBox= new Dictionary<Button, bool>();
+        _selectedRadio = new Dictionary<Button, bool>();
     }
 
 

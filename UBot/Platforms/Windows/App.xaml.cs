@@ -51,7 +51,7 @@ namespace UBot.WinUI
 
                     titleBar.IconShowOptions = IconShowOptions.HideIconAndSystemMenu;
 
-                    titleBar.ButtonBackgroundColor = titleBar.BackgroundColor = Windows.UI.Color.FromArgb(255, 3, 4, 9);
+                    titleBar.ButtonInactiveBackgroundColor = titleBar.ButtonBackgroundColor = titleBar.BackgroundColor = Windows.UI.Color.FromArgb(255, 3, 4, 9);
                 
                 }
             });

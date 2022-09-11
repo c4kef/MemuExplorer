@@ -12,7 +12,13 @@
             <RowDefinition Height="600" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <userControl:Dashboard Grid.Row="0" />
+        <userControl:Dashboard Grid.Row="0"
+                               x:Name="DashboardPanel"
+                               IsVisible="True" />
+        <userControl:Settings Grid.Row="0"
+                              Opacity="0"
+                              x:Name="SettingsPanel"
+                              IsVisible="False" />
         <StackLayout VerticalOptions="End"
                      Grid.Row="1"
                      HeightRequest="71"

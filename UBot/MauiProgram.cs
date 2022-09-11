@@ -9,8 +9,10 @@ using CommunityToolkit.Maui.Markup;
 using UBot.Pages;
 using UBot.Pages.Dialogs;
 using UBot.Views.Dialogs;
+using UBot.Controls;
 
 #if WINDOWS
+using UBot.Platforms.Windows;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Windows.Graphics;
@@ -38,7 +40,9 @@ namespace UBot
                 .UseMauiCommunityToolkitCore()
                 .UseMauiCommunityToolkitMarkup();
 
+
 #if WINDOWS
+            builder.Services.AddTransient<IFolderPicker, FolderPicker>();
             builder.ConfigureLifecycleEvents(events =>
             {
                 events.AddWindows(wndLifeCycleBuilder =>
@@ -58,7 +62,9 @@ namespace UBot
                     });
                 });
             });
-#endif     
+#endif
+
+            _ = Task.Factory.StartNew(Globals.Init);
 
             return builder.Build();
         }

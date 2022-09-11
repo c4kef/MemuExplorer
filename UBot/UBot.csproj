@@ -65,6 +65,7 @@
 	  <PackageReference Include="CommunityToolkit.Maui" Version="1.2.0" />
 	  <PackageReference Include="CommunityToolkit.Maui.Core" Version="1.2.0" />
 	  <PackageReference Include="CommunityToolkit.Maui.Markup" Version="1.0.1" />
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -73,6 +74,9 @@
 	  </Compile>
 	  <Compile Update="Pages\Loading.xaml.cs">
 	    <DependentUpon>Loading.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Pages\User\Settings.xaml.cs">
+	    <DependentUpon>Settings.xaml</DependentUpon>
 	  </Compile>
 	</ItemGroup>
 
@@ -87,6 +91,9 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\MainPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\User\Settings.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\User\Dashboard.xaml">

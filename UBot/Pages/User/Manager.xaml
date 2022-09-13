@@ -11,16 +11,17 @@
                FontSize="24"
                Margin="20,10,0,70"
                HorizontalOptions="Start" />
-        <Grid>
+        <Grid ColumnSpacing="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="450" />
+                <ColumnDefinition Width="200" />
+                <ColumnDefinition Width="400" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <StackLayout Grid.Column="0"
-                         Margin="40,0,0,0"
+                         Margin="20,0,0,0"
                          Orientation="Horizontal"
                          Spacing="40">
                 <VerticalStackLayout Spacing="8">
@@ -29,7 +30,7 @@
                                FontFamily="SegoeUI"
                                TextColor="{StaticResource White}"
                                FontAttributes="Bold"
-                               FontSize="18"/>
+                               FontSize="18" />
 
                     </HorizontalStackLayout>
 
@@ -38,6 +39,7 @@
                         <VerticalStackLayout Spacing="5">
                             <CollectionView Grid.Row="2"
                                             Grid.ColumnSpan="3"
+                                            x:Name="EmulatorsList"
                                             HorizontalScrollBarVisibility="Never"
                                             ItemsSource="{Binding Emulators}"
                                             SelectionMode="None">
@@ -54,11 +56,20 @@
                                                 FontSize="20"
                                                 TextColor="{StaticResource White}"
                                                 BackgroundColor="{Binding CurrentColor}"
-                                                CornerRadius="11" />
+                                                CornerRadius="11">
+                                            <Button.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding Path=BindingContext.SelectEmulator, Source={x:Reference EmulatorsList}}"
+                                                                      CommandParameter="{Binding .}"
+                                                                      NumberOfTapsRequired="1" />
+                                            </Button.GestureRecognizers>
+                                        </Button>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
                             </CollectionView>
                             <ImageButton Source="plus.png"
+                                         x:Name="AddEmulatorBtn"
+                                         Command="{Binding AddEmulator}"
+                                         CommandParameter="{Binding Source={x:Reference AddEmulatorBtn}}"
                                          BackgroundColor="{StaticResource NotActive}"
                                          HeightRequest="56"
                                          Padding="15"
@@ -70,17 +81,72 @@
                 </VerticalStackLayout>
             </StackLayout>
 
-            <Border Grid.Column="1"
+            <StackLayout Grid.Column="1"
+                         Margin="0,0,0,0"
+                         Orientation="Horizontal"
+                         HorizontalOptions="Center"
+                         Spacing="40">
+                <VerticalStackLayout Spacing="25">
+                    <Label Text="{Binding SelectedEmulator.Index, StringFormat='Об устройстве {0}'}"
+                           FontFamily="SegoeUI"
+                           TextColor="{StaticResource White}"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           FontSize="18" />
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Запуск"
+                                HeightRequest="56"
+                                WidthRequest="177"
+                                FontFamily="SegoeUI"
+                                FontSize="20"
+                                Command="{Binding OpenControlPanel}"
+                                TextColor="{StaticResource White}"
+                                BackgroundColor="{StaticResource Active}"
+                                CornerRadius="11">
+                            <Button.Triggers>
+                                <EventTrigger Event="Pressed">
+                                    <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource NotActive}" />
+                                </EventTrigger>
+                                <EventTrigger Event="Released">
+                                    <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Active}" />
+                                </EventTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Остановка"
+                                HeightRequest="56"
+                                WidthRequest="177"
+                                FontFamily="SegoeUI"
+                                FontSize="20"
+                                Command="{Binding OpenControlPanel}"
+                                TextColor="{StaticResource White}"
+                                BackgroundColor="{StaticResource Active}"
+                                CornerRadius="11">
+                            <Button.Triggers>
+                                <EventTrigger Event="Pressed">
+                                    <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource NotActive}" />
+                                </EventTrigger>
+                                <EventTrigger Event="Released">
+                                    <btbAnimate:ButtonTriggerAction BackgroundColor="{StaticResource Active}" />
+                                </EventTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </HorizontalStackLayout>
+                    <Image Source="{Binding ScreenPicture}" WidthRequest="360" HeightRequest="360" />
+                </VerticalStackLayout>
+            </StackLayout>
+
+            <Border Grid.Column="2"
                     Stroke="{StaticResource Active}"
                     StrokeThickness="2"
-                    Margin="50,-50,30,10">
+                    Margin="0,45,30,10">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="11,11,11,11" />
                 </Border.StrokeShape>
-                <Editor HeightRequest="500"
+                <Editor HeightRequest="400"
                         FontFamily="SegoeUI"
                         FontSize="18"
-                        Placeholder="Введите текст"
+                        Placeholder="Логи"
+                        IsReadOnly="True"
                         Text="{Binding Path=Text}"
                         Margin="5"
                         BackgroundColor="{StaticResource Black}" />

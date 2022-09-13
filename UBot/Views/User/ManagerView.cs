@@ -15,6 +15,7 @@ namespace UBot.Views.User
     public struct DataEmulator
     {
         public int Index { get; set; }
+        public bool IsEnabled { get; set; }
         public Color CurrentColor { get; set; }
     }
 
@@ -22,61 +23,29 @@ namespace UBot.Views.User
     {
         public ManagerView()
         {
-            //(Color)ResourceHelper.FindResource(MainPage.GetInstance(), "NotActive");
-            UpdateListEmulators();
+            AddEmulator = new Command<ImageButton>(async (button) => await AddEmulatorExecute(button));
+            SelectEmulator = new Command<DataEmulator>(async (data) => await SelectEmulatorExecute(data));
+            ActionEmulator = new Command<object>(async (action) => await ActionEmulatorExecute((int)action));
         }
 
+        #region variables
+        public DataEmulator SelectedEmulator { get; set; }
+
+        public ImageSource ScreenPicture { get; set; }
+
+        public Command ActionEmulator { get; set; }
+
+        public Command SelectEmulator { get; set; }
+
+        public Command AddEmulator { get; set; }
+
         public ObservableCollection<DataEmulator> Emulators { get; set; }
+        #endregion
 
         private void UpdateListEmulators()
         {
             var emulators = new List<DataEmulator>();
-
-            emulators.Add(new DataEmulator
-            {
-                CurrentColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "Active"),
-                Index = 0
-            });
-            emulators.Add(new DataEmulator
-            {
-                CurrentColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "NotActive"),
-                Index = 1
-            });
-            emulators.Add(new DataEmulator
-            {
-                CurrentColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "Active"),
-                Index = 2
-            });
-            emulators.Add(new DataEmulator
-            {
-                CurrentColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "Busy"),
-                Index = 3
-            });
-            emulators.Add(new DataEmulator
-            {
-                CurrentColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "Active"),
-                Index = 4
-            });
-            emulators.Add(new DataEmulator
-            {
-                CurrentColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "Active"),
-                Index = 5
-            });
-            emulators.Add(new DataEmulator
-            {
-                CurrentColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "Active"),
-                Index = 6
-            });
-            emulators.Add(new DataEmulator
-            {
-                CurrentColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "Active"),
-                Index = 7
-            });
-            emulators.Add(new DataEmulator
-            {
-                CurrentColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "Active"),
-                Index = 8
-            });
+            //To-Do
 
             if (Emulators is null)
                 Emulators = new ObservableCollection<DataEmulator>(emulators.ToArray());
@@ -88,6 +57,51 @@ namespace UBot.Views.User
             }
 
             OnPropertyChanged(nameof(Emulators));
+        }
+
+        private async Task SelectEmulatorExecute(DataEmulator data)
+        {
+            if (!data.IsEnabled)
+            {
+                await ActionEmulatorExecute(0, data);
+                return;
+            }
+
+            SelectedEmulator = data;
+            OnPropertyChanged(nameof(SelectedEmulator));
+        }
+
+        private async Task ActionEmulatorExecute(int action, DataEmulator? data = null)
+        {
+            if (SelectedEmulator.Index == -1)
+                return;
+
+            var emulator = Emulators.ToList().FindIndex(emulator => emulator.Index == ((data is not null) ? data?.Index : SelectedEmulator.Index));
+
+            Emulators[emulator] = new DataEmulator()
+            {
+                Index = Emulators[emulator].Index,
+                CurrentColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "Active"),
+                IsEnabled = true
+            };
+
+            //OnPropertyChanged(nameof(Emulators));
+        }
+
+        private async Task AddEmulatorExecute(ImageButton button)
+        {
+            button.BackgroundColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "Busy");
+            Emulators ??= new ObservableCollection<DataEmulator>();
+
+            Emulators.Add(new DataEmulator()
+            {
+                CurrentColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "NotActive"),
+                Index = new Random().Next(0, 20),
+                IsEnabled = false
+            });
+
+            OnPropertyChanged(nameof(Emulators));
+            button.BackgroundColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "NotActive");
         }
     }
 }

@@ -75,6 +75,9 @@
 	  <Compile Update="Pages\Loading.xaml.cs">
 	    <DependentUpon>Loading.xaml</DependentUpon>
 	  </Compile>
+	  <Compile Update="Pages\User\Manager.xaml.cs">
+	    <DependentUpon>Manager.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Pages\User\Settings.xaml.cs">
 	    <DependentUpon>Settings.xaml</DependentUpon>
 	  </Compile>
@@ -91,6 +94,9 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\MainPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\User\Manager.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\User\Settings.xaml">

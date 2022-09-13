@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:btbAnimate="clr-namespace:UBot.Controls"
+             x:Class="UBot.Pages.User.Manager">
+    <VerticalStackLayout>
+        <Label Text="Управление"
+               FontFamily="SegoeUI"
+               FontAttributes="Bold"
+               TextColor="{StaticResource White}"
+               FontSize="24"
+               Margin="20,10,0,70"
+               HorizontalOptions="Start" />
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="450" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackLayout Grid.Column="0"
+                         Margin="40,0,0,0"
+                         Orientation="Horizontal"
+                         Spacing="40">
+                <VerticalStackLayout Spacing="8">
+                    <HorizontalStackLayout HorizontalOptions="Center">
+                        <Label Text="Эмуляторы"
+                               FontFamily="SegoeUI"
+                               TextColor="{StaticResource White}"
+                               FontAttributes="Bold"
+                               FontSize="18"/>
+
+                    </HorizontalStackLayout>
+
+                    <ScrollView HeightRequest="450"
+                                Margin="10,10,0,0">
+                        <VerticalStackLayout Spacing="5">
+                            <CollectionView Grid.Row="2"
+                                            Grid.ColumnSpan="3"
+                                            HorizontalScrollBarVisibility="Never"
+                                            ItemsSource="{Binding Emulators}"
+                                            SelectionMode="None">
+                                <CollectionView.ItemsLayout>
+                                    <LinearItemsLayout ItemSpacing="5"
+                                                       Orientation="Vertical" />
+                                </CollectionView.ItemsLayout>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Text="{Binding Index}"
+                                                HeightRequest="56"
+                                                WidthRequest="177"
+                                                FontFamily="SegoeUI"
+                                                FontSize="20"
+                                                TextColor="{StaticResource White}"
+                                                BackgroundColor="{Binding CurrentColor}"
+                                                CornerRadius="11" />
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                            <ImageButton Source="plus.png"
+                                         BackgroundColor="{StaticResource NotActive}"
+                                         HeightRequest="56"
+                                         Padding="15"
+                                         WidthRequest="177"
+                                         CornerRadius="11" />
+                        </VerticalStackLayout>
+
+                    </ScrollView>
+                </VerticalStackLayout>
+            </StackLayout>
+
+            <Border Grid.Column="1"
+                    Stroke="{StaticResource Active}"
+                    StrokeThickness="2"
+                    Margin="50,-50,30,10">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="11,11,11,11" />
+                </Border.StrokeShape>
+                <Editor HeightRequest="500"
+                        FontFamily="SegoeUI"
+                        FontSize="18"
+                        Placeholder="Введите текст"
+                        Text="{Binding Path=Text}"
+                        Margin="5"
+                        BackgroundColor="{StaticResource Black}" />
+            </Border>
+        </Grid>
+    </VerticalStackLayout>
+</ContentView>

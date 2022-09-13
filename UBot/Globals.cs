@@ -30,6 +30,7 @@ namespace UBot
         public string PathToFileImage;
         public string PathToFolderAccounts;
         public string PathToFileTextWarm;
+        public int? PinCodeAccount;
 
         public int? CountMessages;
         public int? NumberRepetitionsActions;

@@ -91,6 +91,25 @@
                                    FontSize="18"
                                    Keyboard="Numeric"
                                    MaximumWidthRequest="125"
+                                   Placeholder="Пин-код"
+                                   Margin="0,5,5,0"
+                                   Text="{Binding PinCodeAccount}"
+                                   TextChanged="TextSave"
+                                   BackgroundColor="{StaticResource Black}">
+                                <Entry.Behaviors>
+                                    <controls:NumericValidationBehavior />
+                                </Entry.Behaviors>
+                            </Entry>
+                        </Border>
+                        <Border Stroke="{StaticResource Active}"
+                                StrokeThickness="2">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="11,11,11,11" />
+                            </Border.StrokeShape>
+                            <Entry FontFamily="SegoeUI"
+                                   FontSize="18"
+                                   Keyboard="Numeric"
+                                   MaximumWidthRequest="125"
                                    Placeholder="Цикличность"
                                    Margin="0,5,5,0"
                                    Text="{Binding NumberRepetitionsActions}"

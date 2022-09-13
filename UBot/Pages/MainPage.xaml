@@ -19,6 +19,10 @@
                               Opacity="0"
                               x:Name="SettingsPanel"
                               IsVisible="False" />
+        <userControl:Manager Grid.Row="0"
+                              Opacity="0"
+                              x:Name="ManagerPanel"
+                              IsVisible="False" />
         <StackLayout VerticalOptions="End"
                      Grid.Row="1"
                      HeightRequest="71"

@@ -35,6 +35,12 @@ namespace UBot.Views.User
         #endregion
 
         #region variables text
+        public int? PinCodeAccount
+        {
+            get => Globals.Setup.PinCodeAccount;
+            set => SetProperty(ref Globals.Setup.PinCodeAccount, value);
+        }
+
         public int? NumberRepetitionsActions
         {
             get => Globals.Setup.NumberRepetitionsActions;

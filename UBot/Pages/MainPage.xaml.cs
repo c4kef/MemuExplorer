@@ -15,6 +15,7 @@ public partial class MainPage : ContentPage
 
         UserPanels.Add(DashboardPanel);
         UserPanels.Add(SettingsPanel);
+        UserPanels.Add(ManagerPanel);
 
         this.BindingContext = new MainPageView();
 		(this.BindingContext as MainPageView).Indicators.Add(SelectShadow1);//Чтобы при следующем клике мы могли сразу скрыть индикатор

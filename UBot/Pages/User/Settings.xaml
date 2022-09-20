@@ -65,6 +65,36 @@
                                 CommandParameter="3"
                                 Command="{Binding Path=ButtonClick}"
                                 CornerRadius="11" />
+                        <Button Text="Группы"
+                                HeightRequest="56"
+                                WidthRequest="140"
+                                FontFamily="SegoeUI"
+                                FontSize="20"
+                                TextColor="{StaticResource White}"
+                                BackgroundColor="{Binding Path=ButtonPickerGroupsColor}"
+                                CommandParameter="5"
+                                Command="{Binding Path=ButtonClick}"
+                                CornerRadius="11" />
+                        <Button Text="Чат боты"
+                                HeightRequest="56"
+                                WidthRequest="140"
+                                FontFamily="SegoeUI"
+                                FontSize="20"
+                                TextColor="{StaticResource White}"
+                                BackgroundColor="{Binding Path=ButtonPickerChatBotsColor}"
+                                CommandParameter="6"
+                                Command="{Binding Path=ButtonClick}"
+                                CornerRadius="11" />
+                        <Button Text="Люди"
+                                HeightRequest="56"
+                                WidthRequest="140"
+                                FontFamily="SegoeUI"
+                                FontSize="20"
+                                TextColor="{StaticResource White}"
+                                BackgroundColor="{Binding Path=ButtonPickerPeoplesColor}"
+                                CommandParameter="7"
+                                Command="{Binding Path=ButtonClick}"
+                                CornerRadius="11" />
                     </VerticalStackLayout>
                 </VerticalStackLayout>
             </StackLayout>
@@ -130,6 +160,16 @@
                                 CommandParameter="4"
                                 Command="{Binding Path=ButtonClick}"
                                 CornerRadius="11" />
+                        <Picker SelectedIndex="0"
+                                HeightRequest="56"
+                                WidthRequest="140"
+                                FontFamily="SegoeUI"
+                                FontSize="20"
+                                TextColor="{StaticResource White}"
+                                ItemsSource="{Binding ActionSelectEmulatorScan}"
+                                SelectedItem="{Binding SelectEmulatorScan}"
+                                ItemDisplayBinding="{Binding Name}"
+                                SelectedIndexChanged="PickerChanged" />
                     </VerticalStackLayout>
                 </VerticalStackLayout>
             </StackLayout>

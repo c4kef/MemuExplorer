@@ -60,6 +60,15 @@ public partial class Settings : INotifyPropertyChanged
     /// <summary>
     /// Кол-во прогонов через вебку
     /// </summary>
+    public int SelectDeviceScan
+    {
+        get => Globals.Setup.SelectDeviceScan;
+        set => Globals.Setup.SelectDeviceScan = value;
+    }
+
+    /// <summary>
+    /// Кол-во прогонов через вебку
+    /// </summary>
     public int DelaySendMessageFrom
     {
         get => Globals.Setup.DelaySendMessageFrom;

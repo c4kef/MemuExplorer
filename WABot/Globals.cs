@@ -162,6 +162,7 @@ public class Setup
     /// Кол-во прогонов через вебку
     /// </summary>
     public int CountWarmsOnWeb = 1;
+    public int SelectDeviceScan = 0;
 
     /// <summary>
     /// Кол-во сообщений с аккаунта

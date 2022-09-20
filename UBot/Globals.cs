@@ -26,6 +26,10 @@ namespace UBot
     [Serializable]
     public class Setup
     {
+        public string PathToFileGroups;
+        public string PathToFileChatBots;
+        public string PathToFilePeoples;
+        public SelectEmulatorScan? SelectEmulatorScan;
         public string PathToFileNames;
         public string PathToFileImage;
         public string PathToFolderAccounts;

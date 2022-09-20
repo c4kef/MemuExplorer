@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OBSCamera", "OBSCamera", "{
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UBot", "UBot\UBot.csproj", "{2D06981D-9BFC-44B1-9CD8-D45AE59B80CD}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerAPI", "ServerAPI\ServerAPI.csproj", "{B1EC4553-9E9F-4DD6-A79A-32B095DF718F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{2D06981D-9BFC-44B1-9CD8-D45AE59B80CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D06981D-9BFC-44B1-9CD8-D45AE59B80CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D06981D-9BFC-44B1-9CD8-D45AE59B80CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1EC4553-9E9F-4DD6-A79A-32B095DF718F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1EC4553-9E9F-4DD6-A79A-32B095DF718F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1EC4553-9E9F-4DD6-A79A-32B095DF718F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1EC4553-9E9F-4DD6-A79A-32B095DF718F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

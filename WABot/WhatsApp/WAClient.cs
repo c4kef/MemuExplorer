@@ -302,9 +302,18 @@ public class WaClient
 
         s3:
             if (!await _mem.ExistsElement("//node[@text='НЕ СЕЙЧАС']"))
-                return true;
+                goto s4;
 
             await _mem.Click("//node[@text='НЕ СЕЙЧАС']");
+            await Task.Delay(2_000);
+            await _mem.StopApk(PackageName);
+            await _mem.RunApk(PackageName);
+
+        s4:
+            if (!await _mem.ExistsElement($"//node[@resource-id='{PackageName}:id/code']"))
+                return true;
+
+            await _mem.Input($"//node[@resource-id='{PackageName}:id/code']", "120638");
             await Task.Delay(2_000);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);

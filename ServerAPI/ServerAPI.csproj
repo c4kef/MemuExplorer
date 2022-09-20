@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="EmbedIO" Version="3.4.3" />
+        <PackageReference Include="HttpMultipartParser" Version="7.0.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="RestSharp" Version="106.11.7" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="SocketIO.Client">
+        <HintPath>..\Libs\SocketIO.Client.dll</HintPath>
+      </Reference>
+      <Reference Include="WebSocket4Net">
+        <HintPath>..\Libs\WebSocket4Net.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+</Project>

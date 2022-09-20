@@ -275,20 +275,24 @@ public class AccPreparation
             {
                 try
                 {
-                    if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1)))
+                    if (Globals.Setup.SelectDeviceScan == 0 || Globals.Setup.SelectDeviceScan == 2)
                     {
-                        c2Auth = false;
-                        Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
-                        await DeleteAccount(c2);
-                        continue;
-                    }
-                    Dashboard.GetInstance().CompletedTasks = ++_alivesAccounts;
-
-                    if (await TryLoginWeb(c1, c1.Phone.Remove(0, 1)))
-                    {
+                        if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1)))
+                        {
+                            c2Auth = false;
+                            Dashboard.GetInstance().BannedAccounts = ++_removedAccounts;
+                            await DeleteAccount(c2);
+                            continue;
+                        }
                         Dashboard.GetInstance().CompletedTasks = ++_alivesAccounts;
-                        await DeleteAccount(c1);
                     }
+
+                    if (Globals.Setup.SelectDeviceScan == 0 || Globals.Setup.SelectDeviceScan == 1)
+                        if (await TryLoginWeb(c1, c1.Phone.Remove(0, 1)))
+                        {
+                            Dashboard.GetInstance().CompletedTasks = ++_alivesAccounts;
+                            await DeleteAccount(c1);
+                        }
                 }
                 catch (Exception ex)
                 {

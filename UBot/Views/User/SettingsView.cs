@@ -16,6 +16,23 @@ namespace UBot.Views.User
         public SettingsView()
         {
             ButtonClick = new Command<string>(async (id) => await ButtonClickExecute(int.Parse(id)));
+
+            ActionSelectEmulatorScan = new List<SelectEmulatorScan>();
+            ActionSelectEmulatorScan.Add(new SelectEmulatorScan
+            {
+                Index = 0,
+                Name = "Все"
+            });
+            ActionSelectEmulatorScan.Add(new SelectEmulatorScan
+            {
+                Index = 1,
+                Name = "Получатель"
+            });
+            ActionSelectEmulatorScan.Add(new SelectEmulatorScan
+            {
+                Index = 2,
+                Name = "Отправитель"
+            });
         }
 
         public Command ButtonClick { get; }
@@ -32,9 +49,26 @@ namespace UBot.Views.User
 
         public Color ButtonPickerTextWarmColor =>
             (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFileTextWarm) ? "Active" : "NotActive");
+
+        public Color ButtonPickerGroupsColor =>
+            (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFileGroups) ? "Active" : "NotActive");
+
+        public Color ButtonPickerChatBotsColor =>
+            (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFileChatBots) ? "Active" : "NotActive");
+
+        public Color ButtonPickerPeoplesColor =>
+            (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFilePeoples) ? "Active" : "NotActive");
         #endregion
 
         #region variables text
+        public SelectEmulatorScan? SelectEmulatorScan
+        {
+            get => Globals.Setup.SelectEmulatorScan;
+            set => SetProperty(ref Globals.Setup.SelectEmulatorScan, value);
+        }
+
+        public List<SelectEmulatorScan> ActionSelectEmulatorScan { get; set; }
+
         public int? PinCodeAccount
         {
             get => Globals.Setup.PinCodeAccount;
@@ -139,6 +173,48 @@ namespace UBot.Views.User
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerTextWarmColor));
+
+                    break;
+
+
+                case 5:
+                    pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+
+                    if (string.IsNullOrEmpty(pick))
+                        return;
+
+                    Globals.Setup.PathToFileGroups = pick;
+                    await Globals.SaveSetup();
+
+                    OnPropertyChanged(nameof(ButtonPickerGroupsColor));
+
+                    break;
+
+
+                case 6:
+                    pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+
+                    if (string.IsNullOrEmpty(pick))
+                        return;
+
+                    Globals.Setup.PathToFileChatBots = pick;
+                    await Globals.SaveSetup();
+
+                    OnPropertyChanged(nameof(ButtonPickerChatBotsColor));
+
+                    break;
+
+
+                case 7:
+                    pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+
+                    if (string.IsNullOrEmpty(pick))
+                        return;
+
+                    Globals.Setup.PathToFilePeoples = pick;
+                    await Globals.SaveSetup();
+
+                    OnPropertyChanged(nameof(ButtonPickerPeoplesColor));
 
                     break;
             }

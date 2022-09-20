@@ -55,6 +55,21 @@
                             </ToolTip>
                         </ui:NumberBox.ToolTip>
                     </ui:NumberBox>
+                    <ui:NumberBox Margin="0,10,0,0"
+                                  ValueChanged="ValueChanged"
+                                  Value="{Binding SelectDeviceScan}"
+                                  ui:ControlHelper.CornerRadius="5"
+                                  ui:ControlHelper.PlaceholderText="Сканирование будет на"
+                                  SmallChange="1"
+                                  LargeChange="10"
+                                  Minimum="1"
+                                  SpinButtonPlacementMode="Compact">
+                        <ui:NumberBox.ToolTip>
+                            <ToolTip>
+                                0 - на всех, 1 - только на писавшем, 2 - только на получателе
+                            </ToolTip>
+                        </ui:NumberBox.ToolTip>
+                    </ui:NumberBox>
                     <CheckBox Margin="0,10,0,0"
                               ui:ControlHelper.CornerRadius="5"
                               Content="Только проверка бана"

@@ -12,4 +12,6 @@ public partial class Settings : ContentView
 	}
 
 	private async void TextSave(object sender, TextChangedEventArgs e) => await Globals.SaveSetup();
+
+	private async void PickerChanged(object sender, EventArgs e) => await Globals.SaveSetup();
 }

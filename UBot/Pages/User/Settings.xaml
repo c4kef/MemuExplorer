@@ -112,45 +112,64 @@
 
                     <VerticalStackLayout Spacing="9"
                                          Margin="0,18,0,0">
-                        <Border Stroke="{StaticResource Active}"
-                                StrokeThickness="2">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="11,11,11,11" />
-                            </Border.StrokeShape>
-                            <Entry FontFamily="SegoeUI"
+
+                        <VerticalStackLayout>
+                            <Label Text="Пин-код"
+                                   FontFamily="SegoeUI"
+                                   TextColor="{StaticResource White}"
                                    FontSize="18"
-                                   Keyboard="Numeric"
-                                   MaximumWidthRequest="125"
-                                   Placeholder="Пин-код"
-                                   Margin="0,5,5,0"
-                                   Text="{Binding PinCodeAccount}"
-                                   TextChanged="TextSave"
-                                   BackgroundColor="{StaticResource Black}">
-                                <Entry.Behaviors>
-                                    <controls:NumericValidationBehavior />
-                                </Entry.Behaviors>
-                            </Entry>
-                        </Border>
-                        <Border Stroke="{StaticResource Active}"
-                                StrokeThickness="2">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="11,11,11,11" />
-                            </Border.StrokeShape>
-                            <Entry FontFamily="SegoeUI"
+                                   Margin="5,0,0,0"
+                                   HorizontalOptions="Start" />
+                            <Border Stroke="{StaticResource Active}"
+                                    StrokeThickness="2">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="11,11,11,11" />
+                                </Border.StrokeShape>
+                                <Entry FontFamily="SegoeUI"
+                                       FontSize="18"
+                                       Keyboard="Numeric"
+                                       MaximumWidthRequest="125"
+                                       Placeholder="Пин-код"
+                                       Margin="0,5,5,0"
+                                       Text="{Binding PinCodeAccount}"
+                                       TextChanged="TextSave"
+                                       BackgroundColor="{StaticResource Black}">
+                                    <Entry.Behaviors>
+                                        <controls:NumericValidationBehavior />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="Цикличность"
+                                   FontFamily="SegoeUI"
+                                   TextColor="{StaticResource White}"
                                    FontSize="18"
-                                   Keyboard="Numeric"
-                                   MaximumWidthRequest="125"
-                                   Placeholder="Цикличность"
-                                   Margin="0,5,5,0"
-                                   Text="{Binding NumberRepetitionsActions}"
-                                   TextChanged="TextSave"
-                                   BackgroundColor="{StaticResource Black}">
-                                <Entry.Behaviors>
-                                    <controls:NumericValidationBehavior />
-                                </Entry.Behaviors>
-                            </Entry>
-                        </Border>
-                        <Button Text="Текст"
+                                   Margin="5,0,0,0"
+                                   HorizontalOptions="Start" />
+                            <Border Stroke="{StaticResource Active}"
+                                    StrokeThickness="2">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="11,11,11,11" />
+                                </Border.StrokeShape>
+                                <Entry FontFamily="SegoeUI"
+                                       FontSize="18"
+                                       Keyboard="Numeric"
+                                       MaximumWidthRequest="125"
+                                       Placeholder="Цикличность"
+                                       Margin="0,5,5,0"
+                                       Text="{Binding NumberRepetitionsActions}"
+                                       TextChanged="TextSave"
+                                       BackgroundColor="{StaticResource Black}">
+                                    <Entry.Behaviors>
+                                        <controls:NumericValidationBehavior />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <Button Text="Текст общ"
                                 HeightRequest="56"
                                 WidthRequest="140"
                                 FontFamily="SegoeUI"
@@ -160,6 +179,18 @@
                                 CommandParameter="4"
                                 Command="{Binding Path=ButtonClick}"
                                 CornerRadius="11" />
+
+                        <Button Text="Текст люди"
+                                HeightRequest="56"
+                                WidthRequest="140"
+                                FontFamily="SegoeUI"
+                                FontSize="20"
+                                TextColor="{StaticResource White}"
+                                BackgroundColor="{Binding Path=ButtonPickerTextPeopleWarmColor}"
+                                CommandParameter="8"
+                                Command="{Binding Path=ButtonClick}"
+                                CornerRadius="11" />
+                        
                         <Picker SelectedIndex="0"
                                 HeightRequest="56"
                                 WidthRequest="140"
@@ -187,107 +218,148 @@
 
                     <VerticalStackLayout Spacing="9"
                                          Margin="0,18,0,0">
-                        <Border Stroke="{StaticResource Active}"
-                                StrokeThickness="2">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="11,11,11,11" />
-                            </Border.StrokeShape>
-                            <Entry FontFamily="SegoeUI"
+                        <VerticalStackLayout>
+                            <Label Text="Сообщений"
+                                   FontFamily="SegoeUI"
+                                   TextColor="{StaticResource White}"
                                    FontSize="18"
-                                   Keyboard="Numeric"
-                                   MaximumWidthRequest="125"
-                                   Placeholder="Сообщений"
-                                   Margin="0,5,5,0"
-                                   Text="{Binding CountMessages}"
-                                   TextChanged="TextSave"
-                                   BackgroundColor="{StaticResource Black}">
-                                <Entry.Behaviors>
-                                    <controls:NumericValidationBehavior />
-                                </Entry.Behaviors>
-                            </Entry>
-                        </Border>
+                                   Margin="5,0,0,0"
+                                   HorizontalOptions="Start" />
+                            <Border Stroke="{StaticResource Active}"
+                                    StrokeThickness="2">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="11,11,11,11" />
+                                </Border.StrokeShape>
+                                <Entry FontFamily="SegoeUI"
+                                       FontSize="18"
+                                       Keyboard="Numeric"
+                                       MaximumWidthRequest="125"
+                                       Placeholder="Сообщений"
+                                       Margin="0,5,5,0"
+                                       Text="{Binding CountMessages}"
+                                       TextChanged="TextSave"
+                                       BackgroundColor="{StaticResource Black}">
+                                    <Entry.Behaviors>
+                                        <controls:NumericValidationBehavior />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Border>
+                        </VerticalStackLayout>
 
-                        <Border Stroke="{StaticResource Active}"
-                                StrokeThickness="2">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="11,11,11,11" />
-                            </Border.StrokeShape>
-                            <Entry FontFamily="SegoeUI"
-                                   FontSize="18"
-                                   Keyboard="Numeric"
-                                   MaximumWidthRequest="125"
-                                   Placeholder="Потоков"
-                                   Margin="0,5,5,0"
-                                   Text="{Binding CountThreads}"
-                                   TextChanged="TextSave"
-                                   BackgroundColor="{StaticResource Black}">
-                                <Entry.Behaviors>
-                                    <controls:NumericValidationBehavior />
-                                </Entry.Behaviors>
-                            </Entry>
-                        </Border>
 
-                        <Border Stroke="{StaticResource Active}"
-                                StrokeThickness="2">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="11,11,11,11" />
-                            </Border.StrokeShape>
-                            <Entry FontFamily="SegoeUI"
+                        <VerticalStackLayout>
+                            <Label Text="Потоков"
+                                   FontFamily="SegoeUI"
+                                   TextColor="{StaticResource White}"
                                    FontSize="18"
-                                   Keyboard="Numeric"
-                                   MaximumWidthRequest="125"
-                                   Placeholder="Уровень"
-                                   Margin="0,5,5,0"
-                                   Text="{Binding MinTrustLevel}"
-                                   TextChanged="TextSave"
-                                   BackgroundColor="{StaticResource Black}">
-                                <Entry.Behaviors>
-                                    <controls:NumericValidationBehavior />
-                                </Entry.Behaviors>
-                            </Entry>
-                        </Border>
+                                   Margin="5,0,0,0"
+                                   HorizontalOptions="Start" />
+                            <Border Stroke="{StaticResource Active}"
+                                    StrokeThickness="2">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="11,11,11,11" />
+                                </Border.StrokeShape>
+                                <Entry FontFamily="SegoeUI"
+                                       FontSize="18"
+                                       Keyboard="Numeric"
+                                       MaximumWidthRequest="125"
+                                       Placeholder="Потоков"
+                                       Margin="0,5,5,0"
+                                       Text="{Binding CountThreads}"
+                                       TextChanged="TextSave"
+                                       BackgroundColor="{StaticResource Black}">
+                                    <Entry.Behaviors>
+                                        <controls:NumericValidationBehavior />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="Уровень"
+                                   FontFamily="SegoeUI"
+                                   TextColor="{StaticResource White}"
+                                   FontSize="18"
+                                   Margin="5,0,0,0"
+                                   HorizontalOptions="Start" />
+                            <Border Stroke="{StaticResource Active}"
+                                    StrokeThickness="2">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="11,11,11,11" />
+                                </Border.StrokeShape>
+                                <Entry FontFamily="SegoeUI"
+                                       FontSize="18"
+                                       Keyboard="Numeric"
+                                       MaximumWidthRequest="125"
+                                       Placeholder="Уровень"
+                                       Margin="0,5,5,0"
+                                       Text="{Binding MinTrustLevel}"
+                                       TextChanged="TextSave"
+                                       BackgroundColor="{StaticResource Black}">
+                                    <Entry.Behaviors>
+                                        <controls:NumericValidationBehavior />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Border>
+                        </VerticalStackLayout>
 
                         <HorizontalStackLayout Spacing="2">
-                            <Border Stroke="{StaticResource Active}"
-                                    StrokeThickness="2">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="11,11,11,11" />
-                                </Border.StrokeShape>
-                                <Entry FontFamily="SegoeUI"
+                            <VerticalStackLayout>
+                                <Label Text="От"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
                                        FontSize="18"
-                                       Keyboard="Numeric"
-                                       MaximumWidthRequest="30"
-                                       Placeholder="От"
-                                       Margin="0,5,5,0"
-                                       Text="{Binding DelaySendMessageFrom}"
-                                       TextChanged="TextSave"
-                                       BackgroundColor="{StaticResource Black}">
-                                    <Entry.Behaviors>
-                                        <controls:NumericValidationBehavior />
-                                    </Entry.Behaviors>
-                                </Entry>
-                            </Border>
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="30"
+                                           Placeholder="От"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding DelaySendMessageFrom}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}">
+                                        <Entry.Behaviors>
+                                            <controls:NumericValidationBehavior />
+                                        </Entry.Behaviors>
+                                    </Entry>
+                                </Border>
+                            </VerticalStackLayout>
 
-                            <Border Stroke="{StaticResource Active}"
-                                    StrokeThickness="2">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="11,11,11,11" />
-                                </Border.StrokeShape>
-                                <Entry FontFamily="SegoeUI"
-                                       HorizontalOptions="Center"
+                            <VerticalStackLayout>
+                                <Label Text="До"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
                                        FontSize="18"
-                                       Keyboard="Numeric"
-                                       MaximumWidthRequest="30"
-                                       Placeholder="До"
-                                       Margin="0,5,5,0"
-                                       Text="{Binding DelaySendMessageTo}"
-                                       TextChanged="TextSave"
-                                       BackgroundColor="{StaticResource Black}">
-                                    <Entry.Behaviors>
-                                        <controls:NumericValidationBehavior />
-                                    </Entry.Behaviors>
-                                </Entry>
-                            </Border>
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           HorizontalOptions="Center"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="30"
+                                           Placeholder="До"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding DelaySendMessageTo}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}">
+                                        <Entry.Behaviors>
+                                            <controls:NumericValidationBehavior />
+                                        </Entry.Behaviors>
+                                    </Entry>
+                                </Border>
+                            </VerticalStackLayout>
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </VerticalStackLayout>

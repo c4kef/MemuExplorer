@@ -1,10 +1,10 @@
 {
-   "name": "server-whatsapp",
-   "version": "0.0.1",
-   "main": "index.js",
-   "scripts": {
-      "start": "node index.js"
-   },
+  "name": "jserver",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
    "dependencies": {
       "@wppconnect-team/wppconnect": "^1.16.1",
       "qr-scanner": "^1.4.1",

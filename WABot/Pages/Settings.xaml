@@ -62,7 +62,7 @@
                                   ui:ControlHelper.PlaceholderText="Сканирование будет на"
                                   SmallChange="1"
                                   LargeChange="10"
-                                  Minimum="1"
+                                  Minimum="0"
                                   SpinButtonPlacementMode="Compact">
                         <ui:NumberBox.ToolTip>
                             <ToolTip>

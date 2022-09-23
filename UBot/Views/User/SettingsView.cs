@@ -58,6 +58,9 @@ namespace UBot.Views.User
 
         public Color ButtonPickerPeoplesColor =>
             (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFilePeoples) ? "Active" : "NotActive");
+
+        public Color ButtonPickerTextPeopleWarmColor =>
+            (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFileTextPeopleWarm) ? "Active" : "NotActive");
         #endregion
 
         #region variables text
@@ -125,7 +128,7 @@ namespace UBot.Views.User
             switch (idButton)
             {
                 case 1:
-                    pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+                    pick = await App.GetInstance().FolderPicker.PickFile(".csv");
 
                     if (string.IsNullOrEmpty(pick))
                         return;
@@ -176,7 +179,6 @@ namespace UBot.Views.User
 
                     break;
 
-
                 case 5:
                     pick = await App.GetInstance().FolderPicker.PickFile(".txt");
 
@@ -189,7 +191,6 @@ namespace UBot.Views.User
                     OnPropertyChanged(nameof(ButtonPickerGroupsColor));
 
                     break;
-
 
                 case 6:
                     pick = await App.GetInstance().FolderPicker.PickFile(".txt");
@@ -204,7 +205,6 @@ namespace UBot.Views.User
 
                     break;
 
-
                 case 7:
                     pick = await App.GetInstance().FolderPicker.PickFile(".txt");
 
@@ -215,6 +215,19 @@ namespace UBot.Views.User
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerPeoplesColor));
+
+                    break;
+
+                case 8:
+                    pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+
+                    if (string.IsNullOrEmpty(pick))
+                        return;
+
+                    Globals.Setup.PathToFileTextPeopleWarm = pick;
+                    await Globals.SaveSetup();
+
+                    OnPropertyChanged(nameof(ButtonPickerTextPeopleWarmColor));
 
                     break;
             }

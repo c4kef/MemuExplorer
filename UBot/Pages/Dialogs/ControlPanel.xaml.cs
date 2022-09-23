@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui.Views;
+﻿using CommunityToolkit.Maui.Views;
 using UBot.Controls;
 using UBot.Views.Dialogs;
 
@@ -9,6 +9,8 @@ public partial class ControlPanel : Popup
     public Dictionary<Button, bool> _selectedRadio;
     public Dictionary<Button, bool> _selectedCheckBox;
 
+    private ActionProfileWork _actionProfileWork;
+
     public ControlPanel()
 	{
 		InitializeComponent();
@@ -17,7 +19,38 @@ public partial class ControlPanel : Popup
         _selectedRadio = new Dictionary<Button, bool>();
     }
 
-    private void PressStart(object sender, EventArgs e) => this.Close(null);
+    private void PressStart(object sender, EventArgs e)
+    {
+        foreach (var radioBtn in _selectedRadio)
+            switch (int.Parse(radioBtn.Key.ClassId))
+            {
+                case 1:
+                    _actionProfileWork.IsNewsLetter = radioBtn.Key.Text.Contains("Рассылка") && radioBtn.Value;
+                    break;
+                case 2:
+                    _actionProfileWork.IsWeb = radioBtn.Key.Text.Contains("Web") && radioBtn.Value;
+                    break;
+            }
+
+        foreach (var checkedBtn in _selectedCheckBox)
+            switch (checkedBtn.Key.Text)
+            {
+                case "Проверка":
+                    _actionProfileWork.CheckBan = checkedBtn.Value;
+                    break;
+                case "Прогрев":
+                    _actionProfileWork.Warm = checkedBtn.Value;
+                    break;
+                case "Регистрация":
+                    _actionProfileWork.Registration = checkedBtn.Value;
+                    break;
+                case "Сканирование":
+                    _actionProfileWork.Scaning = checkedBtn.Value;
+                    break;
+            }
+
+        this.Close((_selectedCheckBox.Values.Any(checkbox => checkbox) || _selectedRadio.Values.Any(radio => radio)) ? _actionProfileWork : null);
+    }
 
 
     private void PressRadioButton(object sender, EventArgs e)

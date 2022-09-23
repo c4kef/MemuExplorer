@@ -21,7 +21,7 @@ public static class Log
 
         while (Globals.IsLog)
         {
-            await Task.Delay(500);
+            await Task.Delay(10);
 
             if (DataWrites.Count == 0) continue;
 

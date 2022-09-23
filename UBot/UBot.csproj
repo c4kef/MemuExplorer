@@ -41,6 +41,7 @@
 		<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
 		<GenerateTestArtifacts>True</GenerateTestArtifacts>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -66,6 +67,16 @@
 	  <PackageReference Include="CommunityToolkit.Maui.Core" Version="1.2.0" />
 	  <PackageReference Include="CommunityToolkit.Maui.Markup" Version="1.0.1" />
 	  <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\MemuLib\MemuLib.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="SocketIO.Client">
+	    <HintPath>..\Libs\SocketIO.Client.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 
 	<ItemGroup>

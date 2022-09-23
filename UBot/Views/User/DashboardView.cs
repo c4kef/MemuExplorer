@@ -15,10 +15,12 @@ namespace UBot.Views.User
         public DashboardView()
         {
             OpenControlPanel = new Command(ExecuteOpenControlPanel);
+
+            _webPrep = new Whatsapp.Web.AccPreparation();
+            _isFree = true;
         }
 
-        public Command OpenControlPanel { get; }
-        
+
         #region UI variables
 
         private string _text;
@@ -65,9 +67,38 @@ namespace UBot.Views.User
 
         #endregion
 
+        #region variables
+
+        public Command OpenControlPanel { get; }
+
+        private bool _isFree;
+
+        private readonly Whatsapp.Web.AccPreparation _webPrep;
+
+        #endregion
+
         private async void ExecuteOpenControlPanel()
         {
-            await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new ControlPanel());
+            if (!_isFree)
+                return;
+
+            var result = await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new ControlPanel()) as ActionProfileWork?;
+
+            if (result is null)
+                return;
+
+            if (!result.Value.IsNewsLetter)
+            {
+                _isFree = false;
+                var _activeTask = Task.Run(async () =>
+                {
+                    await _webPrep.Run(string.IsNullOrEmpty(Text) ? await File.ReadAllTextAsync(Globals.Setup.PathToFileTextWarm) : Text, result.Value);
+                });
+
+                await _activeTask;
+                await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Информация", "Прогрев был завершен", false));
+                _isFree = true;
+            }
         }
     }
 }

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "disableSources": false,
+  "entryPoints": ["src/index.ts"],
+  "excludeExternals": false,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "includeVersion": true,
+  "out": "api-docs",
+  "gaID": "G-LTZL26963K",
+  "visibilityFilters": {
+    "external": false
+  },
+  "pluginPages": {
+    "source": ".",
+    "pages": [
+      {
+        "title": "Getting Started",
+        "childrenDir": "docs/getting-started",
+        "childrenOutputDir": "getting-started",
+        "children": [
+          {
+            "title": "Installation",
+            "source": "installation.md"
+          },
+          {
+            "title": "Creating a Client",
+            "source": "creating-client.md"
+          },
+          {
+            "title": "Receiving Messages",
+            "source": "receiving-messages.md"
+          },
+          {
+            "title": "Configuring the logger",
+            "source": "configuring-logger.md"
+          },
+          {
+            "title": "Basic Functions",
+            "source": "basic-functions.md"
+          }
+        ]
+      },
+      {
+        "title": "Changelog",
+        "source": "CHANGELOG.md"
+      }
+    ]
+  }
+}

@@ -33,9 +33,13 @@ namespace UBot.Views.User
                 Index = 2,
                 Name = "Отправитель"
             });
+
+            _instance = this;
         }
 
         public Command ButtonClick { get; }
+
+        private static SettingsView _instance;
 
         #region variables color
         public Color ButtonPickerFileNameColor =>
@@ -61,6 +65,9 @@ namespace UBot.Views.User
 
         public Color ButtonPickerTextPeopleWarmColor =>
             (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFileTextPeopleWarm) ? "Active" : "NotActive");
+
+        public Color ButtonPickerPhonesColor =>
+            (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFilePhones) ? "Active" : "NotActive");
         #endregion
 
         #region variables text
@@ -114,12 +121,9 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.DelaySendMessageTo, value);
         }
 
-        public string NumbersForNewsletter
-        {
-            get => Globals.Setup.NumbersForNewsletter;
-            set => SetProperty(ref Globals.Setup.NumbersForNewsletter, value);
-        }
         #endregion
+
+        public static SettingsView GetInstance() => _instance;
 
         private async Task ButtonClickExecute(int idButton)
         {
@@ -128,12 +132,18 @@ namespace UBot.Views.User
             switch (idButton)
             {
                 case 1:
-                    pick = await App.GetInstance().FolderPicker.PickFile(".csv");
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFileNames))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFile(".csv");
 
-                    if (string.IsNullOrEmpty(pick))
-                        return;
+                        if (string.IsNullOrEmpty(pick))
+                            return;
 
-                    Globals.Setup.PathToFileNames = pick;
+                        Globals.Setup.PathToFileNames = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFileNames = string.Empty;
+
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerFileNameColor));
@@ -141,12 +151,18 @@ namespace UBot.Views.User
                     break;
 
                 case 2:
-                    pick = await App.GetInstance().FolderPicker.PickFile(".ova");
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFileImage))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFile(".ova");
 
-                    if (string.IsNullOrEmpty(pick))
-                        return;
+                        if (string.IsNullOrEmpty(pick))
+                            return;
 
-                    Globals.Setup.PathToFileImage = pick;
+                        Globals.Setup.PathToFileImage = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFileImage = string.Empty;
+
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerImageColor));
@@ -154,12 +170,18 @@ namespace UBot.Views.User
                     break;
 
                 case 3:
-                    pick = await App.GetInstance().FolderPicker.PickFolder();
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFolderAccounts))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFolder();
 
-                    if (string.IsNullOrEmpty(pick))
-                        return;
+                        if (string.IsNullOrEmpty(pick))
+                            return;
 
-                    Globals.Setup.PathToFolderAccounts = pick;
+                        Globals.Setup.PathToFolderAccounts = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFolderAccounts = string.Empty;
+                    
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerAccountsColor));
@@ -167,12 +189,18 @@ namespace UBot.Views.User
                     break;
 
                 case 4:
-                    pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFileTextWarm))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFile(".txt");
 
-                    if (string.IsNullOrEmpty(pick))
-                        return;
+                        if (string.IsNullOrEmpty(pick))
+                            return;
 
-                    Globals.Setup.PathToFileTextWarm = pick;
+                        Globals.Setup.PathToFileTextWarm = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFileTextWarm = string.Empty;
+
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerTextWarmColor));
@@ -180,12 +208,18 @@ namespace UBot.Views.User
                     break;
 
                 case 5:
-                    pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFileGroups))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFile(".txt");
 
-                    if (string.IsNullOrEmpty(pick))
-                        return;
+                        if (string.IsNullOrEmpty(pick))
+                            return;
 
-                    Globals.Setup.PathToFileGroups = pick;
+                        Globals.Setup.PathToFileGroups = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFileGroups = string.Empty;
+
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerGroupsColor));
@@ -193,12 +227,18 @@ namespace UBot.Views.User
                     break;
 
                 case 6:
-                    pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFileChatBots))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFile(".txt");
 
-                    if (string.IsNullOrEmpty(pick))
-                        return;
+                        if (string.IsNullOrEmpty(pick))
+                            return;
 
-                    Globals.Setup.PathToFileChatBots = pick;
+                        Globals.Setup.PathToFileChatBots = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFileChatBots = string.Empty;
+                    
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerChatBotsColor));
@@ -206,12 +246,18 @@ namespace UBot.Views.User
                     break;
 
                 case 7:
-                    pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFilePeoples))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFile(".txt");
 
-                    if (string.IsNullOrEmpty(pick))
-                        return;
+                        if (string.IsNullOrEmpty(pick))
+                            return;
 
-                    Globals.Setup.PathToFilePeoples = pick;
+                        Globals.Setup.PathToFilePeoples = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFilePeoples = string.Empty;
+
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerPeoplesColor));
@@ -219,15 +265,40 @@ namespace UBot.Views.User
                     break;
 
                 case 8:
-                    pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFileTextPeopleWarm))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFile(".txt");
 
-                    if (string.IsNullOrEmpty(pick))
-                        return;
+                        if (string.IsNullOrEmpty(pick))
+                            return;
 
-                    Globals.Setup.PathToFileTextPeopleWarm = pick;
+                        Globals.Setup.PathToFileTextPeopleWarm = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFileTextPeopleWarm = string.Empty;
+
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerTextPeopleWarmColor));
+
+                    break;
+
+                case 9:
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFilePhones))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+
+                        if (string.IsNullOrEmpty(pick))
+                            return;
+
+                        Globals.Setup.PathToFilePhones = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFilePhones = string.Empty;
+
+                    await Globals.SaveSetup();
+
+                    OnPropertyChanged(nameof(ButtonPickerPhonesColor));
 
                     break;
             }

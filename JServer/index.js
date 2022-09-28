@@ -11,7 +11,7 @@ io.configure('development', function () {
 });
 
 io.sockets.on("connection", function (socket) {
-    console.log("Detect new connection");
+    //console.log("Detect new connection");
     socket.on("data", async function (ndata) {
 
         const data = JSON.parse(ndata);
@@ -24,7 +24,7 @@ io.sockets.on("connection", function (socket) {
 
         switch (data["Type"]) {
             case "create":
-                console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"create\"");
+                //console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"create\"");
                 removeSession(data["Values"][0].split('@')[0], data["Values"][1].toString() + "\\" + data["Values"][0].split('@')[0]);
                 await wppconnect
                     .create({
@@ -51,7 +51,7 @@ io.sockets.on("connection", function (socket) {
                                         if (err != null) {
                                             //backdata.status = 500;
                                             //socket.emit("data", JSON.stringify(backdata));
-                                            console.log("I fucked his mom: " + err);
+                                            //console.log("I fucked his mom: " + err);
                                             //return null;
                                         }
                                     });
@@ -59,12 +59,12 @@ io.sockets.on("connection", function (socket) {
                         },
                         headless: false, // Headless chrome
                         devtools: false, // Open devtools by default
-                        useChrome: false, // If false will use Chromium instance
+                        useChrome: true, // If false will use Chromium instance
                         waitForLogin: (data["Values"][2].toString().toLowerCase() === 'true'),
                         debug: false, // Opens a debug session
                         logQR: false, // Logs QR automatically in terminal
                         browserWS: '', // If u want to use browserWSEndpoint
-                        browserArgs: [''], // Parameters to be added into the chrome browser instance
+                        browserArgs: ['--disable-site-isolation-trials', '--renderer-process-limit=2', '--enable-low-end-device-mode'], // Parameters to be added into the chrome browser instance
                         puppeteerOptions: {}, // Will be passed to puppeteer.launch
                         disableWelcome: true, // Option to disable the welcoming message which appears in the beginning
                         updatesLog: true, // Logs info updates automatically in terminal
@@ -82,9 +82,17 @@ io.sockets.on("connection", function (socket) {
                             backdataSub.value.push(state);
                             socket.emit("state", JSON.stringify(backdataSub));
                         });
-                        console.log("[" + data["Values"][0].split('@')[0] + "] - PID " + client.waPage.browser().process().pid);
-                        console.log("[" + data["Values"][0].split('@')[0] + "] - Path " + data["Values"][1].toString() + "\\" + data["Values"][0].split('@')[0]);
-                        console.log("[" + data["Values"][0].split('@')[0] + "] - \"create\" sucessful created");
+                        client.waitForQrCodeScan((qr) =>{
+                            const backdataSub = {
+                                status: "statusSession",
+                                value: []
+                            };
+                            backdataSub.value.push("qrCodeLoaded");
+                            socket.emit("state", JSON.stringify(backdataSub));
+                        })
+                        //console.log("[" + data["Values"][0].split('@')[0] + "] - PID " + client.waPage.browser().process().pid);
+                        //console.log("[" + data["Values"][0].split('@')[0] + "] - Path " + data["Values"][1].toString() + "\\" + data["Values"][0].split('@')[0]);
+                        //console.log("[" + data["Values"][0].split('@')[0] + "] - \"create\" sucessful created");
                         backdata.status = 200;
                         sessions.push({
                             name: data["Values"][0].split('@')[0],
@@ -96,13 +104,13 @@ io.sockets.on("connection", function (socket) {
                     .catch((erro) => {
                         backdata.status = 500;
                         backdata.value.push(erro);
-                        console.log("[" + data["Values"][0].split('@')[0] + "] - \"create\" not created with errors");
+                        //console.log("[" + data["Values"][0].split('@')[0] + "] - \"create\" not created with errors");
                         socket.emit("data", JSON.stringify(backdata));
                     });
                 break;
 
             case "logout":
-                console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"logout\"");
+                //console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"logout\"");
                 backdata.status = 200
                 await getSession(data["Values"][0].split('@')[0]).logout();
                 removeSession(data["Values"][0].split('@')[0], (data["Values"][1].toString().toLowerCase() === 'true'));
@@ -110,7 +118,7 @@ io.sockets.on("connection", function (socket) {
                 break;
 
             case "joinGroup":
-                console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"joinGroup\"");
+                //console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"joinGroup\"");
                 await getSession(data["Values"][0].split('@')[0])
                     .joinGroup(data["Values"][1])
                     .then((result) => {
@@ -126,7 +134,7 @@ io.sockets.on("connection", function (socket) {
                 break;
 
             case "waitForInChat":
-                console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"waitForInChat\"");
+                //console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"waitForInChat\"");
                 backdata.status = 200;
                 await getSession(data["Values"][0].split('@')[0]).waitForInChat();
                 backdata.value.push(true);
@@ -135,13 +143,13 @@ io.sockets.on("connection", function (socket) {
 
             case "free":
                 backdata.status = 200
-                console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"free\"");
+                //console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"free\"");
                 removeSession(data["Values"][0].split('@')[0], (data["Values"][1].toString().toLowerCase() === 'true'));
                 socket.emit("data", JSON.stringify(backdata));
                 break;
 
             case "checkValidPhone":
-                console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"checkValidPhone\"");
+                //console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"checkValidPhone\"");
                 await getSession(data["Values"][0].split('@')[0])
                     .checkNumberStatus(data["Values"][1])
                     .then((result) => {
@@ -158,7 +166,7 @@ io.sockets.on("connection", function (socket) {
 
             case "sendText":
                 if (data["Values"].length === 4) {
-                    console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"sendText\" with image to " + data["Values"][1].toString());
+                    //console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"sendText\" with image to " + data["Values"][1].toString());
                     await getSession(data["Values"][0].split('@')[0])
                         .sendImage(data["Values"][1], data["Values"][2], undefined, data["Values"][3])
                         .then((result) => {
@@ -172,7 +180,7 @@ io.sockets.on("connection", function (socket) {
                             socket.emit("data", JSON.stringify(backdata));
                         });
                 } else {
-                    console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"sendText\" to " + data["Values"][1].toString());
+                    //console.log("[" + data["Values"][0].split('@')[0] + "] - called function \"sendText\" to " + data["Values"][1].toString());
                     await getSession(data["Values"][0].split('@')[0])
                         .sendText(data["Values"][1], data["Values"][2])
                         .then((result) => {
@@ -208,7 +216,7 @@ function removeSession(name, removeDir) {
     if (index === -1) {
         if (fs.existsSync(removeDir) && !fs.existsSync(removeDir + ".data.json")) {
             fs.rmSync(removeDir, { recursive: true, force: true });
-            console.log("[" + name + "] - cache removed");
+            //console.log("[" + name + "] - cache removed");
         }
         return;
     }
@@ -216,14 +224,14 @@ function removeSession(name, removeDir) {
     const browserPID = sessions[index].value.waPage.browser().process().pid
     process.kill(browserPID);
     //sessions[index].value.close();
-    console.log("[" + name + "] - Close PID " + browserPID);
+    //console.log("[" + name + "] - Close PID " + browserPID);
     if (removeDir === true && fs.existsSync(sessions[index].path)) {
         if (!fs.existsSync(sessions[index].path + ".data.json")) {
             fs.rmSync(sessions[index].path, { recursive: true, force: true, maxRetries: 5, retryDelay: 2000 });
-            console.log("[" + name + "] - cache removed");
+            //console.log("[" + name + "] - cache removed");
         }
         else {
-            console.log("[" + name + "] - we cannot delete the cache, there is an authorization file");
+            //console.log("[" + name + "] - we cannot delete the cache, there is an authorization file");
         }
     }
 

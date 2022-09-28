@@ -8,6 +8,6 @@ public partial class Dashboard : ContentView
 	{
 		InitializeComponent();
 
-		this.BindingContext = new DashboardView();
+		this.BindingContext = new DashboardView(this);
 	}
 }

@@ -1,4 +1,6 @@
-﻿namespace MemuLib.Core;
+﻿using OpenQA.Selenium;
+
+namespace MemuLib.Core;
 
 public class Chrome
 {
@@ -10,22 +12,53 @@ public class Chrome
     /// <summary>
     /// Объявляем класс и инициализируем настройки
     /// </summary>
-    public Chrome()
+    public Chrome(string PathToCache)
     {
         var options = new ChromeOptions();
         var service = ChromeDriverService.CreateDefaultService();
         service.HideCommandPromptWindow = true;
         options.AddArgument("no-sandbox");
+        options.AddArgument($"--user-data-dir={PathToCache}");
         options.AddArgument("remote-debugging-port=0");
         options.AddArgument("disable-extensions");
         _webDriver = new ChromeDriver(service, options);
     }
 
     /// <summary>
-    /// Запуск страницы с QR кодом
+    /// Запуск страницы
     /// </summary>
-    public void Start() => _webDriver.Navigate().GoToUrl("https://web.whatsapp.com/");
-    
+    public void Start(string url) => _webDriver.Navigate().GoToUrl(url);
+
+    /// <summary>
+    /// Остановка работы
+    /// </summary>
+    public void Stop()
+    {
+        _webDriver.Close();
+        _webDriver.Dispose();
+    }
+
+    public async Task<IWebElement> FindElement(By by, bool check = true)
+    {
+        while (!IsElementExist(by) && check)
+            await Task.Delay(500);
+
+        return _webDriver.FindElement(by);
+    }
+
+    public bool IsElementExist(By by)
+    {
+        try
+        {
+            var element = _webDriver.FindElement(by);
+            return element.Displayed;
+        }
+        catch (NoSuchElementException)
+        {
+            return false;
+        }
+    }
+
     /// <summary>
     /// Устанавливаем размер окна хрома
     /// </summary>

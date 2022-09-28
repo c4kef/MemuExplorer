@@ -38,7 +38,7 @@
                                WidthRequest="25"
                                Margin="0,-2,0,0"
                                HeightRequest="25" />
-                        <Label Text="Всего:"
+                        <Label Text="Осталось:"
                                FontFamily="SegoeUI"
                                TextColor="{StaticResource White}"
                                FontSize="20"

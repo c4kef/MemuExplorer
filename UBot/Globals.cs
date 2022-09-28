@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using MemuLib.Core;
+using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace UBot
 {
@@ -11,6 +13,7 @@ namespace UBot
         public static DirectoryInfo TempDirectory { get; private set; }
         public static DirectoryInfo WarmedDirectory { get; private set; }
         public static DirectoryInfo LogoutDirectory { get; private set; }
+        public static DirectoryInfo BanDirectory { get; private set; }
         public static FileInfo SetupFile { get; private set; }
         public static Setup Setup { get; private set; }
         private static object Locker { get; set; }
@@ -21,6 +24,9 @@ namespace UBot
             TempDirectory = Directory.CreateDirectory("Temp");
             WarmedDirectory = Directory.CreateDirectory("Warmed");
             LogoutDirectory = Directory.CreateDirectory("Logout");
+            BanDirectory = Directory.CreateDirectory("Bans");
+
+            MemuLib.Globals.IsLog = true;
 
             SetupFile = new FileInfo($@"{DataDirectory.FullName}\{NameSetupFile}");
 
@@ -53,7 +59,7 @@ namespace UBot
                         accounts.Add((phone, accountDirectory));
                 }
 
-                return accounts.ToArray();
+                return accounts.OrderBy(x => new Random().Next()).ToArray();
             }
         }
 
@@ -69,13 +75,23 @@ namespace UBot
 
                     return true;
                 }
-                catch
+                catch(Exception ex)
                 {
+                    Log.Write($"Cant move directory: {ex.Message}");
                     await Task.Delay(1_000);
                 }
             }
 
             return false;
+        }
+
+        public static void KillChromeDriverProcesses()
+        {
+            Process[] chromeDriverProcesses = Process.GetProcessesByName("chromedriver");
+            foreach (var chromeDriverProcess in chromeDriverProcesses)
+            {
+                chromeDriverProcess.Kill();
+            }
         }
     }
 
@@ -91,6 +107,7 @@ namespace UBot
         public string PathToFolderAccounts;
         public string PathToFileTextWarm;
         public string PathToFileTextPeopleWarm;
+        public string PathToFilePhones;
         public int? PinCodeAccount;
 
         public int? CountMessages;
@@ -100,7 +117,5 @@ namespace UBot
 
         public int? DelaySendMessageFrom;
         public int? DelaySendMessageTo;
-
-        public string NumbersForNewsletter;
     }
 }

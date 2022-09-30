@@ -16,7 +16,7 @@
                    VerticalOptions="Center"
                    HorizontalOptions="Center" />
 
-            <Label Text="Доброе утро"
+            <Label Text="{Binding Text}"
                    FontFamily="SegoeUI"
                    TextColor="{StaticResource White}"
                    FontSize="36"

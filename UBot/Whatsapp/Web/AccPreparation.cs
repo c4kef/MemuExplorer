@@ -31,23 +31,11 @@ public class AccPreparation
     private FileInfo _logFile;
     private ActionProfileWork _currentProfile;
 
+    public bool IsStop;
+
     public async Task Run(string message, ActionProfileWork actionProfileWork)
     {
-        /*var client = new WClient("905303198165");
-        await client.Init(false, @"C:\Users\artem\source\repos\MemuExplorer\Data\Accounts\905303198165\905303198165");
-
-        var text = DashboardView.GetInstance().Text.Split('\r').ToList();
-        var file = text.TakeLast(1).ToArray()[0];
-
-        var isFile = !string.IsNullOrEmpty(file) && File.Exists(file);
-
-        if (isFile)
-            text.RemoveAll(str => str.Contains(file));
-
-        if (await client.CheckValidPhone("79772801086"))
-            await client.SendText("79772801086", string.Join("\\n", text), isFile ? new FileInfo(file) : null);*/
-        // await client.SendText("79772801086", "Привет детка", new FileInfo(@"C:\Users\artem\Downloads\preview.gif"));
-        // await client.JoinGroup("Fxf71ILrE7aLJQIYJ7GvNx");
+        IsStop = false;
         _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_prep.txt");
         _logFile.Create().Close();
 
@@ -57,7 +45,7 @@ public class AccPreparation
         {
             var tasks = new List<Task>();
 
-            while (true)
+            while (!IsStop)
             {
                 DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json")).ToArray().Length;
 
@@ -85,6 +73,7 @@ public class AccPreparation
     {
         _logFile = null;
         _accountsNotFound = false;
+        IsStop = false;
 
         _usedPhones.Clear();
         _activePhones.Clear();
@@ -94,6 +83,9 @@ public class AccPreparation
     {
         var lastCountThreads = Globals.Setup.CountThreads;
     getAccount:
+        if (IsStop)
+            return;
+
         var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
 
         if (result.Length == 0)

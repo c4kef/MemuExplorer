@@ -51,7 +51,7 @@ public class WaClient
         await _mem.Stop();
     }
 
-    public async Task<bool> Register()
+    /*public async Task<bool> Register()
     {
         try
         {
@@ -60,44 +60,44 @@ public class WaClient
             await _mem.Shell($"pm clear {PackageName}");
             await _mem.RunApk(PackageName);
 
-            if (!await _mem.ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']"))
+            if (!await _mem.ExistsElement("text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\""))
                 return false;
 
-            await _mem.Click("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']");
+            await _mem.Click("text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"");
 
             var obj = await OnlineSim.Create(codeCountry, "WhatsApp");
 
             if (obj is null)
                 return false;
 
-            if (!await _mem.ExistsElement("//node[@text='номер тел.']"))
+            if (!await _mem.ExistsElement("text=\"номер тел.\""))
                 return false;
 
-            await _mem.ClearInput($"//node[@resource-id='{PackageName}:id/registration_cc']");
-            await _mem.Input($"//node[@resource-id='{PackageName}:id/registration_cc']", codeCountry);
+            await _mem.ClearInput($"resource-id=\"{PackageName}:id/registration_cc\"");
+            await _mem.Input($"resource-id=\"{PackageName}:id/registration_cc\"", codeCountry);
 
-            /*await _mem.Click($"//node[@resource-id='{PackageName}:id/registration_country']");
-            await _mem.Click($"//node[@resource-id='{PackageName}:id/menuitem_search']");
-            await _mem.Input($"//node[@resource-id='{PackageName}:id/search_src_text']", "Sierra");
-            await _mem.Click("//node[@text='Сьерра-Леоне']");*/
+            await _mem.Click($"resource-id=\"{PackageName}:id/registration_country\"");
+            await _mem.Click($"resource-id=\"{PackageName}:id/menuitem_search\"");
+            await _mem.Input($"resource-id=\"{PackageName}:id/search_src_text\"", "Sierra");
+            await _mem.Click("text=\"Сьерра-Леоне\"");
 
             var phone = (await obj!.GetMessage())["number"]!.ToString().Remove(0, codeCountry.Length + 1);
 
-            await _mem.Input("//node[@text='номер тел.']", phone);
+            await _mem.Input("text=\"номер тел.\"", phone);
 
-            await _mem.Click("//node[@text='ДАЛЕЕ']");
+            await _mem.Click("text=\"ДАЛЕЕ\"");
 
-            if (!await _mem.ExistsElement("//node[@text='ИЗМЕНИТЬ']"))
+            if (!await _mem.ExistsElement("text=\"ИЗМЕНИТЬ\""))
                 return false;
 
-            await _mem.Click("//node[@text='OK']");
+            await _mem.Click("text=\"OK\"");
 
-            if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
+            if (await _mem.ExistsElement("resource-id=\"android:id/message\""))
                 return false;
 
-            if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
+            if (await _mem.ExistsElement("resource-id=\"android:id/aerr_restart\""))
             {
-                await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
+                await _mem.Click("resource-id=\"android:id/aerr_restart\"");
                 return false;
             }
 
@@ -127,37 +127,37 @@ public class WaClient
 
             await Task.Delay(3_500);
 
-            if (await _mem.ExistsElement("//node[@resource-id='android:id/message']"))
+            if (await _mem.ExistsElement("resource-id=\"android:id/message\""))
                 return false; //To-Do
 
-            if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
+            if (await _mem.ExistsElement("resource-id=\"android:id/aerr_restart\""))
             {
-                await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
+                await _mem.Click("resource-id=\"android:id/aerr_restart\"");
                 return false;
             }
 
-            if (await _mem.ExistsElement("//node[@text='Введите своё имя']"))
+            if (await _mem.ExistsElement("text=\"Введите своё имя\""))
             {
-                await _mem.Input("//node[@text='Введите своё имя']", "Valeron3000");
-                await _mem.Click("//node[@text='ДАЛЕЕ']");
+                await _mem.Input("text=\"Введите своё имя\"", "Valeron3000");
+                await _mem.Click("text=\"ДАЛЕЕ\"");
             }
-            else if (await _mem.ExistsElement("//node[@text='Название компании']"))
+            else if (await _mem.ExistsElement("text=\"Название компании\""))
             {
-                await _mem.Input("//node[@text='Название компании']", MemuLib.Globals.RandomString(new Random().Next(5, 10), true).ToLower());
-                await _mem.Click("//node[@text='Вид деятельности']");
-                await _mem.Click("//node[@text='Одежда']");
-                await _mem.Click("//node[@text='ДАЛЕЕ']");
+                await _mem.Input("text=\"Название компании\"", MemuLib.Globals.RandomString(new Random().Next(5, 10), true).ToLower());
+                await _mem.Click("text=\"Вид деятельности\"");
+                await _mem.Click("text=\"Одежда\"");
+                await _mem.Click("text=\"ДАЛЕЕ\"");
             }
 
-            if (await _mem.ExistsElement("//node[@resource-id='android:id/aerr_restart']"))
+            if (await _mem.ExistsElement("resource-id=\"android:id/aerr_restart\""))
             {
-                await _mem.Click("//node[@resource-id='android:id/aerr_restart']");
+                await _mem.Click("resource-id=\"android:id/aerr_restart\"");
                 return false;
             }
 
             var count = 0;
 
-            while (await _mem.ExistsElement("//node[@text='Инициализация…']") || await _mem.ExistsElement("//node[@text='ОК']") || await _mem.ExistsElement("//node[@text='OK']"))
+            while (await _mem.ExistsElement("text=\"Инициализация…\"") || await _mem.ExistsElement("text=\"ОК\"") || await _mem.ExistsElement("text=\"OK\""))
             {
                 ++count;
                 await Task.Delay(1_500);
@@ -187,14 +187,14 @@ public class WaClient
             Log.Write(ex.Message);
             return false;
         }
-        /*await _mem.StopApk(PackageName);
+        await _mem.StopApk(PackageName);
         await _mem.Shell($"pm clear {PackageName}");
         await _mem.RunApk(PackageName);
 
-        await _mem.Click("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']");
+        await _mem.Click("text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"");
 
-        await _mem.ClearInput("//node[@resource-id='com.whatsapp.w4b:id/registration_cc']");
-        await _mem.Input("//node[@resource-id='com.whatsapp.w4b:id/registration_cc']", "232");
+        await _mem.ClearInput("resource-id=\"com.whatsapp.w4b:id/registration_cc\"");
+        await _mem.Input("resource-id=\"com.whatsapp.w4b:id/registration_cc\"", "232");
 
         var service = await OnlineSim.Create("232", "WhatsApp");
         
@@ -203,15 +203,15 @@ public class WaClient
 
         var phone = (await service!.GetMessage())["number"]!.ToString().Remove(0, 4);
 
-        await _mem.ClearInput("//node[@resource-id='com.whatsapp.w4b:id/registration_phone']");
-        await _mem.Input("//node[@resource-id='com.whatsapp.w4b:id/registration_phone']", phone);
-        await _mem.Click("//node[@resource-id='com.whatsapp.w4b:id/registration_submit']");
-        await _mem.Click("//node[@text='OK']");
+        await _mem.ClearInput("resource-id=\"com.whatsapp.w4b:id/registration_phone\"");
+        await _mem.Input("resource-id=\"com.whatsapp.w4b:id/registration_phone\"", phone);
+        await _mem.Click("resource-id=\"com.whatsapp.w4b:id/registration_submit\"");
+        await _mem.Click("text=\"OK\"");
 
         await Task.Delay(3_500);
         var dump = _mem.DumpScreen();
 
-        if (!await _mem.ExistsElement("//node[@resource-id='com.whatsapp.w4b:id/verify_sms_code_input']", dump, false) && dump != null)
+        if (!await _mem.ExistsElement("resource-id=\"com.whatsapp.w4b:id/verify_sms_code_input\"", dump, false) && dump != null)
             goto repeat;
 
         var countTryToGetCode = 0;
@@ -235,23 +235,23 @@ public class WaClient
         await _mem.Input(code);
 
         MessageBox.Show((await IsValid()).ToString());
-        return true;*/
-    }
+        return true;
+    }*/
 
     async Task<bool> IsValid()
     {
-        var dump = _mem.DumpScreen();
+        var dump = await _mem.DumpScreen();
 
-        return !await _mem.ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", dump, false) &&
-               !await _mem.ExistsElement("//node[@text='ДАЛЕЕ']", dump, false) &&
-               !await _mem.ExistsElement("//node[@text='Перезапустить приложение']", dump, false) &&
-               !await _mem.ExistsElement("//node[@text='Закрыть приложение']", dump, false) &&
-               !await _mem.ExistsElement("//node[@content-desc='Неверный номер?']", dump, false) &&
-               !await _mem.ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", dump, false) &&
-               !await _mem.ExistsElement("//node[@text='WA Business']", dump, false) &&
-               !await _mem.ExistsElement("//node[@text='WhatsApp']", dump, false) &&
-               !await _mem.ExistsElement("//node[@resource-id='android:id/progress']", dump, false) &&
-               !await _mem.ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", dump, false);
+        return !await _mem.ExistsElement("text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"", dump, false) &&
+               !await _mem.ExistsElement("text=\"ДАЛЕЕ\"", dump, false) &&
+               !await _mem.ExistsElement("text=\"Перезапустить приложение\"", dump, false) &&
+               !await _mem.ExistsElement("text=\"Закрыть приложение\"", dump, false) &&
+               !await _mem.ExistsElement("content-desc=\"Неверный номер?\"", dump, false) &&
+               !await _mem.ExistsElement("text=\"ЗАПРОСИТЬ РАССМОТРЕНИЕ\"", dump, false) &&
+               !await _mem.ExistsElement("text=\"WA Business\"", dump, false) &&
+               !await _mem.ExistsElement("text=\"WhatsApp\"", dump, false) &&
+               !await _mem.ExistsElement("resource-id=\"android:id/progress\"", dump, false) &&
+               !await _mem.ExistsElement("text=\"ПОДТВЕРДИТЬ\"", dump, false);
     }
 
     public async Task<bool> LoginFile([Optional] string path, [Optional] string name)
@@ -271,49 +271,49 @@ public class WaClient
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);
 
-            if (!await _mem.ExistsElement("//node[@text='ПРОПУСТИТЬ']"))
+            if (!await _mem.ExistsElement("text=\"ПРОПУСТИТЬ\""))
                 goto s1;
 
-            await _mem.Click("//node[@text='ПРОПУСТИТЬ']");
+            await _mem.Click("text=\"ПРОПУСТИТЬ\"");
             await Task.Delay(2_000);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);
 
         s1:
-            if (!await _mem.ExistsElement($"//node[@resource-id='{PackageName}:id/registration_name']"))
+            if (!await _mem.ExistsElement($"resource-id=\"{PackageName}:id/registration_name\""))
                 goto s2;
 
-            await _mem.Input("//node[@text='Введите своё имя']", name.Replace(' ', 'I'));
-            await _mem.Click("//node[@text='ДАЛЕЕ']");
+            await _mem.Input("text=\"Введите своё имя\"", name.Replace(' ', 'I'));
+            await _mem.Click("text=\"ДАЛЕЕ\"");
             await Task.Delay(2_000);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);
 
         s2:
-            if (!await _mem.ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
+            if (!await _mem.ExistsElement("text=\"Выберите частоту резервного копирования\""))
                 goto s3;
 
-            await _mem.Click("//node[@text='Выберите частоту резервного копирования']");
-            await _mem.Click("//node[@text='Никогда']");
-            await _mem.Click("//node[@text='ГОТОВО']");
+            await _mem.Click("text=\"Выберите частоту резервного копирования\"");
+            await _mem.Click("text=\"Никогда\"");
+            await _mem.Click("text=\"ГОТОВО\"");
             await Task.Delay(2_000);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);
 
         s3:
-            if (!await _mem.ExistsElement("//node[@text='НЕ СЕЙЧАС']"))
+            if (!await _mem.ExistsElement("text=\"НЕ СЕЙЧАС\""))
                 goto s4;
 
-            await _mem.Click("//node[@text='НЕ СЕЙЧАС']");
+            await _mem.Click("text=\"НЕ СЕЙЧАС\"");
             await Task.Delay(2_000);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);
 
         s4:
-            if (!await _mem.ExistsElement($"//node[@resource-id='{PackageName}:id/code']"))
+            if (!await _mem.ExistsElement($"resource-id=\"{PackageName}:id/code\""))
                 return true;
 
-            await _mem.Input($"//node[@resource-id='{PackageName}:id/code']", "120638");
+            await _mem.Input($"resource-id=\"{PackageName}:id/code\"", "120638");
             await Task.Delay(2_000);
             await _mem.StopApk(PackageName);
             await _mem.RunApk(PackageName);
@@ -331,10 +331,10 @@ public class WaClient
         await _mem.ClearContacts();
         await _mem.ImportContacts(path);
         
-        if (!await _mem.ExistsElement("//node[@text='ОК']"))
+        if (!await _mem.ExistsElement("text=\"ОК\""))
             return false;
 
-        await _mem.Click("//node[@text='ОК']");
+        await _mem.Click("text=\"ОК\"");
 
         await _mem.StopApk(PackageName);
         await _mem.RunApk(PackageName);
@@ -356,18 +356,19 @@ public class WaClient
         
         for (var i = 0; i < 3; i++)
         {
-            if (!await _mem.ExistsElement("//node[@content-desc='Отправить']"))
+            if (!await _mem.ExistsElement("content-desc=\"Отправить\""))
             {
-                if (await _mem.ExistsElement("//node[@text='ОК']"))
-                    await _mem.Click("//node[@text='ОК']");
+                var document = await _mem.DumpScreen();
+                if (await _mem.ExistsElement("text=\"ОК\"", document))
+                    await _mem.Click("text=\"ОК\"", document);
 
-                if (await _mem.ExistsElement("//node[@text='OK']"))
-                    await _mem.Click("//node[@text='OK']");
+                if (await _mem.ExistsElement("text=\"OK\"", document))
+                    await _mem.Click("text=\"OK\"", document);
              
                 continue;
             }
 
-            await _mem.Click("//node[@content-desc='Отправить']");
+            await _mem.Click("content-desc=\"Отправить\"");
             isSended = true;
             break;
         }

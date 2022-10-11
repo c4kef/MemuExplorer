@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using UBot.Pages.Dialogs;
 using UBot.Pages.User;
 using UBot.Views.User;
+using WPP4DotNet;
 
 namespace UBot.Whatsapp.Web;
 
@@ -49,12 +50,12 @@ public class Newsletter
         DashboardView.GetInstance().AllTasks = _contacts.Length;
 
         for (var i = 0; i < Globals.Setup.CountThreads; i++)
-        {
-            var task = Handler();
-            tasks.Add(task);
-        }
+            tasks.Add(Task.Run(async () => await Handler()));
 
         Task.WaitAll(tasks.ToArray(), -1);
+
+        if (IsStop)
+            File.WriteAllLines(Globals.Setup.PathToFilePhones, _contacts.Where(cont => !_usedPhonesUsers.Contains(cont)));
 
         tasks.Clear();
 
@@ -115,6 +116,9 @@ public class Newsletter
 
             try
             {
+                if (Globals.Setup.RemoveAvatar)
+                    await client.Web!.RemoveAvatar();
+
                 while (!IsStop)
                 {
                     peopleReal = GetFreeNumberUser();

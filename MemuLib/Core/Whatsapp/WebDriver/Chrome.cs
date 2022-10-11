@@ -1,6 +1,4 @@
-﻿using OpenQA.Selenium.Chrome;
-using WebDriverManager;
-using WebDriverManager.DriverConfigs.Impl;
+﻿using PuppeteerSharp;
 
 namespace WPP4DotNet.WebDriver
 {
@@ -9,7 +7,7 @@ namespace WPP4DotNet.WebDriver
         /// <summary>
         /// 
         /// </summary>
-        ChromeOptions ChromeOpt;
+        LaunchOptions ChromeOpt;
 
         /// <summary>
         /// 
@@ -18,113 +16,78 @@ namespace WPP4DotNet.WebDriver
         /// <param name="path"></param>
         public ChromeWebApp(bool hidden = true, string path = "")
         {
-            new DriverManager().SetUpDriver(new ChromeConfig());
-            ChromeOpt = new ChromeOptions() { LeaveBrowserRunning = false };
-            ChromeOpt.AddArguments("--log-level=3");
-            ChromeOpt.AddArguments("--no-default-browser-check");
-            ChromeOpt.AddArguments("--disable-site-isolation-trials");
-            ChromeOpt.AddArguments("--no-experiments");
-            ChromeOpt.AddArguments("--ignore-gpu-blacklist");
-            ChromeOpt.AddArguments("--ignore-ssl-errors");
-            ChromeOpt.AddArguments("--ignore-certificate-errors");
-            ChromeOpt.AddArguments("--ignore-certificate-errors-spki-list");
-            ChromeOpt.AddArguments("--disable-gpu");
-            ChromeOpt.AddArguments("--disable-extensions");
-            ChromeOpt.AddArguments("--disable-default-apps");
-            ChromeOpt.AddArguments("--enable-features=NetworkService");
-            ChromeOpt.AddArguments("--disable-setuid-sandbox");
-            ChromeOpt.AddArguments("--no-sandbox");
-            ChromeOpt.AddArguments("--disable-webgl");
-            ChromeOpt.AddArguments("--disable-threaded-animation");
-            ChromeOpt.AddArguments("--disable-threaded-scrolling");
-            ChromeOpt.AddArguments("--disable-in-process-stack-traces");
-            ChromeOpt.AddArguments("--disable-histogram-customizer");
-            ChromeOpt.AddArguments("--disable-gl-extensions");
-            ChromeOpt.AddArguments("--disable-composited-antialiasing");
-            ChromeOpt.AddArguments("--disable-canvas-aa");
-            ChromeOpt.AddArguments("--disable-3d-apis");
-            ChromeOpt.AddArguments("--disable-accelerated-2d-canvas");
-            ChromeOpt.AddArguments("--disable-accelerated-jpeg-decoding");
-            ChromeOpt.AddArguments("--disable-accelerated-mjpeg-decode");
-            ChromeOpt.AddArguments("--disable-app-list-dismiss-on-blur");
-            ChromeOpt.AddArguments("--disable-accelerated-video-decode");
-            ChromeOpt.AddArguments("--disable-infobars");
-            ChromeOpt.AddArguments("--ignore-certifcate-errors");
-            ChromeOpt.AddArguments("--ignore-certifcate-errors-spki-list");
-            ChromeOpt.AddArguments("--disable-dev-shm-usage");
-            ChromeOpt.AddArguments("--disable-gl-drawing-for-tests");
-            //ChromeOpt.AddArguments("--incognito");
-            ChromeOpt.AddArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
-            ChromeOpt.AddArguments("--disable-web-security");
-            ChromeOpt.AddArguments("--aggressive-cache-discard");
-            ChromeOpt.AddArguments("--disable-cache");
-            ChromeOpt.AddArguments("--disable-application-cache");
-            ChromeOpt.AddArguments("--disable-offline-load-stale-cache");
-            ChromeOpt.AddArguments("--disk-cache-size=0");
-            ChromeOpt.AddArguments("--disable-background-networking");
-            ChromeOpt.AddArguments("--disable-sync");
-            ChromeOpt.AddArguments("--disable-translate");
-            ChromeOpt.AddArguments("--hide-scrollbars");
-            ChromeOpt.AddArguments("--metrics-recording-only");
-            ChromeOpt.AddArguments("--mute-audio");
-            ChromeOpt.AddArguments("--no-first-run");
-            ChromeOpt.AddArguments("--safebrowsing-disable-auto-update");
-            ChromeOpt.AddArguments("--no-zygote");
-            ChromeOpt.AddArguments("--window-size=800,600");
-            ChromeOpt.AddExcludedArgument("disable-notifications");
-            ChromeOpt.AddExcludedArgument("enable-automation");
-            if (!string.IsNullOrEmpty(path))
-            {
-                ChromeOpt.AddArguments("user-data-dir=" + path);
-            }
-            if (hidden)
-            {
-                ChromeOpt.AddArguments("--headless");
-            }
+            ChromeOpt = new LaunchOptions();
+
+            ChromeOpt.ExecutablePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
+            ChromeOpt.Headless = hidden;
+            ChromeOpt.UserDataDir = path;
+
+            var args = new List<string>();
+            args.Add("--log-level=3");
+            args.Add("--no-default-browser-check");
+            args.Add("--disable-site-isolation-trials");
+            args.Add("--no-experiments");
+            args.Add("--ignore-gpu-blacklist");
+            args.Add("--ignore-ssl-errors");
+            args.Add("--ignore-certificate-errors");
+            args.Add("--ignore-certificate-errors-spki-list");
+            args.Add("--disable-gpu");
+            args.Add("--disable-extensions");
+            args.Add("--disable-default-apps");
+            args.Add("--enable-features=NetworkService");
+            args.Add("--disable-setuid-sandbox");
+            args.Add("--no-sandbox");
+            args.Add("--disable-webgl");
+            args.Add("--disable-threaded-animation");
+            args.Add("--disable-threaded-scrolling");
+            args.Add("--disable-in-process-stack-traces");
+            args.Add("--disable-histogram-customizer");
+            args.Add("--disable-gl-extensions");
+            args.Add("--disable-composited-antialiasing");
+            args.Add("--disable-canvas-aa");
+            args.Add("--disable-3d-apis");
+            args.Add("--disable-accelerated-2d-canvas");
+            args.Add("--disable-accelerated-jpeg-decoding");
+            args.Add("--disable-accelerated-mjpeg-decode");
+            args.Add("--disable-app-list-dismiss-on-blur");
+            args.Add("--disable-accelerated-video-decode");
+            args.Add("--disable-infobars");
+            args.Add("--ignore-certifcate-errors");
+            args.Add("--ignore-certifcate-errors-spki-list");
+            args.Add("--disable-dev-shm-usage");
+            args.Add("--disable-gl-drawing-for-tests");
+            //args.Add("--incognito");
+            //args.Add("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
+            args.Add("--disable-web-security");
+            args.Add("--aggressive-cache-discard");
+            args.Add("--disable-cache");
+            args.Add("--disable-application-cache");
+            args.Add("--disable-offline-load-stale-cache");
+            args.Add("--disk-cache-size=0");
+            args.Add("--disable-background-networking");
+            args.Add("--disable-sync");
+            args.Add("--disable-translate");
+            args.Add("--hide-scrollbars");
+            args.Add("--metrics-recording-only");
+            args.Add("--mute-audio");
+            args.Add("--no-first-run");
+            args.Add("--safebrowsing-disable-auto-update");
+            args.Add("--no-zygote");
+            args.Add("--window-size=800,600");
+
+            ChromeOpt.Args = args.ToArray();
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public override void StartSession()
+        public override async Task StartSession()
         {
             CheckDriverStarted();
-            var driverService = ChromeDriverService.CreateDefaultService();
-            driverService.HideCommandPromptWindow = true;
-   
-            var drive = new ChromeDriver(driverService, ChromeOpt);
 
-            base.StartSession(drive);
-        }
+            var drive = await Puppeteer.LaunchAsync(ChromeOpt);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="path"></param>
-        public void AddExtensao(string path)
-        {
-            CheckDriverStarted();
-            ChromeOpt.AddExtension(path);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="base64"></param>
-        public void AddExtensaoBase64(string base64)
-        {
-            CheckDriverStarted();
-            ChromeOpt.AddEncodedExtension(base64);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="arg"></param>
-        public void AddArgumentoInicial(params string[] arg)
-        {
-            CheckDriverStarted();
-            ChromeOpt.AddArguments(arg);
+            await base.StartSession(drive);
         }
     }
 }

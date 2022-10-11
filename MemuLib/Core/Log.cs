@@ -25,8 +25,12 @@ public static class Log
 
             if (DataWrites.Count == 0) continue;
 
-            await File.AppendAllTextAsync(DataWrites[0].Path, DataWrites[0].Text);
-            DataWrites.RemoveAt(0);
+            try
+            {
+                await File.AppendAllTextAsync(DataWrites[0].Path, DataWrites[0].Text);
+                DataWrites.RemoveAt(0);
+            }
+            catch { }
         }
     }
 

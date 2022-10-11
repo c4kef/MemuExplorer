@@ -121,6 +121,12 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.DelaySendMessageTo, value);
         }
 
+        public bool RemoveAvatar
+        {
+            get => Globals.Setup.RemoveAvatar;
+            set => SetProperty(ref Globals.Setup.RemoveAvatar, value);
+        }
+
         #endregion
 
         public static SettingsView GetInstance() => _instance;

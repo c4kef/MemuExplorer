@@ -3,24 +3,6 @@
 public static class Memu
 {
     /// <summary>
-    /// Запуск ADB сервера
-    /// </summary>
-    /// <exception cref="Exception">ошибка при запуске, допустим зависло или х** его знает что еще</exception>
-    public static void RunAdbServer()
-    {
-        if (AdbServer.Instance.GetStatus().IsRunning)
-            return;
-
-        var server = new AdbServer();
-        var result = server.StartServer($@"{Settings.BaseDir}\adb.exe", false);
-
-        if (result != StartServerResult.Started)
-            throw new Exception("Can't start adb server");
-        
-        Log.Write("ADB server is started!");
-    }
-
-    /// <summary>
     /// Проверка на существование машины
     /// </summary>
     /// <param name="index">индекс машины</param>

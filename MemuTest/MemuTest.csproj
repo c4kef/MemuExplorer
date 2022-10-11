@@ -13,6 +13,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="PuppeteerSharp" Version="8.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Reference Include="SocketIO.Client, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
         <HintPath>..\Libs\SocketIO.Client.dll</HintPath>
       </Reference>

@@ -3,12 +3,11 @@ global using System.Text;
 global using System.Drawing;
 global using System.Net;
 global using System.Text.RegularExpressions;
-global using OpenQA.Selenium.Chrome;
-global using AdvancedSharpAdbClient;
 global using Newtonsoft.Json;
 global using System.Runtime.InteropServices;
 global using MemuLib.Core.Contacts;
 global using Newtonsoft.Json.Linq;
+
 namespace MemuLib;
 
 public static class Globals

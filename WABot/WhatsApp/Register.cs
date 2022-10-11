@@ -65,10 +65,10 @@ public class Register
 
         while (Globals.Devices.Where(device => device.Index == clientIndex).ToArray()[0].IsActive && !IsStop)
         {
-            if (await client.Register())
+            /*if (await client.Register())
                 ++Dashboard.GetInstance().CompletedTasks;
             else
-                ++Dashboard.GetInstance().BannedAccounts;
+                ++Dashboard.GetInstance().BannedAccounts;*/
 
             Dashboard.GetInstance().CountTasks++;
         }

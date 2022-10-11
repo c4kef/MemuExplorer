@@ -14,6 +14,7 @@ public static class MemuCmd
         cmd.StartInfo.RedirectStandardOutput = true;
         cmd.StartInfo.CreateNoWindow = true;
         cmd.StartInfo.UseShellExecute = false;
+        cmd.StartInfo.StandardOutputEncoding = Encoding.UTF8;
         cmd.StartInfo.Arguments = arg;
         cmd.StartInfo.WorkingDirectory = Settings.BaseDir;
         cmd.Start();

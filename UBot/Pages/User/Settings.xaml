@@ -219,6 +219,18 @@
                     <VerticalStackLayout Spacing="9"
                                          Margin="0,18,0,0">
 
+                        <HorizontalStackLayout>
+                            <Label Text="Уд. Аватар"
+                                   FontFamily="SegoeUI"
+                                   TextColor="{StaticResource White}"
+                                   FontSize="18"
+                                   Margin="5,0,0,0"
+                                   HorizontalOptions="Start" />
+                            <CheckBox Margin="5,-5,0,0"
+                                      CheckedChanged="CheckboxChanged"
+                                      IsChecked="{Binding RemoveAvatar}" />
+                        </HorizontalStackLayout>
+
                         <VerticalStackLayout>
                             <Label Text="Сообщений"
                                    FontFamily="SegoeUI"
@@ -246,7 +258,6 @@
                                 </Entry>
                             </Border>
                         </VerticalStackLayout>
-
 
                         <VerticalStackLayout>
                             <Label Text="Потоков"

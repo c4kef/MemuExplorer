@@ -36,7 +36,7 @@ public class WClient
     public async Task Init(bool waitQr, string pathToWeb)
     {
         _wpp = new ChromeWebApp(false, pathToWeb) as IWpp;
-        _wpp.StartSession();
+        await _wpp.StartSession();
 
         var timerLoading = 0;
 
@@ -123,7 +123,7 @@ public class WClient
     /// </summary>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>
-    public void Free() => _wpp.Finish();
+    public async void Free() => await _wpp.Finish();
 
     /// <summary>
     /// Проверяет контакт на наличие Whatsapp
@@ -135,7 +135,14 @@ public class WClient
         if (!await IsConnected())
             throw new Exception($"CheckValidPhone: client has disconected");
 
-        return !string.IsNullOrEmpty(await _wpp.ContactGetStatus($"{phone.Replace("+", string.Empty)}@c.us"));
+        return true;//!string.IsNullOrEmpty(await _wpp.ContactGetStatus($"{phone.Replace("+", string.Empty)}@c.us"));To-Do
+    }
+
+    public async Task RemoveAvatar()
+    {
+        if (!await IsConnected())
+            throw new Exception($"RemoveAvatar: client has disconected");
+
     }
 
     /// <summary>

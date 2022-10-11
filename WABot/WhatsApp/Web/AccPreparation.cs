@@ -430,8 +430,8 @@ public class AccPreparation
 
                 await Task.Delay(3_000);
 
-                if (await client.GetInstance().ExistsElement("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']"))
-                    await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
+                if (await client.GetInstance().ExistsElement("text=\"ПРИВЯЗКА УСТРОЙСТВА\""))
+                    await client.GetInstance().Click("text=\"ПРИВЯЗКА УСТРОЙСТВА\"");
 
                 try
                 {
@@ -449,19 +449,19 @@ public class AccPreparation
 
                 await client.Web!.Free();
 
-                if (await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", isWait: false))
+                if (await client.GetInstance().ExistsElement("text=\"ПОДТВЕРДИТЬ\"", isWait: false))
                     return false;
 
-                if (await client.GetInstance().ExistsElement("//node[@text='OK']", isWait: false))
+                if (await client.GetInstance().ExistsElement("text=\"OK\"", isWait: false))
                 {
-                    //await client.GetInstance().Click("//node[@text='OK']");
+                    //await client.GetInstance().Click("text=\"OK\"");
                     ++i;
 
-                    if (await client.GetInstance().ExistsElement("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']"))
+                    if (await client.GetInstance().ExistsElement("text=\"ПРИВЯЗКА УСТРОЙСТВА\""))
                     {
                         await SetZero(client.Web);
                         //await Task.Delay(1_000);
-                        //await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
+                        //await client.GetInstance().Click("text=\"ПРИВЯЗКА УСТРОЙСТВА\"");
                     }
 
                     await client.GetInstance().StopApk(c1.PackageName);
@@ -484,10 +484,10 @@ public class AccPreparation
 
                 await Task.Delay(3_000);
                 //resource-id="com.whatsapp.w4b:id/device_name_edit_text"
-                if (await client.GetInstance().ExistsElement("//node[@resource-id='com.whatsapp.w4b:id/device_name_edit_text']"))
+                if (await client.GetInstance().ExistsElement("resource-id=\"com.whatsapp.w4b:id/device_name_edit_text\""))
                 {
-                    await client.GetInstance().Input("//node[@resource-id='com.whatsapp.w4b:id/device_name_edit_text']", _names[new Random().Next(0, _names.Length)].Replace(' ', 'I'));
-                    await client.GetInstance().Click("//node[@text='СОХРАНИТЬ']");
+                    await client.GetInstance().Input("resource-id=\"com.whatsapp.w4b:id/device_name_edit_text\"", _names[new Random().Next(0, _names.Length)].Replace(' ', 'I'));
+                    await client.GetInstance().Click("text=\"СОХРАНИТЬ\"");
                 }
 
                 client.Web.RemoveQueue();
@@ -532,81 +532,81 @@ public class AccPreparation
 
         async Task MoveToScan(WaClient client, bool isWaitQueue)
         {
-            if (await client.GetInstance().ExistsElement("//node[@text='НЕ СЕЙЧАС']", isWait: false))
+            if (await client.GetInstance().ExistsElement("text=\"НЕ СЕЙЧАС\"", isWait: false))
             {
-                await client.GetInstance().Click("//node[@text='НЕ СЕЙЧАС']");
+                await client.GetInstance().Click("text=\"НЕ СЕЙЧАС\"");
                 await Task.Delay(500);
             }
 
-            if (await client.GetInstance().ExistsElement("//node[@text='Выберите частоту резервного копирования']"))
+            if (await client.GetInstance().ExistsElement("text=\"Выберите частоту резервного копирования\""))
             {
-                await client.GetInstance().Click("//node[@text='Выберите частоту резервного копирования']");
-                await client.GetInstance().Click("//node[@text='Никогда']");
-                await client.GetInstance().Click("//node[@text='ГОТОВО']");
+                await client.GetInstance().Click("text=\"Выберите частоту резервного копирования\"");
+                await client.GetInstance().Click("text=\"Никогда\"");
+                await client.GetInstance().Click("text=\"ГОТОВО\"");
                 await Task.Delay(2_000);
                 await client.GetInstance().StopApk(client.PackageName);
                 await client.GetInstance().RunApk(client.PackageName);
             }
 
             await Task.Delay(3_000);
-            await client.GetInstance().Click("//node[@content-desc='Ещё']");
-            await client.GetInstance().Click("//node[@text='Связанные устройства']");
+            await client.GetInstance().Click("content-desc=\"Ещё\"");
+            await client.GetInstance().Click("text=\"Связанные устройства\"");
 
-            if (await client.GetInstance().ExistsElement("//node[@resource-id='android:id/button1']"))
-                await client.GetInstance().Click("//node[@resource-id='android:id/button1']");
+            if (await client.GetInstance().ExistsElement("resource-id=\"android:id/button1\""))
+                await client.GetInstance().Click("resource-id=\"android:id/button1\"");
 
             if (isWaitQueue)
             {
                 client.Web.AddToQueue();
                 await client.Web.WaitQueue();
             }
-            await client.GetInstance().Click("//node[@text='ПРИВЯЗКА УСТРОЙСТВА']");
+            await client.GetInstance().Click("text=\"ПРИВЯЗКА УСТРОЙСТВА\"");
 
-            if (await client.GetInstance().ExistsElement("//node[@text='OK']"))
-                await client.GetInstance().Click("//node[@text='OK']");
+            if (await client.GetInstance().ExistsElement("text=\"OK\""))
+                await client.GetInstance().Click("text=\"OK\"");
         }
 
         async Task<bool> IsValid(WaClient client)
         {
             await Task.Delay(MemuLib.Settings.WaitingSecs);
 
-            if (await client.GetInstance().ExistsElement("//node[@text='Перезапустить приложение']"))
+            if (await client.GetInstance().ExistsElement("text=\"Перезапустить приложение\""))
             {
-                await client.GetInstance().Click("//node[@text='Перезапустить приложение']");
+                await client.GetInstance().Click("text=\"Перезапустить приложение\"");
                 await client.GetInstance().StopApk(client.PackageName);
                 await client.GetInstance().RunApk(client.PackageName);
             }
 
-            if (await client.GetInstance().ExistsElement("//node[@text='ОК']"))
-                await client.GetInstance().Click("//node[@text='ОК']");
+            if (await client.GetInstance().ExistsElement("text=\"ОК\""))
+                await client.GetInstance().Click("text=\"ОК\"");
 
-            if (await client.GetInstance().ExistsElement("//node[@text='OK']"))
-                await client.GetInstance().Click("//node[@text='OK']");
+            if (await client.GetInstance().ExistsElement("text=\"OK\""))
+                await client.GetInstance().Click("text=\"OK\"");
 
-            if (await client.GetInstance().ExistsElement("//node[@text='ПРОПУСТИТЬ']"))
-                await client.GetInstance().Click("//node[@text='ПРОПУСТИТЬ']");
+            if (await client.GetInstance().ExistsElement("text=\"ПРОПУСТИТЬ\""))
+                await client.GetInstance().Click("text=\"ПРОПУСТИТЬ\"");
 
-            if (await client.GetInstance().ExistsElement("//node[@text='Закрыть приложение']"))
+            if (await client.GetInstance().ExistsElement("text=\"Закрыть приложение\""))
             {
-                await client.GetInstance().Click("//node[@text='Закрыть приложение']");
+                await client.GetInstance().Click("text=\"Закрыть приложение\"");
                 await client.GetInstance().StopApk(client.PackageName);
                 await client.GetInstance().RunApk(client.PackageName);
             }
 
             await Task.Delay(MemuLib.Settings.WaitingSecs);
 
-            var dump = client.GetInstance().DumpScreen();
+            var dump = await client.GetInstance().DumpScreen();
 
-            return !await client.GetInstance().ExistsElement("//node[@text='ПРИНЯТЬ И ПРОДОЛЖИТЬ']", dump, false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='ДАЛЕЕ']", dump, false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='Перезапустить приложение']", dump, false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='Закрыть приложение']", dump, false) &&
-                   !await client.GetInstance().ExistsElement("//node[@content-desc='Неверный номер?']", dump, false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='ЗАПРОСИТЬ РАССМОТРЕНИЕ']", dump, false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='WA Business']", dump, false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='WhatsApp']", dump, false) &&
-                   !await client.GetInstance().ExistsElement("//node[@resource-id='android:id/progress']", dump, false) &&
-                   !await client.GetInstance().ExistsElement("//node[@text='ПОДТВЕРДИТЬ']", dump, false);
+            return !await client.GetInstance().ExistsElement("text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"", dump, false) &&
+                   !await client.GetInstance().ExistsElement("text=\"ДАЛЕЕ\"", dump, false) &&
+                   !await client.GetInstance().ExistsElement("text=\"Перезапустить приложение\"", dump, false) &&
+                   !await client.GetInstance().ExistsElement("text=\"Закрыть приложение\"", dump, false) &&
+                   !await client.GetInstance().ExistsElement("content-desc=\"Неверный номер?\"", dump, false) &&
+                   !await client.GetInstance().ExistsElement("text=\"ЗАПРОСИТЬ РАССМОТРЕНИЕ\"", dump, false) &&
+                   !await client.GetInstance().ExistsElement("text=\"WA Business\"", dump, false) &&
+                   !await client.GetInstance().ExistsElement("text=\"WhatsApp\"", dump, false) &&
+                   !await client.GetInstance().ExistsElement("resource-id=\"android:id/progress\"", dump, false) &&
+                   !await client.GetInstance().ExistsElement("text=\"ПОДТВЕРДИТЬ\"", dump, false);
         }
     }
 }

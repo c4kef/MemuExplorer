@@ -10,29 +10,15 @@ public class Client
     private readonly int _index;
 
     /// <summary>
-    /// Образ ADB клиента
-    /// </summary>
-    private readonly AdvancedAdbClient _adbClient;
-
-    /// <summary>
-    /// Образ устройства
-    /// </summary>
-    private DeviceData? _device;
-
-    /// <summary>
     /// Локальное объявление информации о железе
     /// </summary>
     private DeviceInfoGenerated? _deviceInfo;
-    
+
     /// <summary>
     /// Объявление образа машины
     /// </summary>
     /// <param name="index">индекс машины</param>
-    public Client(int index)
-    {
-        _index = index;
-        _adbClient = new AdvancedAdbClient();
-    }
+    public Client(int index) => _index = index;
 
     /// <summary>
     /// Запуск машины
@@ -45,28 +31,8 @@ public class Client
             return;
         }
 
-        await Task.Delay(Settings.WaitingSecs);
-        
         await Memu.Start(_index);
 
-        await Task.Delay(3_500);//Ждем наверняка...
-        
-        var host = new Regex(@"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b")
-            .Match(await MemuCmd.ExecMemuc($"-i {_index} adb start-server")).Value;
-
-        if (string.IsNullOrEmpty(host))
-        {
-            await MemuCmd.ExecMemuc($"-i {_index} adb kill-server");
-            throw new Exception($"[{_index}] Can't start server");
-        }
-
-        _adbClient.Connect(host);
-
-        _device = _adbClient.GetDevices().FirstOrDefault(deviceData => deviceData?.Serial == host) ?? null;
-        
-        if (_device is null)
-            throw new Exception($"[{_index}] Can't connect to device");
-        
         Log.Write($"[{_index}] -> VM started");
     }
 
@@ -108,7 +74,7 @@ public class Client
 
         Log.Write($"[{_index}] -> installed apk");
     }
-    
+
     /// <summary>
     /// Импорт контактов
     /// </summary>
@@ -131,7 +97,7 @@ public class Client
 
         Log.Write($"[{_index}] -> contacts imported");
     }
-    
+
     /// <summary>
     /// Очистка контактов
     /// </summary>
@@ -202,12 +168,12 @@ public class Client
 
         Log.Write($"[{_index}] -> input tap {x} {y}");
     }
-    
+
     /// <summary>
     /// Проверка элемента на существование
     /// </summary>
     /// <param name="uiElement">название элемента в интерфейсе</param>
-    public async Task<bool> ExistsElement(string uiElement, XmlDocument? dump = null, bool isWait = true)
+    public async Task<bool> ExistsElement(string uiElement, string? dump = null, bool isWait = true)
     {
         try
         {
@@ -220,9 +186,9 @@ public class Client
             if (isWait)
                 await Task.Delay(Settings.WaitingSecs);
 
-            var element = (dump is null) ? _adbClient.FindElement(_device, uiElement, (isWait) ? TimeSpan.FromMilliseconds(Settings.WaitingSecs) : TimeSpan.Zero) : FindElement(uiElement, dump, (isWait) ? TimeSpan.FromMilliseconds(Settings.WaitingSecs) : TimeSpan.Zero);
+            var (x, y) = await FindElement(uiElement, dump ?? await DumpScreen());
 
-            return element is not null;
+            return x != -1 && y != -1;
         }
         catch
         {
@@ -230,52 +196,35 @@ public class Client
         }
     }
 
-    public XmlDocument DumpScreen() => _adbClient.DumpScreen(_device);
-
-    public Element FindElement(string xpath, XmlDocument xmlDocument, TimeSpan timeout = default(TimeSpan))
+    public async Task<string> DumpScreen()
     {
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.Start();
-        while (timeout == TimeSpan.Zero || stopwatch.Elapsed < timeout)
+        var result = await ShellCmd("uiautomator dump");
+        var document = await ShellCmd("cat /storage/emulated/0/window_dump.xml");
+        if (document != "" && !result.Contains("ERROR"))
+            return document;
+
+        return string.Empty;
+    }
+
+    public async Task<(int x, int y)> FindElement(string xpath, string? xdocument)
+    {
+        var document = xdocument ?? await DumpScreen();
+
+        if (document.Contains(xpath))
         {
-            if (xmlDocument != null)
-            {
-                XmlNode xmlNode = xmlDocument.SelectSingleNode(xpath);
-                if (xmlNode != null)
-                {
-                    string value = xmlNode.Attributes!["bounds"]!.Value;
-                    if (value != null)
-                    {
-                        int[] array = value.Replace("][", ",").Replace("[", "").Replace("]", "")
-                            .Split(new char[1] { ',' })
-                            .Select(new Func<string, int>(int.Parse))
-                            .ToArray();
-                        Dictionary<string, string> dictionary = new Dictionary<string, string>();
-                        foreach (XmlAttribute item in xmlNode.Attributes!)
-                        {
-                            dictionary.Add(item.Name, item.Value);
-                        }
+            string Cord = document.Split(xpath)[1].Split("bounds=\"")[1].Split('\"')[0].Replace("[", "");
 
-                        Cords cords = new Cords((array[0] + array[2]) / 2, (array[1] + array[3]) / 2);
-                        return new Element(_adbClient, _device, cords, dictionary);
-                    }
-                }
-            }
-
-            if (timeout == TimeSpan.Zero)
-            {
-                break;
-            }
+            return ((Convert.ToInt32(Cord.Split(']')[0].Split(',')[0]) + Convert.ToInt32(Cord.Split(']')[1].Split(',')[0])) / 2, (Convert.ToInt32(Cord.Split(']')[0].Split(',')[1]) + Convert.ToInt32(Cord.Split(']')[1].Split(',')[1])) / 2);
         }
 
-        return null;
+        return (-1, -1);
     }
 
     /// <summary>
     /// Симуляция кликов по экрану
     /// </summary>
     /// <param name="uiElement">название элемента в интерфейсе</param>
-    public async Task Click(string uiElement, XmlDocument? dump = null)
+    public async Task Click(string uiElement, string? dump = null)
     {
         if (!await Memu.Exists(_index))
         {
@@ -285,12 +234,12 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var element = (dump is null) ? _adbClient.FindElement(_device, uiElement, TimeSpan.FromMilliseconds(Settings.WaitingSecs)) : FindElement(uiElement, dump, TimeSpan.FromMilliseconds(Settings.WaitingSecs));
+        var (x, y) = await FindElement(uiElement, dump ?? await DumpScreen());
         
-        if (element is null)
+        if (x == -1 && y == -1)
             throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
 
-        element.Click();
+        await Click(x, y);
 
         Log.Write($"[{_index}] -> input tap uiElement");
     }
@@ -300,7 +249,7 @@ public class Client
     /// </summary>
     /// <param name="uiElement">название элемента в интерфейсе</param>
     /// <param name="text">текст передаваемый на интерфейс</param>
-    public async Task Input(string uiElement, string text)
+    public async Task Input(string uiElement, string text, string? dump = null)
     {
         if (!await Memu.Exists(_index))
         {
@@ -310,38 +259,15 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromMilliseconds(Settings.WaitingSecs));
-       
-        if (element is null)
+        var (x, y) = await FindElement(uiElement, dump ?? await DumpScreen());
+
+        if (x == -1 && y == -1)
             throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
 
-        element.SendText(text);
+        await Click(x, y);
+        await Input(text);
 
         Log.Write($"[{_index}] -> input text uiElement");
-    }
-    
-    /// <summary>
-    /// Очистка элемента ввода
-    /// </summary>
-    /// <param name="uiElement">название элемента в интерфейсе</param>
-    public async Task ClearInput(string uiElement)
-    {
-        if (!await Memu.Exists(_index))
-        {
-            Log.Write($"[{_index}] -> VM not found");
-            return;
-        }
-
-        await Task.Delay(Settings.WaitingSecs);
-
-        var element = _adbClient.FindElement(_device, uiElement, TimeSpan.FromMilliseconds(Settings.WaitingSecs));
-       
-        if (element is null)
-            throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
-
-        element.ClearInput();
-
-        Log.Write($"[{_index}] -> clear text uiElement");
     }
     
     /// <summary>

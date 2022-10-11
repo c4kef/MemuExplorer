@@ -37,8 +37,18 @@ namespace UBot
                 : new Setup())!;
         }
 
-        public static async Task SaveSetup() => await File.WriteAllTextAsync(SetupFile.FullName, JsonConvert.SerializeObject(Setup, Formatting.Indented));
-
+        public static async Task SaveSetup()
+        {
+            try
+            {
+                await File.WriteAllTextAsync(SetupFile.FullName, JsonConvert.SerializeObject(Setup, Formatting.Indented));
+            }
+            catch 
+            {
+                await Task.Delay(100);
+                await SaveSetup();
+            }
+        }
         public static (string phone, string path)[] GetAccounts(string[] phoneFrom, bool isWarming = false, object locker = null)
         {
             lock (locker is null ? Locker : locker)
@@ -108,6 +118,7 @@ namespace UBot
         public string PathToFileTextWarm;
         public string PathToFileTextPeopleWarm;
         public string PathToFilePhones;
+        public bool RemoveAvatar;
         public int? PinCodeAccount;
 
         public int? CountMessages;

@@ -138,13 +138,13 @@ public class AccPreparation
             {
                 while (lastCountThreads != _activePhones.Count)
                 {
-                    if (_accountsNotFound)
+                    if (_accountsNotFound || IsStop)
                         break;
 
                     await Task.Delay(500);
                 }
 
-                if (_accountsNotFound)
+                if (_accountsNotFound || IsStop)
                 {
                     client.Web!.Free();
                     return;
@@ -165,7 +165,7 @@ public class AccPreparation
                     foreach (var warmPhone in phones.Where(_phone => _phone != phone))
                     {
                         if (!await client.Web!.SendText(warmPhone, messages[new Random().Next(0, messages.Length - 1)].Replace("\n", "\\n").Replace("\r", "")))
-                            break;
+                            continue;
 
                         await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
                     }

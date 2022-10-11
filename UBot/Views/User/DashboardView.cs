@@ -115,7 +115,7 @@ namespace UBot.Views.User
 
             if ((result.Value.Warm || result.Value.CheckBan) && result.Value.IsWeb)
             {
-                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || Globals.Setup.CountThreads <= 1 || Globals.Setup.NumberRepetitionsActions < 1 || Globals.Setup.CountMessages < 1)
+                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (Globals.Setup.CountThreads <= 1 && !result.Value.CheckBan) || Globals.Setup.NumberRepetitionsActions < 1 || Globals.Setup.CountMessages < 1)
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));
                     return;
@@ -134,7 +134,7 @@ namespace UBot.Views.User
 
             if (result.Value.IsNewsLetter && result.Value.IsWeb)
             {
-                if (!File.Exists(Globals.Setup.PathToFilePhones) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || Globals.Setup.CountThreads <= 1 || Globals.Setup.CountMessages < 1 || string.IsNullOrEmpty(Text) || Text.Length < 5)
+                if (!File.Exists(Globals.Setup.PathToFilePhones) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || Globals.Setup.CountThreads < 1 || Globals.Setup.CountMessages < 1 || string.IsNullOrEmpty(Text) || Text.Length < 5)
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед рассылкой", false));
                     return;

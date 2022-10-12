@@ -161,6 +161,7 @@ namespace WPP4DotNet
             await (await Driver.PagesAsync())[0].SetUserAgentAsync("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36");
 
             await (await Driver.PagesAsync())[0].EvaluateExpressionOnNewDocumentAsync("navigator.serviceWorker.getRegistrations().then((registrations)=>{for(let registration of registrations){registration.unregister()}}).catch((err)=>null);navigator.serviceWorker.register=new Promise(()=>{});");
+            await (await Driver.PagesAsync())[0].EvaluateFunctionOnNewDocumentAsync("()=>{navigator.serviceWorker.getRegistrations().then((registrations)=>{for(let registration of registrations){registration.unregister()}}).catch((err)=>null);navigator.serviceWorker.register=new Promise(()=>{})}");
             await (await Driver.PagesAsync())[0].SetRequestInterceptionAsync(true);
 
             (await Driver.PagesAsync())[0].Request += async (sender, e) =>
@@ -247,7 +248,6 @@ namespace WPP4DotNet
                 request.AddJsonBody(new { Sender = msg.Sender, Message = msg.Message, Date = msg.Date });
                 RestResponse response = client.PostAsync(request).Result;
                 return response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content) ? true : false;
-                return true;
             }
             catch (Exception)
             {
@@ -311,8 +311,12 @@ namespace WPP4DotNet
         {
             try
             {
-                dynamic response = await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("() => window.WPP?.conn.getAuthCode()");
-                return response["fullCode"];
+                var code = await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("() => window.WPP?.conn.getAuthCode()");
+                if (code is null)
+                    return "";
+
+                var response = JObject.Parse(code.ToString()!);
+                return (string)response["fullCode"]!;
             }
             catch (Exception)
             {
@@ -328,8 +332,8 @@ namespace WPP4DotNet
         {
             try
             {
-                dynamic response = await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("() => window.WPP?.conn.refreshQR()");
-                return response["fullCode"];
+                var response = JObject.Parse((await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("() => window.WPP?.conn.refreshQR()")).ToString()!);
+                return (string)response["fullCode"]!;
             }
             catch (Exception)
             {
@@ -345,8 +349,8 @@ namespace WPP4DotNet
         {
             try
             {
-                dynamic response = await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("() => window.WPP?.conn.getMyUserId()");
-                return string.Format("{0}", response["user"]);
+                var response = JObject.Parse((await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("() => window.WPP?.conn.getMyUserId()")).ToString()!);
+                return (string)response["user"]!;
             }
             catch (Exception)
             {
@@ -527,10 +531,11 @@ namespace WPP4DotNet
                 {
                     await MarkIsComposing(chat, 5000);
                 }
-                dynamic response = await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("(chat, message) => window.WPP?.chat.sendTextMessage(chat, message, {\n  createChat: true\n})", chat, message);
-                if (!string.IsNullOrEmpty(response["id"]))
+
+                var response = JObject.Parse((await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("(chat, message) => window.WPP?.chat.sendTextMessage(chat, message, {\n  createChat: true\n})", chat, message)).ToString()!);
+                if (!string.IsNullOrEmpty((string)response["id"]!))
                 { 
-                    ret.Id = response["id"];
+                    ret.Id = (string)response["id"]!;
                     ret.Sender = await GetMyNumber();
                     ret.Recipient = chat;
                     ret.Status = true;
@@ -574,10 +579,10 @@ namespace WPP4DotNet
                     option += string.Format(",{0}", item);
                 }
                 option = "{"+ option.TrimStart(',') + "}";
-                dynamic response = await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("(chat, content, option) => window.WPP?.chat.sendFileMessage(chat, content, option)", chat, content, option);
-                if (!string.IsNullOrEmpty(response["id"]))
+                var response = JObject.Parse((await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("(chat, content, option) => window.WPP?.chat.sendFileMessage(chat, content, option)", chat, content, option)).ToString()!);
+                if (!string.IsNullOrEmpty((string)response["id"]!))
                 {
-                    ret.Id = response["id"];
+                    ret.Id = (string)response["id"]!;
                     ret.Sender = await GetMyNumber();
                     ret.Recipient = chat;
                     ret.Status = true;
@@ -630,8 +635,8 @@ namespace WPP4DotNet
         {
             try
             {
-                dynamic response = await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("(code) => window.WPP?.group.join(code)", code);
-                return response["id"];
+                var response = JObject.Parse((await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("(code) => window.WPP?.group.join(code)", code)).ToString()!);
+                return (string)response["id"]!;
             }
             catch (Exception)
             {

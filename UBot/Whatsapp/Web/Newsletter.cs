@@ -139,7 +139,7 @@ public class Newsletter
                         if (isFile)
                             text.RemoveAll(str => str.Contains(file));
 
-                        if (await client.Web!.SendText(peopleReal, SelectWord(string.Join('\n', text).Replace("\n", "\\n").Replace("\r", "")), isFile ? new FileInfo(file) : null))
+                        if (await client.Web!.SendText(peopleReal, SelectWord(string.Join('\n', text).Replace("\n", "\n").Replace("\r", "\r")), isFile ? new FileInfo(file) : null))
                         {
                             ++DashboardView.GetInstance().CompletedTasks;
                             Log.Write(

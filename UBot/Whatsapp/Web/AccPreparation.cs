@@ -11,6 +11,7 @@ using UBot.Views.User;
 using WPP4DotNet;
 using WPP4DotNet.WebDriver;
 using ZXing.QrCode.Internal;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace UBot.Whatsapp.Web;
 
@@ -164,7 +165,7 @@ public class AccPreparation
 
                     foreach (var warmPhone in phones.Where(_phone => _phone != phone))
                     {
-                        if (!await client.Web!.SendText(warmPhone, messages[new Random().Next(0, messages.Length - 1)].Replace("\n", "\\n").Replace("\r", "")))
+                        if (!await client.Web!.SendText(warmPhone, messages[new Random().Next(0, messages.Length - 1)].Replace("\n", "\n").Replace("\r", "\r")))
                             continue;
 
                         await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));

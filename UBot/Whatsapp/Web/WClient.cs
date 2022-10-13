@@ -100,6 +100,7 @@ public class WClient
                 List<string> options = new List<string>();
                 options.Add($"type: '{type}'");
                 options.Add($"caption: '{text}'");
+                options.Add($"createChat: true");
 
                 isSended = (await _wpp.SendFileMessage($"{number.Replace("+", string.Empty)}@c.us", base64, options)).Status;
             }

@@ -579,7 +579,9 @@ namespace WPP4DotNet
                     option += string.Format(",{0}", item);
                 }
                 option = "{"+ option.TrimStart(',') + "}";
-                var response = JObject.Parse((await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("(chat, content, option) => window.WPP?.chat.sendFileMessage(chat, content, option)", chat, content, option)).ToString()!);
+                var optionJit = JObject.Parse(option);
+                var res = $"window.WPP?.chat.sendFileMessage({chat}, {content}, {optionJit})";
+                var response = JObject.Parse((await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("(chat, content, option) => window.WPP?.chat.sendFileMessage(chat, content, option)", chat, content, optionJit)).ToString()!);
                 if (!string.IsNullOrEmpty((string)response["id"]!))
                 {
                     ret.Id = (string)response["id"]!;

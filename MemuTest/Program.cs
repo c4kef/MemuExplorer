@@ -41,13 +41,17 @@ await using var browser = await Puppeteer.LaunchAsync(
     "--disable-accelerated-video-decode",
     "--user-data-dir=C:\\Users\\artem\\source\\repos\\MemuExplorer\\UBot\\bin\\Debug\\net6.0-windows10.0.19041.0\\win10-x64\\WppConnect\\test",
     "--disable-dev-shm-usage",
+    "--proxy-server=https=217.29.62.212:10451"
     } });
 await using var page = await browser.NewPageAsync();
-await page.EvaluateExpressionOnNewDocumentAsync(await File.ReadAllTextAsync(@"C:\Users\artem\Downloads\removeWorkers.js"));
-await page.SetRequestInterceptionAsync(true);
-
-page.Request += Page_Request;
-
+//await page.EvaluateExpressionOnNewDocumentAsync(await File.ReadAllTextAsync(@"C:\Users\artem\Downloads\removeWorkers.js"));
+//await page.SetRequestInterceptionAsync(true);
+await page.AuthenticateAsync(new Credentials()
+{
+    Username = "C37jer",
+    Password = "dSEdPU"
+});
+//page.Request += Page_Request;
 await page.GoToAsync("https://web.whatsapp.com");
 await page.ReloadAsync();
 

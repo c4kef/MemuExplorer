@@ -144,7 +144,7 @@ namespace WPP4DotNet
         /// </summary>
         /// <param name="cache">If necessary define the directory to save the session data.</param>
         /// <param name="hidden">Set true or false if you want to hide the browser.</param>
-        public virtual async Task StartSession()
+        public virtual async Task StartSession(Credentials? auth)
         {
             CheckDriverStarted();
             DriverStarted = true;
@@ -154,9 +154,12 @@ namespace WPP4DotNet
         /// This method starts browsing and inserting JS scripts.
         /// </summary>
         /// <param name="driver">Insert the IWebDriver object.</param>
-        public virtual async Task StartSession(IBrowser driver)
+        public virtual async Task StartSession(IBrowser driver, Credentials? auth)
         {
             this.Driver = driver;
+
+            if (auth != null)
+                await (await Driver.PagesAsync())[0].AuthenticateAsync(auth);
 
             await (await Driver.PagesAsync())[0].SetUserAgentAsync("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36");
 

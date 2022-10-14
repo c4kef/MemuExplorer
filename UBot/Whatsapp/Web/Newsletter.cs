@@ -100,13 +100,13 @@ public class Newsletter
 
             try
             {
-                await client.Web!.Init(false, $@"{path}\{new DirectoryInfo(path).Name}");
+                await client.Web!.Init(false, $@"{path}\{new DirectoryInfo(path).Name}", await GetProxy());
 
                 Log.Write($"[{phone}] - смогли войти\n", _logFile.FullName);
             }
             catch (Exception ex)
             {
-                client.Web!.Free();
+                await client.Web!.Free();
                 await Globals.TryMove(path, $@"{Globals.LogoutDirectory.FullName}\{phone}");
                 Log.Write($"[{phone}] - не смогли войти: {ex.Message}\n", _logFile.FullName);
                 continue;
@@ -161,7 +161,7 @@ public class Newsletter
                 _sendedMessagesCountFromAccount[phone] = countSendedMessages;
                 _usedPhonesUsers.Remove(peopleReal);
 
-                client.Web!.Free();
+                await client.Web!.Free();
                 ++DashboardView.GetInstance().DeniedTasks;
                 await Globals.TryMove(path, $@"{Globals.BanDirectory.FullName}\{phone}");
 
@@ -184,7 +184,11 @@ public class Newsletter
             }
 
             //Успех
-            client.Web!.Free();
+            await Task.Delay(2_000);
+            await client.Web!.Free();
+
+            if (!_contacts.Any(cont => !_usedPhonesUsers.Contains(cont)))
+                break;
 
             string GetFreeNumberUser()
             {
@@ -219,6 +223,19 @@ public class Newsletter
                     backValue = backValue.Replace(match.ToString()!, match.ToString()!.Split("||")[new Random().Next(0, 100) >= 50 ? 1 : 0]);
 
                 return backValue;
+            }
+
+            async Task<string> GetProxy()
+            {
+                if (!File.Exists(Globals.Setup.PathToFileProxy))
+                    return "";
+
+                var proxyList = await File.ReadAllLinesAsync(Globals.Setup.PathToFileProxy);
+
+                if (proxyList.Length == 0)
+                    return "";
+
+                return proxyList.OrderBy(x => new Random().Next()).ToArray()[0];
             }
         }
     }

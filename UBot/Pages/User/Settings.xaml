@@ -35,14 +35,14 @@
 
                     <VerticalStackLayout Spacing="9"
                                          Margin="0,18,0,0">
-                        <Button Text="Имена"
+                        <Button Text="Прокси"
                                 HeightRequest="56"
                                 WidthRequest="140"
                                 FontFamily="SegoeUI"
                                 FontSize="20"
                                 TextColor="{StaticResource White}"
-                                BackgroundColor="{Binding Path=ButtonPickerFileNameColor}"
-                                CommandParameter="1"
+                                BackgroundColor="{Binding Path=ButtonPickerFileProxy}"
+                                CommandParameter="10"
                                 Command="{Binding Path=ButtonClick}"
                                 CornerRadius="11" />
                         <Button Text="Образ"
@@ -142,7 +142,7 @@
                         </VerticalStackLayout>
 
                         <VerticalStackLayout>
-                            <Label Text="Цикличность"
+                            <Label Text="Группировок"
                                    FontFamily="SegoeUI"
                                    TextColor="{StaticResource White}"
                                    FontSize="18"
@@ -157,9 +157,9 @@
                                        FontSize="18"
                                        Keyboard="Numeric"
                                        MaximumWidthRequest="125"
-                                       Placeholder="Цикличность"
+                                       Placeholder="Группировок"
                                        Margin="0,5,5,0"
-                                       Text="{Binding NumberRepetitionsActions}"
+                                       Text="{Binding CountGroups}"
                                        TextChanged="TextSave"
                                        BackgroundColor="{StaticResource Black}">
                                     <Entry.Behaviors>
@@ -168,6 +168,17 @@
                                 </Entry>
                             </Border>
                         </VerticalStackLayout>
+
+                        <Button Text="Имена"
+                                HeightRequest="56"
+                                WidthRequest="140"
+                                FontFamily="SegoeUI"
+                                FontSize="20"
+                                TextColor="{StaticResource White}"
+                                BackgroundColor="{Binding Path=ButtonPickerFileNameColor}"
+                                CommandParameter="1"
+                                Command="{Binding Path=ButtonClick}"
+                                CornerRadius="11" />
 
                         <Button Text="Текст общ"
                                 HeightRequest="56"
@@ -218,19 +229,6 @@
 
                     <VerticalStackLayout Spacing="9"
                                          Margin="0,18,0,0">
-
-                        <HorizontalStackLayout>
-                            <Label Text="Уд. Аватар"
-                                   FontFamily="SegoeUI"
-                                   TextColor="{StaticResource White}"
-                                   FontSize="18"
-                                   Margin="5,0,0,0"
-                                   HorizontalOptions="Start" />
-                            <CheckBox Margin="5,-5,0,0"
-                                      CheckedChanged="CheckboxChanged"
-                                      IsChecked="{Binding RemoveAvatar}" />
-                        </HorizontalStackLayout>
-
                         <VerticalStackLayout>
                             <Label Text="Сообщений"
                                    FontFamily="SegoeUI"

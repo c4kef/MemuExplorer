@@ -118,11 +118,12 @@ namespace UBot
         public string PathToFileTextWarm;
         public string PathToFileTextPeopleWarm;
         public string PathToFilePhones;
+        public string PathToFileProxy;
         public bool RemoveAvatar;
         public int? PinCodeAccount;
 
         public int? CountMessages;
-        public int? NumberRepetitionsActions;
+        public int? CountGroups;
         public int? CountThreads;
         public int? MinTrustLevel;
 

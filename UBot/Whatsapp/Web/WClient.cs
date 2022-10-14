@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using WPP4DotNet.WebDriver;
 using WPP4DotNet;
 using WPP4DotNet.Models;
+using ZXing;
+using PuppeteerSharp;
 
 namespace UBot.Whatsapp.Web;
 
@@ -33,21 +35,38 @@ public class WClient
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>
-    public async Task Init(bool waitQr, string pathToWeb)
+    public async Task Init(bool waitQr, string pathToWeb, string proxy = "")
     {
-        _wpp = new ChromeWebApp(false, pathToWeb) as IWpp;
-        await _wpp.StartSession();
+        if (!string.IsNullOrEmpty(proxy))
+        {
+            var proxyAuthData = proxy.Split(':');
+            _wpp = new ChromeWebApp(false, pathToWeb, string.Join(':', proxyAuthData.Take(2))) as IWpp;
+            await _wpp.StartSession(new Credentials()
+            {
+                Username = proxyAuthData[2],
+                Password = proxyAuthData[3]
+            });
+        }
+        else
+        {
+            _wpp = new ChromeWebApp(false, pathToWeb) as IWpp;
+            await _wpp.StartSession(null);
+        }
 
         var timerLoading = 0;
-
         while (timerLoading++ < 45)
         {
             if (await IsConnected())
                 break;
 
-            if (!string.IsNullOrEmpty(await _wpp.GetAuthCode()))
+            if (!waitQr)
             {
-                if (waitQr)
+                if ((await (await _wpp.WebDriver.PagesAsync())[0].QuerySelectorAsync("#app > div > div > div.landing-window > div.landing-main > div > a")) is not null)
+                    throw new Exception("Qr code is generating...");
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(await _wpp.GetAuthCode()))
                 {
                     /*var qr = await wpp.GetAuthImage();
 
@@ -66,8 +85,6 @@ public class WClient
                     while (!TryDeleteQR())
                         await Task.Delay(500);*/
                 }
-                else
-                    throw new Exception("Qr code is generated");
             }
 
             await Task.Delay(500);
@@ -77,7 +94,7 @@ public class WClient
             throw new Exception("Cant load account");
     }
 
-    public async Task<bool> IsConnected() => await _wpp.IsMainLoaded() && await _wpp.IsAuthenticated() && await _wpp.IsMainReady();
+    public async Task<bool> IsConnected() => (await (await _wpp.WebDriver.PagesAsync())[0].QuerySelectorAsync("#app > div > div > div.landing-window > div.landing-main > div > a")) is null && await _wpp.IsMainLoaded() && await _wpp.IsAuthenticated() && await _wpp.IsMainReady();
 
     /// <summary>
     /// Отправить сообщение
@@ -124,8 +141,20 @@ public class WClient
     /// </summary>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>
-    public async void Free() => await _wpp.Finish();
+    public async Task Free()
+    {
+        try
+        {
+            /*await _wpp.WebDriver.CloseAsync();
+            _wpp.WebDriver.Dispose();*/
 
+            _wpp.WebDriver.Process.Kill();
+        }
+        catch(Exception ex)
+        {
+            Log.Write($"Ошибка при очистке сессии:\n{ex.Message}\n");
+        }
+    }
     /// <summary>
     /// Проверяет контакт на наличие Whatsapp
     /// </summary>
@@ -136,7 +165,7 @@ public class WClient
         if (!await IsConnected())
             throw new Exception($"CheckValidPhone: client has disconected");
 
-        return true;//!string.IsNullOrEmpty(await _wpp.ContactGetStatus($"{phone.Replace("+", string.Empty)}@c.us"));To-Do
+        return await _wpp.ContactExists($"{phone.Replace("+", string.Empty)}@c.us");
     }
 
     public async Task RemoveAvatar()

@@ -41,31 +41,42 @@ public class AccPreparation
         _logFile.Create().Close();
 
         _currentProfile = actionProfileWork;
+        var mainTasks = new List<Task>();
 
-        for (var cycleId = 0; cycleId < Globals.Setup.NumberRepetitionsActions; cycleId++)
+        for (var cycleId = 0; cycleId < Globals.Setup.CountGroups; cycleId++)
         {
-            var tasks = new List<Task>();
-
-            while (!IsStop)
+            var id = cycleId;
+            await Task.Delay(100);
+            mainTasks.Add(Task.Run(async () =>
             {
-                DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json")).ToArray().Length;
+                var tasks = new List<Task>();
 
-                for (var i = 0; i < Globals.Setup.CountThreads; i++)
-                    tasks.Add(Task.Run(async () => await Handler(message.Split('\n'), cycleId + 1 == Globals.Setup.NumberRepetitionsActions)));
+                while (!IsStop)
+                {
+                    DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json")).ToArray().Length;
 
-                Task.WaitAll(tasks.ToArray(), -1);
+                    for (var i = 0; i < Globals.Setup.CountThreads; i++)
+                    {
+                        await Task.Delay(100);
+                        tasks.Add(Task.Run(async () => await Handler(message.Split('\n'), id)));
+                    }
 
-                _activePhones.Clear();
-                tasks.Clear();
+                    Task.WaitAll(tasks.ToArray(), -1);
 
-                if (_accountsNotFound)
-                    break;
-            }
+                    _activePhones.RemoveAll(obj => obj[0].ToString() == id.ToString());
+                    tasks.Clear();
 
-            _accountsNotFound = false;
+                    if (_accountsNotFound)
+                        break;
+                }
 
-            _usedPhones.Clear();
+                _usedPhones.RemoveAll(obj => obj[0].ToString() == id.ToString());
+            }));
         }
+
+        Task.WaitAll(mainTasks.ToArray(), -1);
+
+        _accountsNotFound = false;
 
         Stop();
     }
@@ -80,14 +91,14 @@ public class AccPreparation
         _activePhones.Clear();
     }
 
-    private async Task Handler(string[] messages, bool move)
+    private async Task Handler(string[] messages, int threadId)
     {
         var lastCountThreads = Globals.Setup.CountThreads;
     getAccount:
         if (IsStop)
             return;
 
-        var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
+        var result = Globals.GetAccounts(_usedPhones.Select(phone => phone.Remove(0, 1)).ToArray(), true, _lock);
 
         if (result.Length == 0)
         {
@@ -98,25 +109,25 @@ public class AccPreparation
 
         var (phone, path) = result[0];
 
-        if (_usedPhones.Contains(phone))
+        if (_usedPhones.Contains(threadId + phone))
         {
             Log.Write($"[I] - дубликат аккаунта\n", _logFile.FullName);
             goto getAccount;
         }
 
-        _usedPhones.Add(phone);
+        _usedPhones.Add(threadId + phone);
 
         var client = new Client(phone, path);
 
         try
         {
-            await client.Web!.Init(false, $@"{path}\{new DirectoryInfo(path).Name}");
+            await client.Web!.Init(false, $@"{path}\{new DirectoryInfo(path).Name}", await GetProxy());
 
             Log.Write($"[{phone}] - смогли войти\n", _logFile.FullName);
         }
         catch (Exception ex)
         {
-            client.Web!.Free();
+            await client.Web!.Free();
             await Globals.TryMove(path, $@"{Globals.LogoutDirectory.FullName}\{phone}");
             Log.Write($"[{phone}] - не смогли войти: {ex.Message}\n", _logFile.FullName);
 
@@ -126,18 +137,18 @@ public class AccPreparation
 
         if (_currentProfile.CheckBan)
         {
-            client.Web!.Free();
+            await client.Web!.Free();
             ++DashboardView.GetInstance().CompletedTasks;
             goto getAccount;
         }
 
         try
         {
-            _activePhones.Add(phone);
+            _activePhones.Add(threadId + phone);
 
             if (_currentProfile.Warm)
             {
-                while (lastCountThreads != _activePhones.Count)
+                while (lastCountThreads != _activePhones.Count(phone => phone[0].ToString() == threadId.ToString()))
                 {
                     if (_accountsNotFound || IsStop)
                         break;
@@ -147,17 +158,17 @@ public class AccPreparation
 
                 if (_accountsNotFound || IsStop)
                 {
-                    client.Web!.Free();
+                    await client.Web!.Free();
                     return;
                 }
 
-                var phones = _activePhones.ToArray();
+                var phones = _activePhones.Where(phone => phone[0].ToString() == threadId.ToString()).Select(phone => phone.Remove(0, 1)).ToArray();
 
                 for (var i = 0; i < Globals.Setup.CountMessages; i++)//Первый этап - переписки между собой
                 {
                     if (!await client.Web!.IsConnected())
                     {
-                        client.Web!.Free();
+                        await client.Web!.Free();
                         await Globals.TryMove(path, $@"{Globals.BanDirectory.FullName}\{phone}");
                         ++DashboardView.GetInstance().DeniedTasks;
                         return;
@@ -213,32 +224,43 @@ public class AccPreparation
                         await client.Web!.SendText(people, localMessages.Count == 0 ? messages[new Random().Next(0, messages.Length - 1)] : localMessages[new Random().Next(0, localMessages.Count - 1)]);
                 }
 
+                await Task.Delay(2_000);
+
                 if (!await client.Web!.IsConnected())
                 {
-                    client.Web!.Free();
+                    await client.Web!.Free();
                     ++DashboardView.GetInstance().DeniedTasks;
                     await Globals.TryMove(path, $@"{Globals.BanDirectory.FullName}\{phone}");
                 }
                 else
                 {
-                    client.Web!.Free();
-
-                    if (move)
-                    {
-                        ++DashboardView.GetInstance().CompletedTasks;
-                        await Globals.TryMove(path, $@"{Globals.WarmedDirectory.FullName}\{phone}");
-                    }
+                    await client.Web!.Free();
+                    ++DashboardView.GetInstance().CompletedTasks;
+                    await Globals.TryMove(path, $@"{Globals.WarmedDirectory.FullName}\{phone}");
                 }
             }
 
-            _activePhones.Remove(phone);
+            _activePhones.Remove(threadId + phone);
         }
         catch (Exception ex)
         {
             Log.Write($"[Handler] - крит. ошибка: {ex.Message}\n", _logFile.FullName);
-            client.Web!.Free();
+            await client.Web!.Free();
             ++DashboardView.GetInstance().DeniedTasks;
             await Globals.TryMove(path, $@"{Globals.BanDirectory.FullName}\{phone}");
+        }
+
+        async Task<string> GetProxy()
+        {
+            if (!File.Exists(Globals.Setup.PathToFileProxy))
+                return "";
+
+            var proxyList = await File.ReadAllLinesAsync(Globals.Setup.PathToFileProxy);
+
+            if (proxyList.Length == 0)
+                return "";
+
+            return proxyList.OrderBy(x => new Random().Next()).ToArray()[0];
         }
     }
 }

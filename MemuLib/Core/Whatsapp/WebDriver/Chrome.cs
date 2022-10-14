@@ -14,7 +14,8 @@ namespace WPP4DotNet.WebDriver
         /// </summary>
         /// <param name="hidden"></param>
         /// <param name="path"></param>
-        public ChromeWebApp(bool hidden = true, string path = "")
+        /// <param name="proxy">В формате IP:PORT</param>
+        public ChromeWebApp(bool hidden = true, string path = "", string proxy = "")
         {
             ChromeOpt = new LaunchOptions();
 
@@ -75,19 +76,22 @@ namespace WPP4DotNet.WebDriver
             args.Add("--no-zygote");
             args.Add("--window-size=800,600");
 
+            if (!string.IsNullOrEmpty(proxy))
+                args.Add($"--proxy-server=https={proxy}");
+
             ChromeOpt.Args = args.ToArray();
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public override async Task StartSession()
+        public override async Task StartSession(Credentials? auth = null)
         {
             CheckDriverStarted();
 
             var drive = await Puppeteer.LaunchAsync(ChromeOpt);
 
-            await base.StartSession(drive);
+            await base.StartSession(drive, auth);
         }
     }
 }

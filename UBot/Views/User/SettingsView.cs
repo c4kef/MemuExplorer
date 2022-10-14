@@ -68,6 +68,9 @@ namespace UBot.Views.User
 
         public Color ButtonPickerPhonesColor =>
             (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFilePhones) ? "Active" : "NotActive");
+
+        public Color ButtonPickerFileProxy =>
+            (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFileProxy) ? "Active" : "NotActive");
         #endregion
 
         #region variables text
@@ -85,10 +88,10 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.PinCodeAccount, value);
         }
 
-        public int? NumberRepetitionsActions
+        public int? CountGroups
         {
-            get => Globals.Setup.NumberRepetitionsActions;
-            set => SetProperty(ref Globals.Setup.NumberRepetitionsActions, value);
+            get => Globals.Setup.CountGroups;
+            set => SetProperty(ref Globals.Setup.CountGroups, value);
         }
 
         public int? CountMessages
@@ -305,6 +308,25 @@ namespace UBot.Views.User
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerPhonesColor));
+
+                    break;
+
+                case 10:
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFileProxy))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+
+                        if (string.IsNullOrEmpty(pick))
+                            return;
+
+                        Globals.Setup.PathToFileProxy = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFileProxy = string.Empty;
+
+                    await Globals.SaveSetup();
+
+                    OnPropertyChanged(nameof(ButtonPickerFileProxy));
 
                     break;
             }

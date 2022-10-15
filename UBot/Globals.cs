@@ -95,6 +95,15 @@ namespace UBot
             return false;
         }
 
+        public static async Task InitAccountsFolder()
+        {
+            foreach (var directory in Directory.GetDirectories(Setup.PathToFolderAccounts))
+                if (!File.Exists($@"{directory}\Data.json") && (Directory.Exists($@"{directory}\com.whatsapp") || Directory.Exists($@"{directory}\com.whatsapp.w4b")))
+                    await File.WriteAllTextAsync($@"{directory}\Data.json",
+                        JsonConvert.SerializeObject(new AccountData()
+                        { TrustLevelAccount = 0 }, Formatting.Indented));
+        }
+
         public static void KillChromeDriverProcesses()
         {
             Process[] chromeDriverProcesses = Process.GetProcessesByName("chromedriver");

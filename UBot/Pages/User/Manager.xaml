@@ -11,14 +11,13 @@
                FontSize="24"
                Margin="20,10,0,70"
                HorizontalOptions="Start" />
-        <Grid ColumnSpacing="10">
+        <Grid ColumnSpacing="10" HorizontalOptions="Center">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200" />
                 <ColumnDefinition Width="400" />
-                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <StackLayout Grid.Column="0"
                          Margin="20,0,0,0"
@@ -35,6 +34,7 @@
                     </HorizontalStackLayout>
 
                     <ScrollView HeightRequest="450"
+                                WidthRequest="186"
                                 Margin="10,10,0,0">
                         <VerticalStackLayout Spacing="5">
                             <CollectionView Grid.Row="2"
@@ -73,6 +73,7 @@
                                          BackgroundColor="{StaticResource NotActive}"
                                          HeightRequest="56"
                                          Padding="15"
+                                         HorizontalOptions="Start"
                                          WidthRequest="177"
                                          CornerRadius="11" />
                         </VerticalStackLayout>
@@ -99,7 +100,8 @@
                                 WidthRequest="177"
                                 FontFamily="SegoeUI"
                                 FontSize="20"
-                                Command="{Binding OpenControlPanel}"
+                                Command="{Binding ActionEmulator}"
+                                CommandParameter="0"
                                 TextColor="{StaticResource White}"
                                 BackgroundColor="{StaticResource Active}"
                                 CornerRadius="11">
@@ -117,7 +119,8 @@
                                 WidthRequest="177"
                                 FontFamily="SegoeUI"
                                 FontSize="20"
-                                Command="{Binding OpenControlPanel}"
+                                Command="{Binding ActionEmulator}"
+                                CommandParameter="1"
                                 TextColor="{StaticResource White}"
                                 BackgroundColor="{StaticResource Active}"
                                 CornerRadius="11">
@@ -131,26 +134,11 @@
                             </Button.Triggers>
                         </Button>
                     </HorizontalStackLayout>
-                    <Image Source="{Binding ScreenPicture}" WidthRequest="360" HeightRequest="360" />
+                    <Image Source="{Binding ScreenPicture}"
+                           WidthRequest="360"
+                           HeightRequest="360" />
                 </VerticalStackLayout>
             </StackLayout>
-
-            <Border Grid.Column="2"
-                    Stroke="{StaticResource Active}"
-                    StrokeThickness="2"
-                    Margin="0,45,30,10">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="11,11,11,11" />
-                </Border.StrokeShape>
-                <Editor HeightRequest="400"
-                        FontFamily="SegoeUI"
-                        FontSize="18"
-                        Placeholder="Логи"
-                        IsReadOnly="True"
-                        Text="{Binding Path=Text}"
-                        Margin="5"
-                        BackgroundColor="{StaticResource Black}" />
-            </Border>
         </Grid>
     </VerticalStackLayout>
 </ContentView>

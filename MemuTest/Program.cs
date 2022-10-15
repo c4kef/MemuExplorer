@@ -1,4 +1,23 @@
-﻿using PuppeteerSharp;
+﻿using System.Text;
+
+Console.OutputEncoding = Console.InputEncoding = Encoding.Unicode;
+
+while (true)
+{
+    var document = await File.ReadAllTextAsync(@"C:\Users\artem\Downloads\MEmu Download\window_dump.xml");
+    var xpath = Console.ReadLine()!.Replace(@"\", "");
+
+    if (document.Contains(xpath))
+    {
+        string Cord = document.Split(xpath)[1].Split("bounds=\"")[1].Split('\"')[0].Replace("[", "");
+
+        Console.WriteLine($"{(Convert.ToInt32(Cord.Split(']')[0].Split(',')[0]) + Convert.ToInt32(Cord.Split(']')[1].Split(',')[0])) / 2}, {(Convert.ToInt32(Cord.Split(']')[0].Split(',')[1]) + Convert.ToInt32(Cord.Split(']')[1].Split(',')[1])) / 2}");
+        continue;
+    }
+
+    Console.WriteLine("Not found");
+}
+/*using PuppeteerSharp;
 
 using var browserFetcher = new BrowserFetcher();
 await browserFetcher.DownloadAsync();
@@ -81,4 +100,4 @@ async void Page_Request(object? sender, RequestEventArgs e)
         ContentType = "text/html",
         Body = await File.ReadAllTextAsync(@"C:\Users\artem\Downloads\2.2238.7-beta.html")
     });
-}
+}*/

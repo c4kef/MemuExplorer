@@ -18,7 +18,7 @@ public static class Settings
     public const string SimApi = "72deadac6b4f05dcd06f65534a0eeec2";
 
     /// <summary>
-    /// Таймер операций (в секундах)
+    /// Таймер операций (в м.секундах)
     /// </summary>
     public const int WaitingSecs = 200;
 }

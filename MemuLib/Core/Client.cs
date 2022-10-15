@@ -7,7 +7,7 @@ public class Client
     /// <summary>
     /// Индекс машины
     /// </summary>
-    private readonly int _index;
+    public readonly int Index;
 
     /// <summary>
     /// Локальное объявление информации о железе
@@ -18,22 +18,22 @@ public class Client
     /// Объявление образа машины
     /// </summary>
     /// <param name="index">индекс машины</param>
-    public Client(int index) => _index = index;
+    public Client(int index) => Index = index;
 
     /// <summary>
     /// Запуск машины
     /// </summary>
     public async Task Start()
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return;
         }
 
-        await Memu.Start(_index);
+        await Memu.Start(Index);
 
-        Log.Write($"[{_index}] -> VM started");
+        Log.Write($"[{Index}] -> VM started");
     }
 
     /// <summary>
@@ -41,15 +41,15 @@ public class Client
     /// </summary>
     public async Task Stop()
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return;
         }
 
-        await Memu.Stop(_index);
+        await Memu.Stop(Index);
 
-        Log.Write($"[{_index}] -> VM stoped");
+        Log.Write($"[{Index}] -> VM stoped");
     }
 
     /// <summary>
@@ -58,21 +58,21 @@ public class Client
     /// <param name="path">путь до приложения на локальном компе</param>
     public async Task InstallApk(string path)
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return;
         }
 
         if (!File.Exists(path))
         {
-            Log.Write($"[{_index}] -> apk file not found");
+            Log.Write($"[{Index}] -> apk file not found");
             return;
         }
 
-        await Memu.InstallApk(_index, path);
+        await Memu.InstallApk(Index, path);
 
-        Log.Write($"[{_index}] -> installed apk");
+        Log.Write($"[{Index}] -> installed apk");
     }
 
     /// <summary>
@@ -81,21 +81,21 @@ public class Client
     /// <param name="path">путь до контакта</param>
     public async Task ImportContacts(string path)
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return;
         }
 
         if (!File.Exists(path))
         {
-            Log.Write($"[{_index}] -> contact file not found");
+            Log.Write($"[{Index}] -> contact file not found");
             return;
         }
 
-        await ContactManager.Import(_index, path);
+        await ContactManager.Import(Index, path);
 
-        Log.Write($"[{_index}] -> contacts imported");
+        Log.Write($"[{Index}] -> contacts imported");
     }
 
     /// <summary>
@@ -103,15 +103,15 @@ public class Client
     /// </summary>
     public async Task ClearContacts()
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return;
         }
 
-        var result = await MemuCmd.ExecMemuc($@"-i {_index} execcmd pm clear com.android.providers.contacts");
+        var result = await MemuCmd.ExecMemuc($@"-i {Index} execcmd pm clear com.android.providers.contacts");
 
-        Log.Write($"[{_index}] -> contacts cleaned with results: {result}");
+        Log.Write($"[{Index}] -> contacts cleaned with results: {result}");
     }
 
     /// <summary>
@@ -120,16 +120,16 @@ public class Client
     /// <param name="comPath">com-путь до установленного приложения на машине</param>
     public async Task RunApk(string comPath)
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return;
         }
 
         await Task.Delay(Settings.WaitingSecs);
-        await Memu.StartApk(_index, comPath);
+        await Memu.StartApk(Index, comPath);
 
-        Log.Write($"[{_index}] -> apk runned");
+        Log.Write($"[{Index}] -> apk runned");
     }
 
     /// <summary>
@@ -138,16 +138,16 @@ public class Client
     /// <param name="comPath">com-путь до установленного приложения на машине</param>
     public async Task StopApk(string comPath)
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return;
         }
 
         await Task.Delay(Settings.WaitingSecs);
-        await Memu.StopApk(_index, comPath);
+        await Memu.StopApk(Index, comPath);
 
-        Log.Write($"[{_index}] -> apk stopped");
+        Log.Write($"[{Index}] -> apk stopped");
     }
 
     /// <summary>
@@ -157,16 +157,16 @@ public class Client
     /// <param name="y">по вертикали</param>
     public async Task Click(int x, int y)
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return;
         }
 
-        await Task.Delay(100);
-        await MemuCmd.ExecMemuc($"-i {_index} adb shell input tap {x} {y}");
+        await Task.Delay(200);
+        await MemuCmd.ExecMemuc($"-i {Index} adb shell input tap {x} {y}");
 
-        Log.Write($"[{_index}] -> input tap {x} {y}");
+        Log.Write($"[{Index}] -> input tap {x} {y}");
     }
 
     /// <summary>
@@ -177,9 +177,9 @@ public class Client
     {
         try
         {
-            if (!await Memu.Exists(_index))
+            if (!await Memu.Exists(Index))
             {
-                Log.Write($"[{_index}] -> VM not found");
+                Log.Write($"[{Index}] -> VM not found");
                 return false;
             }
 
@@ -226,9 +226,9 @@ public class Client
     /// <param name="uiElement">название элемента в интерфейсе</param>
     public async Task Click(string uiElement, string? dump = null)
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return;
         }
 
@@ -237,11 +237,11 @@ public class Client
         var (x, y) = await FindElement(uiElement, dump ?? await DumpScreen());
         
         if (x == -1 && y == -1)
-            throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
+            throw new Exception($"[{Index}] Can't found element by name \"{uiElement}\"");
 
         await Click(x, y);
 
-        Log.Write($"[{_index}] -> input tap uiElement");
+        Log.Write($"[{Index}] -> input tap uiElement");
     }
     
     /// <summary>
@@ -251,9 +251,9 @@ public class Client
     /// <param name="text">текст передаваемый на интерфейс</param>
     public async Task Input(string uiElement, string text, string? dump = null)
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return;
         }
 
@@ -262,12 +262,12 @@ public class Client
         var (x, y) = await FindElement(uiElement, dump ?? await DumpScreen());
 
         if (x == -1 && y == -1)
-            throw new Exception($"[{_index}] Can't found element by name \"{uiElement}\"");
+            throw new Exception($"[{Index}] Can't found element by name \"{uiElement}\"");
 
         await Click(x, y);
         await Input(text);
 
-        Log.Write($"[{_index}] -> input text uiElement");
+        Log.Write($"[{Index}] -> input text uiElement");
     }
     
     /// <summary>
@@ -276,17 +276,17 @@ public class Client
     /// <param name="text">текст передаваемый на интерфейс</param>
     public async Task Input(string text)
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return;
         }
         
         await Task.Delay(Settings.WaitingSecs);
         
-        await Memu.SendText(_index, text);
+        await Memu.SendText(Index, text);
 
-        Log.Write($"[{_index}] -> input text uiElement");
+        Log.Write($"[{Index}] -> input text uiElement");
     }
 
     /// <summary>
@@ -296,15 +296,15 @@ public class Client
     /// <param name="remote">путь на удаленной машине</param>
     public async Task Push(string local, string remote)
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return;
         }
 
-        await Memu.Push(_index, local, remote);
+        await Memu.Push(Index, local, remote);
 
-        Log.Write($"[{_index}] -> files pushed");
+        Log.Write($"[{Index}] -> files pushed");
     }
 
     /// <summary>
@@ -314,14 +314,14 @@ public class Client
     /// <param name="remote">путь на удаленной машине</param>
     public async Task<string> Pull(string local, string remote)
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return "";
         }
 
-        Log.Write($"[{_index}] -> files pulled");
-        return await Memu.Pull(_index, local, remote);
+        Log.Write($"[{Index}] -> files pulled");
+        return await Memu.Pull(Index, local, remote);
     }
 
     /// <summary>
@@ -330,15 +330,15 @@ public class Client
     /// <param name="cmd">команда (без adb shell)</param>
     public async Task<string> Shell(string cmd)
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return string.Empty;
         }
 
-        var result = await MemuCmd.ExecMemuc($"-i {_index} adb shell {cmd}");
+        var result = await MemuCmd.ExecMemuc($"-i {Index} adb shell {cmd}");
 
-        Log.Write($"[{_index}] -> shell be called");
+        Log.Write($"[{Index}] -> shell be called");
 
         return result;
     }
@@ -349,15 +349,15 @@ public class Client
     /// <param name="cmd">команда</param>
     public async Task<string> ShellCmd(string cmd)
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return string.Empty;
         }
 
-        var result = await MemuCmd.ExecMemuc($"-i {_index} execcmd {cmd}");
+        var result = await MemuCmd.ExecMemuc($"-i {Index} execcmd {cmd}");
 
-        Log.Write($"[{_index}] -> shellCmd be called");
+        Log.Write($"[{Index}] -> shellCmd be called");
 
         return result;
     }
@@ -368,16 +368,16 @@ public class Client
     /// <returns>Разрешение экрана</returns>
     public async Task<Point> GetResoultion()
     {
-        if (!await Memu.Exists(_index))
+        if (!await Memu.Exists(Index))
         {
-            Log.Write($"[{_index}] -> VM not found");
+            Log.Write($"[{Index}] -> VM not found");
             return Point.Empty;
         }
 
-        var x = int.Parse((await MemuCmd.ExecMemuc($"-i {_index} getconfigex resolution_width")).Split(' ')[1]);
-        var y = int.Parse((await MemuCmd.ExecMemuc($"-i {_index} getconfigex resolution_height")).Split(' ')[1]);
+        var x = int.Parse((await MemuCmd.ExecMemuc($"-i {Index} getconfigex resolution_width")).Split(' ')[1]);
+        var y = int.Parse((await MemuCmd.ExecMemuc($"-i {Index} getconfigex resolution_height")).Split(' ')[1]);
 
-        Log.Write($"[{_index}] -> requested resolution VM");
+        Log.Write($"[{Index}] -> requested resolution VM");
 
         return new Point(x, y);
     }
@@ -419,7 +419,7 @@ public class Client
                 PBootCount = random.Next(0, 50).ToString()
             };
 
-        await Memu.Spoof(_index, _deviceInfo ?? new DeviceInfoGenerated());
-        Log.Write($"[{_index}] -> VM spoofed, do not forget reload machine");
+        await Memu.Spoof(Index, _deviceInfo ?? new DeviceInfoGenerated());
+        Log.Write($"[{Index}] -> VM spoofed, do not forget reload machine");
     }
 }

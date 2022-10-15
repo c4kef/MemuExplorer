@@ -22,6 +22,7 @@ namespace UBot.Views.User
 
             _webPrep = new Whatsapp.Web.AccPreparation();
             _webNewsletter = new Whatsapp.Web.Newsletter();
+            _emPrep = new Whatsapp.AccPreparation();
 
             _isFree = true;
             _instance = this;
@@ -84,6 +85,7 @@ namespace UBot.Views.User
         private bool _isFree;
 
         private readonly Whatsapp.Web.AccPreparation _webPrep;
+        private readonly Whatsapp.AccPreparation _emPrep;
         private readonly Whatsapp.Web.Newsletter _webNewsletter;
 
         #endregion
@@ -148,6 +150,25 @@ namespace UBot.Views.User
 
                 await _activeTask;
                 await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Информация", "Рассылка была завершена", false));
+                _isFree = true;
+            }
+
+            if ((result.Value.Warm || result.Value.CheckBan || result.Value.Scaning) && !result.Value.IsWeb)
+            {
+                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) % 2 != 0 && !result.Value.CheckBan))
+                {
+                    await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));
+                    return;
+                }
+
+                _isFree = false;
+                var _activeTask = Task.Run(async () =>
+                {
+                    await _emPrep.Run(await File.ReadAllTextAsync(Globals.Setup.PathToFileTextWarm), result.Value);
+                });
+
+                await _activeTask;
+                await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Информация", "Прогрев был завершен", false));
                 _isFree = true;
             }
 

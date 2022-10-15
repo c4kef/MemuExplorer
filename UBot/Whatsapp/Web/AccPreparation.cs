@@ -1,17 +1,5 @@
 ﻿using MemuLib.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using UBot.Pages.Dialogs;
-using UBot.Pages.User;
 using UBot.Views.User;
-using WPP4DotNet;
-using WPP4DotNet.WebDriver;
-using ZXing.QrCode.Internal;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace UBot.Whatsapp.Web;
 

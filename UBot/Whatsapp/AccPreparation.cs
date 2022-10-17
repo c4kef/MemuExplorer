@@ -356,7 +356,7 @@ public class AccPreparation
 
                 try
                 {
-                    await client.Web!.Init(true, @$"{client.Account}\{client.Phone.Remove(0, 1)}");
+                    await client.Web!.Init(true, @$"{client.Account}\{client.Phone.Remove(0, 1)}", await GetProxy());
 
                     initWithErrors = false;
                 }
@@ -490,6 +490,19 @@ public class AccPreparation
                 await client.GetInstance().Click("text=\"OK\"");
 
             return true;
+        }
+
+        async Task<string> GetProxy()
+        {
+            if (!File.Exists(Globals.Setup.PathToFileProxy))
+                return "";
+
+            var proxyList = await File.ReadAllLinesAsync(Globals.Setup.PathToFileProxy);
+
+            if (proxyList.Length == 0)
+                return "";
+
+            return proxyList.OrderBy(x => new Random().Next()).ToArray()[0];
         }
 
         async Task SuccesfulMoveAccount(Client client)

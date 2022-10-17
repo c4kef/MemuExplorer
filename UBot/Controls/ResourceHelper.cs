@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,19 @@ namespace UBot.Controls
 {
     public static class ResourceHelper
     {
+        public static Bitmap Base64StringToBitmap(this string base64String)
+        {
+            byte[] byteBuffer = Convert.FromBase64String(base64String);
+            MemoryStream memoryStream = new(byteBuffer)
+            {
+                Position = 0
+            };
+
+            Bitmap bmpReturn = (Bitmap)System.Drawing.Image.FromStream(memoryStream);
+            memoryStream.Close();
+
+            return bmpReturn;
+        }
 
         public static object FindResource(this VisualElement o, string key)
         {

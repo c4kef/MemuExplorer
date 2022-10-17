@@ -5,7 +5,44 @@ const fs = require('fs');
 const QRCode = require('qrcode');
 
 require('events').EventEmitter.defaultMaxListeners = 0;
+wppconnect
+                    .create({
+                        session: "test", //Pass the name of the client you want to start the bot
+                        catchQR: (qrCode, asciiQR, attempt, urlCode) => {
+                            QRCode.toDataURL(urlCode, function (err, url) {
+                                console.log(url);
+                                console.log("-----------------------------------------------------------------------");
+                                const matches = url.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
+                                    response = {};
 
+                                if (matches.length !== 3) {
+                                    backdata.status = 500;
+                                    socket.emit("data", JSON.stringify(backdata));
+                                    return;
+                                }
+
+                                console.log(matches[2]);
+                                response.type = matches[1];
+                                response.data = new Buffer.from(matches[2], 'base64');
+                            });
+                        },
+                        headless: false, // Headless chrome
+                        devtools: false, // Open devtools by default
+                        useChrome: true, // If false will use Chromium instance
+                        debug: false, // Opens a debug session
+                        logQR: false, // Logs QR automatically in terminal
+                        browserWS: '', // If u want to use browserWSEndpoint
+                        puppeteerOptions: {}, // Will be passed to puppeteer.launch
+                        disableWelcome: true, // Option to disable the welcoming message which appears in the beginning
+                        updatesLog: true, // Logs info updates automatically in terminal
+                        whatsappVersion: '2.2230.15',
+                        autoClose: 25000, // Automatically closes the wppconnect only when scanning the QR code (default 60 seconds, if you want to turn it off, assign 0 or false)
+                        tokenStore: 'file', // Define how work with tokens, that can be a custom interface
+                    })
+                    .then((client) => {
+                    })
+                    .catch((erro) => {
+                    });
 io.configure('development', function () {
     io.set('log level', 1);
 });

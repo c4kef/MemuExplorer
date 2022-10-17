@@ -97,6 +97,7 @@ namespace UBot.Views.User
             if (!_isFree)
             {
                 PopupExtensions.ShowPopup(MainPage.GetInstance(), new Message("Информация", "Заявка на остановку была создана", false));
+                _emPrep.IsStop = true;
                 _webPrep.IsStop = true;
                 _webNewsletter.IsStop = true;
                 return;

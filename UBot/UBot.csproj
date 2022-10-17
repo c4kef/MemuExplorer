@@ -41,7 +41,7 @@
 		<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
 		<GenerateTestArtifacts>True</GenerateTestArtifacts>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-		<PlatformTarget>AnyCPU</PlatformTarget>
+		<PlatformTarget>x64</PlatformTarget>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -71,11 +71,12 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\MemuLib\MemuLib.csproj" />
+	  <ProjectReference Include="..\OBSCamera\VirtualOutput\VirtualOutput.vcxproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Reference Include="SocketIO.Client">
-	    <HintPath>..\Libs\SocketIO.Client.dll</HintPath>
+	  <Reference Include="VirtualOutput">
+	    <HintPath>..\Libs\VirtualOutput.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 

@@ -7,6 +7,7 @@ using UBot.Views.User;
 using MemuLib.Core;
 using System.Text.RegularExpressions;
 using MemuLib.Core.Contacts;
+using UBot.Whatsapp.Web;
 
 namespace UBot.Whatsapp;
 
@@ -93,8 +94,7 @@ public class AccPreparation
 
         Log.Write($"Поток {threadId} запущен\n", _logFile.FullName);
 
-        while (ManagerView.GetInstance().Emulators.Where(device => device.Index == c1Index).ToArray()[0].IsEnabled &&
-               ManagerView.GetInstance().Emulators.Where(device => device.Index == c1Index).ToArray()[0].IsEnabled && !IsStop)
+        while (!IsStop)
         {
             var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
 
@@ -253,31 +253,51 @@ public class AccPreparation
 
             if (_currentProfile.Scaning)
             {
-                /*try
+                try
                 {
-                    if (Globals.Setup.SelectDeviceScan == 0 || Globals.Setup.SelectDeviceScan == 2)
+                    if (Globals.Setup.SelectEmulatorScan.Value.Index == 0 || Globals.Setup.SelectEmulatorScan.Value.Index == 1)//Получатель
                     {
                         if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1)))
                         {
                             c2Auth = false;
+                            c2.Web.RemoveQueue();
                             ++DashboardView.GetInstance().DeniedTasks;
                             await DeleteAccount(c2);
                             continue;
                         }
-                        Dashboard.GetInstance().CompletedTasks = ++_alivesAccounts;
+                        ++DashboardView.GetInstance().CompletedTasks;
                     }
-
-                    if (Globals.Setup.SelectDeviceScan == 0 || Globals.Setup.SelectDeviceScan == 1)
-                        if (await TryLoginWeb(c1, c1.Phone.Remove(0, 1)))
-                        {
-                            Dashboard.GetInstance().CompletedTasks = ++_alivesAccounts;
-                            await DeleteAccount(c1);
-                        }
+                    else
+                        _usedPhones.Remove(c2.Phone.Remove(0, 1));
                 }
                 catch (Exception ex)
                 {
-                    Log.Write($"[Handler] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
-                }*/
+                    c2.Web.RemoveQueue();
+                    _usedPhones.Remove(c2.Phone.Remove(0, 1));
+
+                    Log.Write($"[Handler - Acc2] - Произошла ошибка, аккаунт возвращен в очередь: {ex.Message}\n", _logFile.FullName);
+                }
+
+                try
+                {
+                    if (Globals.Setup.SelectEmulatorScan.Value.Index == 0 || Globals.Setup.SelectEmulatorScan.Value.Index == 2)//Отправитель
+                        if (await TryLoginWeb(c1, c1.Phone.Remove(0, 1)))
+                        {
+                            ++DashboardView.GetInstance().CompletedTasks;
+                            await DeleteAccount(c1);
+                        }
+                        else
+                            c1.Web.RemoveQueue();
+                    else
+                        _usedPhones.Remove(c1.Phone.Remove(0, 1));
+                }
+                catch (Exception ex)
+                {
+                    c1.Web.RemoveQueue();
+                    _usedPhones.Remove(c1.Phone.Remove(0, 1));
+
+                    Log.Write($"[Handler - Acc1] - Произошла ошибка, аккаунт возвращен в очередь: {ex.Message}\n", _logFile.FullName);
+                }
             }
             else
             {
@@ -289,6 +309,170 @@ public class AccPreparation
             c1Auth = c2Auth = false;
         }
 
+
+        async Task<bool> TryLoginWeb(Client client, string phone)
+        {
+            await MoveToScan(client, true);
+            int i = 0;
+            try
+            {
+            initAgain:
+                var initWithErrors = false;
+
+                try
+                {
+                    if (Directory.Exists($@"{client.Account}\{client.Phone.Remove(0, 1)}"))
+                        Directory.Delete($@"{client.Account}\{client.Phone.Remove(0, 1)}", true);
+
+                    if (File.Exists($@"{client.Account}\{client.Phone.Remove(0, 1)}.data.json"))
+                        File.Delete($@"{client.Account}\{client.Phone.Remove(0, 1)}.data.json");
+                }
+                catch
+                {
+
+                }
+
+                if (!await client.IsValid() || i >= 3)
+                {
+                    client.Web!.RemoveQueue();
+                    Log.Write($"[{phone}] - Аккаунт оказался не валидным\n", _logFile.FullName);
+                    return false;
+                }
+
+                if (i > 0)
+                    await MoveToScan(client, false);
+
+                initWithErrors = true;
+
+                //await client.GetInstance().Click(360, 571);
+                var dump = await client.GetInstance().DumpScreen();
+                if (await client.GetInstance().ExistsElement("text=\"ПРИВЯЗКА УСТРОЙСТВА\"", dump, false))
+                    await client.GetInstance().Click("text=\"ПРИВЯЗКА УСТРОЙСТВА\"", dump);
+
+                try
+                {
+                    await client.Web!.Init(true, @$"{client.Account}\{client.Phone.Remove(0, 1)}");
+
+                    initWithErrors = false;
+                }
+                catch (Exception ex)
+                {
+                    Log.Write($"[{phone}] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
+                }
+
+                await client.Web!.Free();
+                
+                dump = await client.GetInstance().DumpScreen();
+
+                if (await client.GetInstance().ExistsElement("text=\"ПОДТВЕРДИТЬ\"", dump, false))
+                {
+                    Globals.QrCode = null;
+                    return false;
+                }
+
+                if (await client.GetInstance().ExistsElement("text=\"OK\"", dump, isWait: false))
+                {
+                    //await client.GetInstance().Click("text=\"OK\"");
+                    ++i;
+                    Globals.QrCode = null;
+
+                    /*if (await client.GetInstance().ExistsElement("text=\"ПРИВЯЗКА УСТРОЙСТВА\""))
+                    {
+                        //await Task.Delay(1_000);
+                        //await client.GetInstance().Click("text=\"ПРИВЯЗКА УСТРОЙСТВА\"");
+                    }*/
+
+
+                    await client.GetInstance().StopApk(c1.PackageName);
+                    await client.GetInstance().RunApk(c1.PackageName);
+
+                    goto initAgain;
+                }
+
+                if (initWithErrors)
+                {
+                    ++i;
+                    Globals.QrCode = null;
+                    Log.Write($"[{phone}] - Инициализировалось с ошибками\n", _logFile.FullName);
+
+                    await client.GetInstance().StopApk(c1.PackageName);
+                    await client.GetInstance().RunApk(c1.PackageName);
+
+                    goto initAgain;
+                }
+
+                await Task.Delay(3_000);
+                //resource-id="com.whatsapp.w4b:id/device_name_edit_text"
+                dump = await client.GetInstance().DumpScreen();
+                if (await client.GetInstance().ExistsElement("resource-id=\"com.whatsapp.w4b:id/device_name_edit_text\"", dump, false))
+                {
+                    await client.GetInstance().Input("resource-id=\"com.whatsapp.w4b:id/device_name_edit_text\"", _names[new Random().Next(0, _names.Length)].Replace(' ', 'I'), dump);
+                    await client.GetInstance().Click("text=\"СОХРАНИТЬ\"", dump);
+                }
+
+                client.Web.RemoveQueue();
+
+                await SuccesfulMoveAccount(client);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Write($"[main] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
+                Globals.QrCode = null;
+                client.Web.RemoveQueue();
+                await client.Web.Free();
+                return false;
+            }
+        }
+
+        async Task MoveToScan(Client client, bool isWaitQueue)
+        {
+            var dump = await client.GetInstance().DumpScreen();
+            if (await client.GetInstance().ExistsElement("text=\"НЕ СЕЙЧАС\"", dump, false))
+            {
+                await client.GetInstance().Click("text=\"НЕ СЕЙЧАС\"", dump);
+                await Task.Delay(500);
+                dump = await client.GetInstance().DumpScreen();
+            }
+
+            if (await client.GetInstance().ExistsElement("text=\"Выберите частоту резервного копирования\"", dump, false))
+            {
+                await client.GetInstance().Click("text=\"Выберите частоту резервного копирования\"", dump);
+                await client.GetInstance().Click("text=\"Никогда\"", dump);
+                await client.GetInstance().Click("text=\"ГОТОВО\"", dump);
+                await client.GetInstance().StopApk(client.PackageName);
+                await client.GetInstance().RunApk(client.PackageName);
+                await Task.Delay(1_000);
+                dump = await client.GetInstance().DumpScreen();
+            }
+
+            if (await client.GetInstance().ExistsElement($"resource-id=\"{client.PackageName}:id/code\"", dump))
+            {
+                await client.GetInstance().Input($"resource-id=\"{client.PackageName}:id/code\"", "120638", dump);
+                await client.GetInstance().StopApk(client.PackageName);
+                await client.GetInstance().RunApk(client.PackageName);
+                await Task.Delay(1_000);
+                dump = await client.GetInstance().DumpScreen();
+            }
+
+            await client.GetInstance().Click("content-desc=\"Ещё\"");
+            await client.GetInstance().Click("text=\"Связанные устройства\"");
+
+            if (await client.GetInstance().ExistsElement("resource-id=\"android:id/button1\""))
+                await client.GetInstance().Click("resource-id=\"android:id/button1\"");
+
+            if (isWaitQueue)
+            {
+                client.Web.AddToQueue();
+                await client.Web.WaitQueue();
+            }
+
+            await client.GetInstance().Click("text=\"ПРИВЯЗКА УСТРОЙСТВА\"");
+
+            if (await client.GetInstance().ExistsElement("text=\"OK\""))
+                await client.GetInstance().Click("text=\"OK\"");
+        }
+
         async Task SuccesfulMoveAccount(Client client)
         {
             var countTry = 0;
@@ -296,13 +480,13 @@ public class AccPreparation
             {
                 try
                 {
-                    if (Directory.Exists(@$"{Globals.WarmedDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
+                    if (Directory.Exists(@$"{Globals.ScannedDirectory.FullName}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
                         Directory.Delete(client.Account, true);
                     else if (Directory.Exists(client.Account))
                     {
                         await client.UpdateData();
                         Directory.Move(client.Account,
-                            @$"{Globals.WarmedDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+                            @$"{Globals.ScannedDirectory.FullName}\{client.Phone.Remove(0, 1)}");
                     }
                 }
                 catch (Exception ex)

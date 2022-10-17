@@ -229,16 +229,18 @@ public class Client
             dump = await Mem.DumpScreen();
         }
 
-        return !await Mem.ExistsElement("text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"", dump, false) &&
-               !await Mem.ExistsElement("text=\"ДАЛЕЕ\"", dump, false) &&
-               !await Mem.ExistsElement("text=\"Перезапустить приложение\"", dump, false) &&
-               !await Mem.ExistsElement("text=\"Закрыть приложение\"", dump, false) &&
-               !await Mem.ExistsElement("content-desc=\"Неверный номер?\"", dump, false) &&
-               !await Mem.ExistsElement("text=\"ЗАПРОСИТЬ РАССМОТРЕНИЕ\"", dump, false) &&
-               !await Mem.ExistsElement("text=\"WA Business\"", dump, false) &&
-               !await Mem.ExistsElement("text=\"WhatsApp\"", dump, false) &&
-               !await Mem.ExistsElement("resource-id=\"android:id/progress\"", dump, false) &&
-               !await Mem.ExistsElement("text=\"ПОДТВЕРДИТЬ\"", dump, false);
+        return !await Mem.ExistsElements(new string[] {
+        "text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"",
+        "text=\"AGREE AND CONTINUE\"",
+        "text=\"ДАЛЕЕ\"",
+        "text=\"Перезапустить приложение\"",
+        "text=\"Закрыть приложение\"",
+        "content-desc=\"Неверный номер?\"",
+        "text=\"ЗАПРОСИТЬ РАССМОТРЕНИЕ\"",
+        "text=\"WA Business\"",
+        "text=\"WhatsApp\"",
+        "resource-id=\"android:id/progress\"",
+        "text=\"ПОДТВЕРДИТЬ\""}, dump, false);
     }
 
     public async Task ReCreate([Optional] string phone, [Optional] string account, [Optional] int? deviceId)

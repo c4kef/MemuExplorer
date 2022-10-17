@@ -196,6 +196,39 @@ public class Client
         }
     }
 
+    /// <summary>
+    /// Проверка элементов на существование
+    /// </summary>
+    /// <param name="uiElement">название элементов в интерфейсе</param>
+    public async Task<bool> ExistsElements(string[] uiElements, string? dump = null, bool isWait = true)
+    {
+        try
+        {
+            if (!await Memu.Exists(Index))
+            {
+                Log.Write($"[{Index}] -> VM not found");
+                return false;
+            }
+
+            if (isWait)
+                await Task.Delay(Settings.WaitingSecs);
+
+            foreach (var uiElement in uiElements)
+            {
+                var (x, y) = await FindElement(uiElement, dump ?? await DumpScreen());
+
+                if (x != -1 && y != -1)
+                    return true;
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public async Task<string> DumpScreen()
     {
         var result = await ShellCmd("uiautomator dump");

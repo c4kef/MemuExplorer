@@ -16,8 +16,13 @@ namespace UBot.Whatsapp.Web;
 
 public class WClient
 {
+    private static List<int> Queue = null!;
+    private static List<int> QueueProcess = null!;
+
     private IWpp _wpp;
+    public readonly int TaskId;
     public readonly string NameSession;
+    public bool IsDisposed { get; private set; }
 
     /// <summary>
     /// Инициализация сессии
@@ -26,6 +31,70 @@ public class WClient
     public WClient(string nameSession)
     {
         NameSession = nameSession;
+        TaskId = new Random().Next(1_000_000, 10_000_000);
+    }
+
+    /// <summary>
+    /// Добавление в очередь
+    /// </summary>
+    public void AddToQueue() => Queue.Add(TaskId);
+
+    /// <summary>
+    /// Ждем своей очереди
+    /// </summary>
+    /// <returns>false - если очередь не удалось дождаться и true - если мы смогли дождаться</returns>
+    public async Task WaitQueue()
+    {
+        while (!QueueProcess.ToArray().Any(_id => _id == TaskId))
+            await Task.Delay(10);
+    }
+
+    /// <summary>
+    /// Удаляем наш запрос из очереди
+    /// </summary>
+    public void RemoveQueue() => QueueProcess.Remove(TaskId);
+
+    /// <summary>
+    /// Обработчик запросов на сканирование
+    /// </summary>
+    public static async Task QueueCameraHandler()
+    {
+        Queue = new List<int>();
+        QueueProcess = new List<int>();
+
+        var lastId = 0;
+        var aliveLastId = 0;
+
+        while (true)
+        {
+            if (Queue.Count > 0 && QueueProcess.Count == 0)
+            {
+                QueueProcess.Add(Queue[0]);
+                Queue.RemoveAt(0);
+            }
+
+            if (QueueProcess.Count > 0)
+            {
+                if (lastId == 0 || lastId != QueueProcess[0])
+                {
+                    lastId = QueueProcess[0];
+                    aliveLastId = 0;
+                }
+                else if (lastId == QueueProcess[0])
+                {
+                    //124 = 1 minute - 60 sec
+                    //2 = 1 sec
+                    if (aliveLastId++ > 400)
+                    {
+                        QueueProcess.Clear();
+                        lastId = 0;
+                        aliveLastId = 0;
+                    }
+                }
+            }
+
+            await Task.Delay(500);
+        }
     }
 
     /// <summary>
@@ -37,6 +106,9 @@ public class WClient
     /// <exception cref="Exception">Ошибка сервера</exception>
     public async Task Init(bool waitQr, string pathToWeb, string proxy = "")
     {
+        Directory.CreateDirectory(pathToWeb);
+        IsDisposed = false;
+
         if (!string.IsNullOrEmpty(proxy))
         {
             var proxyAuthData = proxy.Split(':');
@@ -68,22 +140,19 @@ public class WClient
             {
                 if (!string.IsNullOrEmpty(await _wpp.GetAuthCode()))
                 {
-                    /*var qr = await wpp.GetAuthImage();
+                    Globals.QrCode = null;
+                    Globals.QrCode = await _wpp.GetAuthImage(276, 276);
+                    var timerLoadingQr = 0;
 
-                    qr.Save(@$"{Globals.TempDirectory.FullName}\{TaskId}.png");
-
-                    Globals.QrCodeName = TaskId.ToString();
-
-                    if (!await WaitRequest())
+                    while (!await IsConnected())
                     {
-                        _taskQueue.RemoveAll(task => task == TaskId);
-                        throw new Exception("cant wait end operation");
+                        if (timerLoadingQr++ > 50)
+                            throw new Exception("We cant scan Qr, retry again");
+
+                        await Task.Delay(500);
                     }
 
-                    Globals.QrCodeName = string.Empty;
-
-                    while (!TryDeleteQR())
-                        await Task.Delay(500);*/
+                    Globals.QrCode = null;
                 }
             }
 
@@ -94,7 +163,7 @@ public class WClient
             throw new Exception("Cant load account");
     }
 
-    public async Task<bool> IsConnected() => (await (await _wpp.WebDriver.PagesAsync())[0].QuerySelectorAsync("#app > div > div > div.landing-window > div.landing-main > div > a")) is null && await _wpp.IsMainLoaded() && await _wpp.IsAuthenticated() && await _wpp.IsMainReady();
+    public async Task<bool> IsConnected() => !IsDisposed && (await (await _wpp.WebDriver.PagesAsync())[0].QuerySelectorAsync("#app > div > div > div.landing-window > div.landing-main > div > a")) is null && await _wpp.IsMainLoaded() && await _wpp.IsAuthenticated() && await _wpp.IsMainReady();
 
     /// <summary>
     /// Отправить сообщение
@@ -143,6 +212,7 @@ public class WClient
     /// <exception cref="Exception">Ошибка сервера</exception>
     public async Task Free()
     {
+        IsDisposed = true;
         try
         {
             /*await _wpp.WebDriver.CloseAsync();

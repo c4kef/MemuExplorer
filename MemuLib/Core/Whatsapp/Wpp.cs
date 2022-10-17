@@ -314,14 +314,14 @@ namespace WPP4DotNet
         {
             try
             {
-                var code = await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("() => window.WPP?.conn.getAuthCode()");
+                var code = await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("() => document.querySelector('canvas').closest('[data-ref]').getAttribute('data-ref')");// window.WPP?.conn.getAuthCode()");
                 if (code is null)
                     return "";
 
-                var response = JObject.Parse(code.ToString()!);
-                return (string)response["fullCode"]!;
+                //var response = JObject.Parse(code.ToString()!);
+                return code.ToString()!;//(string)response["fullCode"]!;
             }
-            catch (Exception)
+            catch (Exception msg)
             {
                 return "";
             }

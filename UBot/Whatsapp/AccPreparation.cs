@@ -498,21 +498,19 @@ public class AccPreparation
             }
         }
 
-        async Task DeleteAccount(Client client)
+        async Task DeleteAccount(Client client, bool isStartBan = false)
         {
             var countTry = 0;
             while (countTry++ < 3)
             {
                 try
                 {
-                    if (Directory.Exists(@$"{Globals.BanDirectory.FullName}\{client.Phone.Remove(0, 1)}") &&
-                        Directory.Exists(client.Account))
+                    if (Directory.Exists(@$"{((isStartBan) ? Globals.BanStartDirectory.FullName : Globals.BanWorkDirectory.FullName)}\{client.Phone.Remove(0, 1)}") && Directory.Exists(client.Account))
                         Directory.Delete(client.Account, true);
                     else if (Directory.Exists(client.Account))
                     {
                         await client.UpdateData();
-                        Directory.Move(client.Account,
-                            @$"{Globals.BanDirectory.FullName}\{client.Phone.Remove(0, 1)}");
+                        Directory.Move(client.Account, @$"{((isStartBan) ? Globals.BanStartDirectory.FullName : Globals.BanWorkDirectory.FullName)}\{client.Phone.Remove(0, 1)}");
                     }
                 }
                 catch (Exception ex)
@@ -531,11 +529,17 @@ public class AccPreparation
                 await client.ReCreate($"+{phone}", path);
                 if (!await client.Login(name: _names[new Random().Next(0, _names.Length)]))
                 {
-                    await DeleteAccount(client);
+                    await DeleteAccount(client, true);
                     return false;
                 }
 
                 var status = await client.IsValid();
+                if (!status)
+                {
+                    await DeleteAccount(client, true);
+                    return false;
+                }
+
                 return status;
             }
             catch (Exception ex)

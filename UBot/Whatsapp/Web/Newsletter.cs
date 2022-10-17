@@ -32,6 +32,7 @@ public class Newsletter
     private string[] _contacts;
     private FileInfo _logFile;
     private FileInfo _reportFile;
+    private FileInfo _badProxyFile;
 
     public bool IsStop;
 
@@ -40,6 +41,13 @@ public class Newsletter
         IsStop = false;
         _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_log.txt");
         _reportFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_report.txt");
+
+        if (File.Exists(Globals.Setup.PathToFileProxy))
+        {
+            _badProxyFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_badproxy.txt");
+            _badProxyFile.Create().Close();
+        }
+
         _logFile.Create().Close();
         _reportFile.Create().Close();
 
@@ -74,6 +82,7 @@ public class Newsletter
 
     private async Task Handler()
     {
+        var badProxyList = new List<string>();
         while (!IsStop)
         {
             var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
@@ -97,10 +106,17 @@ public class Newsletter
             var countSendedMessages = 0;
 
             var client = new Client(phone, path);
+            var proxy = GetProxy();
+
+            if (proxy == "0")
+            {
+                Log.Write($"[I] - прокси не было найдено\n", _logFile.FullName);
+                return;
+            }
 
             try
             {
-                await client.Web!.Init(false, $@"{path}\{new DirectoryInfo(path).Name}", await GetProxy());
+                await client.Web!.Init(false, $@"{path}\{new DirectoryInfo(path).Name}", proxy);
 
                 Log.Write($"[{phone}] - смогли войти\n", _logFile.FullName);
             }
@@ -159,6 +175,13 @@ public class Newsletter
             catch (Exception ex)
             {
                 _sendedMessagesCountFromAccount[phone] = countSendedMessages;
+
+                if (countSendedMessages < 10 && File.Exists(Globals.Setup.PathToFileProxy))
+                {
+                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{proxy}", _badProxyFile.FullName);
+                    badProxyList.Add(proxy);
+                }
+
                 _usedPhonesUsers.Remove(peopleReal);
 
                 await client.Web!.Free();
@@ -225,17 +248,24 @@ public class Newsletter
                 return backValue;
             }
 
-            async Task<string> GetProxy()
+            string GetProxy()
             {
-                if (!File.Exists(Globals.Setup.PathToFileProxy))
-                    return "";
+                lock (_lock)
+                {
+                    if (!File.Exists(Globals.Setup.PathToFileProxy))
+                        return "";
 
-                var proxyList = await File.ReadAllLinesAsync(Globals.Setup.PathToFileProxy);
+                    var proxyList = File.ReadAllLines(Globals.Setup.PathToFileProxy).ToList();
+                    
+                    proxyList.RemoveAll(badProxyList.ToArray().Contains);
 
-                if (proxyList.Length == 0)
-                    return "";
+                    File.WriteAllLines(Globals.Setup.PathToFileProxy, proxyList.ToArray());
 
-                return proxyList.OrderBy(x => new Random().Next()).ToArray()[0];
+                    if (proxyList.Count == 0)
+                        return "0";
+
+                    return proxyList.OrderBy(x => new Random().Next()).ToArray()[0];
+                }
             }
         }
     }

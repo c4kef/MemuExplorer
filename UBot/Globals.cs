@@ -22,6 +22,8 @@ namespace UBot
         public static DirectoryInfo ScannedDirectory { get; private set; }
         public static DirectoryInfo LogoutDirectory { get; private set; }
         public static DirectoryInfo BanDirectory { get; private set; }
+        public static DirectoryInfo BanWorkDirectory { get; private set; }
+        public static DirectoryInfo BanStartDirectory { get; private set; }
         public static FileInfo SetupFile { get; private set; }
         public static Setup Setup { get; private set; }
         public static VirtualOutput Camera { get; private set; } = null!;
@@ -35,6 +37,8 @@ namespace UBot
             ScannedDirectory = Directory.CreateDirectory("Scanned");
             LogoutDirectory = Directory.CreateDirectory("Logout");
             BanDirectory = Directory.CreateDirectory("Bans");
+            BanWorkDirectory = Directory.CreateDirectory($@"{BanDirectory.FullName}\Work");
+            BanStartDirectory = Directory.CreateDirectory($@"{BanDirectory.FullName}\Start");
 
             MemuLib.Globals.IsLog = true;
 

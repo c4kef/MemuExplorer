@@ -88,6 +88,12 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.PinCodeAccount, value);
         }
 
+        public int? CountBansToSleep
+        {
+            get => Globals.Setup.CountBansToSleep;
+            set => SetProperty(ref Globals.Setup.CountBansToSleep, value);
+        }
+
         public int? CountGroups
         {
             get => Globals.Setup.CountGroups;

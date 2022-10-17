@@ -94,9 +94,12 @@ public class Client
             if (!await Mem.ExistsElement("text=\"Выберите частоту резервного копирования\"", dump))
                 goto s3;
 
-            await Mem.Click(374, 513);//Выберите частоту резервного копирования
-            await Mem.Click(414, 846);//text=\"Никогда\"
-            await Mem.Click(616, 1238);//text=\"ГОТОВО\"
+            //await Mem.Click(374, 513);//Выберите частоту резервного копирования
+            //await Mem.Click(414, 846);//text=\"Никогда\"
+            //await Mem.Click(616, 1238);//text=\"ГОТОВО\"
+            await Mem.Click("text=\"Выберите частоту резервного копирования\"", dump);
+            await Mem.Click("text=\"Никогда\"", dump);
+            await Mem.Click("text=\"ГОТОВО\"", dump);
             await Task.Delay(1_000);
             await Mem.StopApk(PackageName);
             await Mem.RunApk(PackageName);
@@ -118,7 +121,7 @@ public class Client
             if (!await Mem.ExistsElement($"resource-id=\"{PackageName}:id/code\"", dump))
                 return true;
 
-            await Mem.Input($"resource-id=\"{PackageName}:id/code\"", "120638", dump);
+            await Mem.Input($"resource-id=\"{PackageName}:id/code\"", Globals.Setup.PinCodeAccount.ToString(), dump);
             await Mem.StopApk(PackageName);
             await Mem.RunApk(PackageName);
             return true;

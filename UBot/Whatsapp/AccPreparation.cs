@@ -84,6 +84,9 @@ public class AccPreparation
         var (c1, c2) = (_tetheredDevices[threadId][0], _tetheredDevices[threadId][1]);
         var (c1Index, c2Index) = (_tetheredDevices[threadId][0].GetInstance().Index, _tetheredDevices[threadId][1].GetInstance().Index);
 
+        var c1BansCount = 0;
+        var c2BansCount = 0;
+
         await c1.GetInstance().RunApk("net.sourceforge.opencamera");
         await c2.GetInstance().RunApk("net.sourceforge.opencamera");
         await c1.GetInstance().StopApk("net.sourceforge.opencamera");
@@ -267,8 +270,16 @@ public class AccPreparation
                             c2.Web.RemoveQueue();
                             ++DashboardView.GetInstance().DeniedTasks;
                             await DeleteAccount(c2);
+                            if (++c2BansCount >= Globals.Setup.CountBansToSleep)
+                            {
+                                await c2.Stop();
+                                break;    
+                            }
+
                             continue;
                         }
+
+                        c2BansCount = 0;
                         ++DashboardView.GetInstance().CompletedTasks;
                     }
                     else
@@ -287,11 +298,21 @@ public class AccPreparation
                     if (Globals.Setup.SelectEmulatorScan.Value.Index == 0 || Globals.Setup.SelectEmulatorScan.Value.Index == 2)//Отправитель
                         if (await TryLoginWeb(c1, c1.Phone.Remove(0, 1)))
                         {
+                            c1BansCount = 0;
                             ++DashboardView.GetInstance().CompletedTasks;
                             await DeleteAccount(c1);
                         }
                         else
+                        {
                             c1.Web.RemoveQueue();
+
+                            if (++c1BansCount >= Globals.Setup.CountBansToSleep)
+                            {
+                                await c1.Stop();
+                                break;
+                            }
+
+                        }
                     else
                         _usedPhones.Remove(c1.Phone.Remove(0, 1));
                 }
@@ -455,7 +476,7 @@ public class AccPreparation
 
             if (await client.GetInstance().ExistsElement($"resource-id=\"{client.PackageName}:id/code\"", dump))
             {
-                await client.GetInstance().Input($"resource-id=\"{client.PackageName}:id/code\"", "120638", dump);
+                await client.GetInstance().Input($"resource-id=\"{client.PackageName}:id/code\"", Globals.Setup.PinCodeAccount.ToString(), dump);
                 await client.GetInstance().StopApk(client.PackageName);
                 await client.GetInstance().RunApk(client.PackageName);
                 await Task.Delay(1_000);

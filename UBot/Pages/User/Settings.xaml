@@ -102,118 +102,148 @@
             <StackLayout Grid.Column="1"
                          Orientation="Vertical"
                          Spacing="40">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Подготовка"
-                           FontFamily="SegoeUI"
-                           TextColor="{StaticResource White}"
-                           FontAttributes="Bold"
-                           FontSize="18"
-                           HorizontalOptions="Center" />
+                <ScrollView HeightRequest="450" VerticalScrollBarVisibility="Never">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Подготовка"
+                               FontFamily="SegoeUI"
+                               TextColor="{StaticResource White}"
+                               FontAttributes="Bold"
+                               FontSize="18"
+                               HorizontalOptions="Center" />
 
-                    <VerticalStackLayout Spacing="9"
-                                         Margin="0,18,0,0">
+                        <VerticalStackLayout Spacing="9"
+                                             Margin="0,18,0,0">
 
-                        <VerticalStackLayout>
-                            <Label Text="Пин-код"
-                                   FontFamily="SegoeUI"
-                                   TextColor="{StaticResource White}"
-                                   FontSize="18"
-                                   Margin="5,0,0,0"
-                                   HorizontalOptions="Start" />
-                            <Border Stroke="{StaticResource Active}"
-                                    StrokeThickness="2">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="11,11,11,11" />
-                                </Border.StrokeShape>
-                                <Entry FontFamily="SegoeUI"
+                            <VerticalStackLayout>
+                                <Label Text="Пин-код"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
                                        FontSize="18"
-                                       Keyboard="Numeric"
-                                       MaximumWidthRequest="125"
-                                       Placeholder="Пин-код"
-                                       Margin="0,5,5,0"
-                                       Text="{Binding PinCodeAccount}"
-                                       TextChanged="TextSave"
-                                       BackgroundColor="{StaticResource Black}">
-                                    <Entry.Behaviors>
-                                        <controls:NumericValidationBehavior />
-                                    </Entry.Behaviors>
-                                </Entry>
-                            </Border>
-                        </VerticalStackLayout>
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Пин-код"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding PinCodeAccount}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}">
+                                        <Entry.Behaviors>
+                                            <controls:NumericValidationBehavior />
+                                        </Entry.Behaviors>
+                                    </Entry>
+                                </Border>
+                            </VerticalStackLayout>
 
-                        <VerticalStackLayout>
-                            <Label Text="Группировок"
-                                   FontFamily="SegoeUI"
-                                   TextColor="{StaticResource White}"
-                                   FontSize="18"
-                                   Margin="5,0,0,0"
-                                   HorizontalOptions="Start" />
-                            <Border Stroke="{StaticResource Active}"
-                                    StrokeThickness="2">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="11,11,11,11" />
-                                </Border.StrokeShape>
-                                <Entry FontFamily="SegoeUI"
+                            <VerticalStackLayout>
+                                <Label Text="Банов во сне"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
                                        FontSize="18"
-                                       Keyboard="Numeric"
-                                       MaximumWidthRequest="125"
-                                       Placeholder="Группировок"
-                                       Margin="0,5,5,0"
-                                       Text="{Binding CountGroups}"
-                                       TextChanged="TextSave"
-                                       BackgroundColor="{StaticResource Black}">
-                                    <Entry.Behaviors>
-                                        <controls:NumericValidationBehavior />
-                                    </Entry.Behaviors>
-                                </Entry>
-                            </Border>
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Банов во сне"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding CountBansToSleep}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}">
+                                        <Entry.Behaviors>
+                                            <controls:NumericValidationBehavior />
+                                        </Entry.Behaviors>
+                                    </Entry>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout>
+                                <Label Text="Группировок"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Группировок"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding CountGroups}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}">
+                                        <Entry.Behaviors>
+                                            <controls:NumericValidationBehavior />
+                                        </Entry.Behaviors>
+                                    </Entry>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <Button Text="Имена"
+                                    HeightRequest="56"
+                                    WidthRequest="140"
+                                    FontFamily="SegoeUI"
+                                    FontSize="20"
+                                    TextColor="{StaticResource White}"
+                                    BackgroundColor="{Binding Path=ButtonPickerFileNameColor}"
+                                    CommandParameter="1"
+                                    Command="{Binding Path=ButtonClick}"
+                                    CornerRadius="11" />
+
+                            <Button Text="Текст общ"
+                                    HeightRequest="56"
+                                    WidthRequest="140"
+                                    FontFamily="SegoeUI"
+                                    FontSize="20"
+                                    TextColor="{StaticResource White}"
+                                    BackgroundColor="{Binding Path=ButtonPickerTextWarmColor}"
+                                    CommandParameter="4"
+                                    Command="{Binding Path=ButtonClick}"
+                                    CornerRadius="11" />
+
+                            <Button Text="Текст люди"
+                                    HeightRequest="56"
+                                    WidthRequest="140"
+                                    FontFamily="SegoeUI"
+                                    FontSize="20"
+                                    TextColor="{StaticResource White}"
+                                    BackgroundColor="{Binding Path=ButtonPickerTextPeopleWarmColor}"
+                                    CommandParameter="8"
+                                    Command="{Binding Path=ButtonClick}"
+                                    CornerRadius="11" />
+
+                            <Picker SelectedIndex="0"
+                                    HeightRequest="56"
+                                    WidthRequest="140"
+                                    FontFamily="SegoeUI"
+                                    FontSize="20"
+                                    TextColor="{StaticResource White}"
+                                    ItemsSource="{Binding ActionSelectEmulatorScan}"
+                                    SelectedItem="{Binding SelectEmulatorScan}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    SelectedIndexChanged="PickerChanged" />
                         </VerticalStackLayout>
-
-                        <Button Text="Имена"
-                                HeightRequest="56"
-                                WidthRequest="140"
-                                FontFamily="SegoeUI"
-                                FontSize="20"
-                                TextColor="{StaticResource White}"
-                                BackgroundColor="{Binding Path=ButtonPickerFileNameColor}"
-                                CommandParameter="1"
-                                Command="{Binding Path=ButtonClick}"
-                                CornerRadius="11" />
-
-                        <Button Text="Текст общ"
-                                HeightRequest="56"
-                                WidthRequest="140"
-                                FontFamily="SegoeUI"
-                                FontSize="20"
-                                TextColor="{StaticResource White}"
-                                BackgroundColor="{Binding Path=ButtonPickerTextWarmColor}"
-                                CommandParameter="4"
-                                Command="{Binding Path=ButtonClick}"
-                                CornerRadius="11" />
-
-                        <Button Text="Текст люди"
-                                HeightRequest="56"
-                                WidthRequest="140"
-                                FontFamily="SegoeUI"
-                                FontSize="20"
-                                TextColor="{StaticResource White}"
-                                BackgroundColor="{Binding Path=ButtonPickerTextPeopleWarmColor}"
-                                CommandParameter="8"
-                                Command="{Binding Path=ButtonClick}"
-                                CornerRadius="11" />
-                        
-                        <Picker SelectedIndex="0"
-                                HeightRequest="56"
-                                WidthRequest="140"
-                                FontFamily="SegoeUI"
-                                FontSize="20"
-                                TextColor="{StaticResource White}"
-                                ItemsSource="{Binding ActionSelectEmulatorScan}"
-                                SelectedItem="{Binding SelectEmulatorScan}"
-                                ItemDisplayBinding="{Binding Name}"
-                                SelectedIndexChanged="PickerChanged" />
                     </VerticalStackLayout>
-                </VerticalStackLayout>
+                </ScrollView>
             </StackLayout>
 
             <StackLayout Grid.Column="2"

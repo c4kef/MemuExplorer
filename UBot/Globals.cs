@@ -192,6 +192,7 @@ namespace UBot
         public bool RemoveAvatar;
         public int? PinCodeAccount;
 
+        public int? CountBansToSleep;
         public int? CountMessages;
         public int? CountGroups;
         public int? CountThreads;

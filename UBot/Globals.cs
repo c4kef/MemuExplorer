@@ -96,7 +96,8 @@ namespace UBot
                 await SaveSetup();
             }
         }
-        public static (string phone, string path)[] GetAccounts(string[] phoneFrom, bool isWarming = false, object locker = null)
+
+        public static (string phone, string path)[] GetAccounts(string[] phoneFrom, bool isWarming = false, object locker = null, string[] currentPhones = null)
         {
             lock (locker is null ? Locker : locker)
             {
@@ -113,7 +114,20 @@ namespace UBot
                             File.ReadAllText($@"{accountDirectory}\Data.json"));
 
                     if (!phoneFrom.Contains(phone) && (isWarming || dataAccount!.TrustLevelAccount >= Setup.MinTrustLevel))
-                        accounts.Add((phone, accountDirectory));
+                    {
+                        if (currentPhones != null)
+                        {
+                            foreach (var currentPhone in currentPhones)
+                                if (Directory.Exists($@"{Setup.PathToFolderAccounts}\{currentPhone}") && File.Exists($@"{Setup.PathToFolderAccounts}\{currentPhone}\Data.json"))
+                                {
+                                    var data = JsonConvert.DeserializeObject<AccountData>(File.ReadAllText($@"{accountDirectory}\Data.json"));
+                                    if (data.MessageHistory != null && data.MessageHistory.Count > 0 && !data.MessageHistory.ContainsKey(phone))
+                                        accounts.Add((phone, accountDirectory));
+                                }
+                        }
+                        else
+                            accounts.Add((phone, accountDirectory));
+                    }
                 }
 
                 return accounts.OrderBy(x => new Random().Next()).ToArray();

@@ -86,7 +86,7 @@ public class AccPreparation
         if (IsStop)
             return;
 
-        var result = Globals.GetAccounts(_usedPhones.Select(phone => phone.Remove(0, 1)).ToArray(), true, _lock);
+        var result = Globals.GetAccounts(_usedPhones.Select(phone => phone.Remove(0, 1)).ToArray(), true, _lock, _activePhones.Where(phone => phone[0].ToString() == threadId.ToString()).Select(phone => phone.Remove(0, 1)).ToArray());
 
         if (result.Length == 0)
         {
@@ -223,6 +223,8 @@ public class AccPreparation
                 else
                 {
                     await client.Web!.Free();
+                    ++client.AccountData.TrustLevelAccount;
+                    await client.UpdateData();
                     ++DashboardView.GetInstance().CompletedTasks;
                     await Globals.TryMove(path, $@"{Globals.WarmedDirectory.FullName}\{phone}");
                 }

@@ -47,6 +47,16 @@ public class AccountData
     public DateTime CreatedDate = DateTime.Now;
 
     /// <summary>
+    /// Дата бана
+    /// </summary>
+    public DateTime BannedDate;
+
+    /// <summary>
+    /// С кем переписывался
+    /// </summary>
+    public Dictionary<string, DateTime> MessageHistory = new Dictionary<string, DateTime>();
+
+    /// <summary>
     /// Аккаунт первый начал переписку?
     /// </summary>
     public bool FirstMsg = false;

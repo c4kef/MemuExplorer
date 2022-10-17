@@ -30,8 +30,11 @@ public class Client
         AccountData = new AccountData();
 
         if (account != string.Empty)
+        {
             AccountData = JsonConvert.DeserializeObject<AccountData>(File.ReadAllText($@"{account}\Data.json"))!;
-
+            AccountData.MessageHistory ??= new Dictionary<string, DateTime>();
+        }
+        
         if (!string.IsNullOrEmpty(phone))
             Web = new WClient(phone[0] == '+' ? phone.Remove(0, 1) : phone);
 
@@ -180,6 +183,7 @@ public class Client
 
             await Mem.Click("content-desc=\"Отправить\"", dump);
             isSended = true;
+            AccountData.MessageHistory[to] = DateTime.Now;
             break;
         }
 

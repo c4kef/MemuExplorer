@@ -96,7 +96,11 @@ public class AccPreparation
 
         while (!IsStop)
         {
-            var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
+            var usedPhones = _usedPhones.Select(phone => phone.Remove(0, 1)).ToList();
+            if (c1Auth && _currentProfile.Warm)
+                usedPhones.AddRange(c1.AccountData.MessageHistory.Keys);
+
+            var result = Globals.GetAccounts(usedPhones.ToArray(), true, _lock);
 
             DashboardView.GetInstance().AllTasks = result.Length;
 
@@ -340,7 +344,8 @@ public class AccPreparation
                 }
 
                 if (i > 0)
-                    await MoveToScan(client, false);
+                    if (!await MoveToScan(client, false))
+                        goto initAgain;
 
                 initWithErrors = true;
 
@@ -425,8 +430,10 @@ public class AccPreparation
             }
         }
 
-        async Task MoveToScan(Client client, bool isWaitQueue)
+        async Task<bool> MoveToScan(Client client, bool isWaitQueue)
         {
+            var countTry = 0;
+        tryAgain:
             var dump = await client.GetInstance().DumpScreen();
             if (await client.GetInstance().ExistsElement("text=\"НЕ СЕЙЧАС\"", dump, false))
             {
@@ -455,6 +462,16 @@ public class AccPreparation
                 dump = await client.GetInstance().DumpScreen();
             }
 
+            if (!await client.GetInstance().ExistsElement("content-desc=\"Ещё\""))
+            {
+                Log.Write($"Не можем найти кнопку ещё, пробуем сдампить еще раз\n", _logFile.FullName);
+                
+                if (++countTry >= 2)
+                    return false;
+
+                goto tryAgain;
+            }
+
             await client.GetInstance().Click("content-desc=\"Ещё\"");
             await client.GetInstance().Click("text=\"Связанные устройства\"");
 
@@ -471,6 +488,8 @@ public class AccPreparation
 
             if (await client.GetInstance().ExistsElement("text=\"OK\""))
                 await client.GetInstance().Click("text=\"OK\"");
+
+            return true;
         }
 
         async Task SuccesfulMoveAccount(Client client)
@@ -509,6 +528,7 @@ public class AccPreparation
                         Directory.Delete(client.Account, true);
                     else if (Directory.Exists(client.Account))
                     {
+                        client!.AccountData.BannedDate = DateTime.Now;
                         await client.UpdateData();
                         Directory.Move(client.Account, @$"{((isStartBan) ? Globals.BanStartDirectory.FullName : Globals.BanWorkDirectory.FullName)}\{client.Phone.Remove(0, 1)}");
                     }

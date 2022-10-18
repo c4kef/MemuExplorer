@@ -66,6 +66,8 @@ public class Client
             await Mem.StopApk(PackageName);
             await Mem.RunApk(PackageName);
 
+            await Task.Delay(1_500);
+
             var dump = await Mem.DumpScreen();
 
             if (!await Mem.ExistsElement("text=\"ПРОПУСТИТЬ\"", dump))
@@ -91,16 +93,10 @@ public class Client
             dump = await Mem.DumpScreen();
 
         s2:
-            if (!await Mem.ExistsElement("text=\"Выберите частоту резервного копирования\"", dump))
+            if (!await Mem.ExistsElement($"resource-id=\"{PackageName}:id/code\"", dump))
                 goto s3;
 
-            //await Mem.Click(374, 513);//Выберите частоту резервного копирования
-            //await Mem.Click(414, 846);//text=\"Никогда\"
-            //await Mem.Click(616, 1238);//text=\"ГОТОВО\"
-            await Mem.Click("text=\"Выберите частоту резервного копирования\"", dump);
-            await Mem.Click("text=\"Никогда\"", dump);
-            await Mem.Click("text=\"ГОТОВО\"", dump);
-            await Task.Delay(1_000);
+            await Mem.Input($"resource-id=\"{PackageName}:id/code\"", Globals.Setup.PinCodeAccount.ToString(), dump);
             await Mem.StopApk(PackageName);
             await Mem.RunApk(PackageName);
             await Task.Delay(1_000);
@@ -118,12 +114,19 @@ public class Client
             dump = await Mem.DumpScreen();
 
         s4:
-            if (!await Mem.ExistsElement($"resource-id=\"{PackageName}:id/code\"", dump))
+            if (!await Mem.ExistsElement("text=\"Выберите частоту резервного копирования\"", dump))
                 return true;
 
-            await Mem.Input($"resource-id=\"{PackageName}:id/code\"", Globals.Setup.PinCodeAccount.ToString(), dump);
+            //await Mem.Click(374, 513);//Выберите частоту резервного копирования
+            //await Mem.Click(414, 846);//text=\"Никогда\"
+            //await Mem.Click(616, 1238);//text=\"ГОТОВО\"
+            await Mem.Click("text=\"Выберите частоту резервного копирования\"", dump);
+            await Mem.Click("text=\"Никогда\"", dump);
+            await Mem.Click("text=\"ГОТОВО\"", dump);
+            await Task.Delay(1_000);
             await Mem.StopApk(PackageName);
             await Mem.RunApk(PackageName);
+
             return true;
         }
         catch (Exception ex)
@@ -181,6 +184,7 @@ public class Client
                 if (await Mem.ExistsElement("text=\"OK\"", document))
                     await Mem.Click("text=\"OK\"", document);*/
 
+                await Task.Delay(1_500);
                 continue;
             }
 

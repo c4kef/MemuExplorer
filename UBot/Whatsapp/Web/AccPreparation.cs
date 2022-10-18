@@ -157,7 +157,7 @@ public class AccPreparation
                     if (!await client.Web!.IsConnected())
                     {
                         await client.Web!.Free();
-                        await Globals.TryMove(path, $@"{Globals.BanDirectory.FullName}\{phone}");
+                        await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
                         ++DashboardView.GetInstance().DeniedTasks;
                         return;
                     }
@@ -218,7 +218,7 @@ public class AccPreparation
                 {
                     await client.Web!.Free();
                     ++DashboardView.GetInstance().DeniedTasks;
-                    await Globals.TryMove(path, $@"{Globals.BanDirectory.FullName}\{phone}");
+                    await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
                 }
                 else
                 {
@@ -226,7 +226,6 @@ public class AccPreparation
                     ++client.AccountData.TrustLevelAccount;
                     await client.UpdateData();
                     ++DashboardView.GetInstance().CompletedTasks;
-                    await Globals.TryMove(path, $@"{Globals.WarmedDirectory.FullName}\{phone}");
                 }
             }
 
@@ -237,7 +236,7 @@ public class AccPreparation
             Log.Write($"[Handler] - крит. ошибка: {ex.Message}\n", _logFile.FullName);
             await client.Web!.Free();
             ++DashboardView.GetInstance().DeniedTasks;
-            await Globals.TryMove(path, $@"{Globals.BanDirectory.FullName}\{phone}");
+            await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
         }
 
         async Task<string> GetProxy()

@@ -19,7 +19,7 @@ namespace WPP4DotNet.WebDriver
         {
             ChromeOpt = new LaunchOptions();
 
-            ChromeOpt.ExecutablePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
+            ChromeOpt.ExecutablePath = @$"{Directory.GetCurrentDirectory()}\Chromium\chrome.exe";
             ChromeOpt.Headless = hidden;
             ChromeOpt.UserDataDir = path;
 

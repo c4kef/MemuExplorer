@@ -63,8 +63,7 @@ namespace UBot
                 });
             });
 #endif
-            Globals.Init();
-            //_ = Task.Factory.StartNew(Globals.Init);
+            _ = Task.Factory.StartNew(Globals.Init);
 
             return builder.Build();
         }

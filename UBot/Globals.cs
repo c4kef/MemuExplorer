@@ -6,6 +6,7 @@ using System.Drawing;
 using UBot.Controls;
 using UBot.Whatsapp.Web;
 using VirtualCameraOutput;
+using WPP4DotNet;
 
 namespace UBot
 {
@@ -24,36 +25,52 @@ namespace UBot
         public static DirectoryInfo BanDirectory { get; private set; }
         public static DirectoryInfo BanWorkDirectory { get; private set; }
         public static DirectoryInfo BanStartDirectory { get; private set; }
+        public static DirectoryInfo WebBanDirectory { get; private set; }
+        public static DirectoryInfo WebBanWorkDirectory { get; private set; }
+        public static DirectoryInfo WebBanStartDirectory { get; private set; }
         public static FileInfo SetupFile { get; private set; }
         public static Setup Setup { get; private set; }
         public static VirtualOutput Camera { get; private set; } = null!;
         private static object Locker { get; set; }
 
-        public static void Init()
+        public static async Task Init()
         {
-            DataDirectory = Directory.CreateDirectory("Data");
-            TempDirectory = Directory.CreateDirectory("Temp");
-            WarmedDirectory = Directory.CreateDirectory("Warmed");
-            ScannedDirectory = Directory.CreateDirectory("Scanned");
-            LogoutDirectory = Directory.CreateDirectory("Logout");
-            BanDirectory = Directory.CreateDirectory("Bans");
-            BanWorkDirectory = Directory.CreateDirectory($@"{BanDirectory.FullName}\Work");
-            BanStartDirectory = Directory.CreateDirectory($@"{BanDirectory.FullName}\Start");
+            try
+            {
+                DataDirectory = Directory.CreateDirectory("Data");
+                TempDirectory = Directory.CreateDirectory($@"{DataDirectory.FullName}\Temp");
+                WarmedDirectory = Directory.CreateDirectory($@"{DataDirectory.FullName}\Warmed");
+                ScannedDirectory = Directory.CreateDirectory($@"{DataDirectory.FullName}\Scanned");
+                LogoutDirectory = Directory.CreateDirectory($@"{DataDirectory.FullName}\Logout");
+                BanDirectory = Directory.CreateDirectory($@"{DataDirectory.FullName}\Bans");
+                BanWorkDirectory = Directory.CreateDirectory($@"{BanDirectory.FullName}\Work");
+                BanStartDirectory = Directory.CreateDirectory($@"{BanDirectory.FullName}\Start");
 
-            MemuLib.Globals.IsLog = true;
+                WebBanDirectory = Directory.CreateDirectory($@"{DataDirectory.FullName}\WebBans");
+                WebBanWorkDirectory = Directory.CreateDirectory($@"{WebBanDirectory.FullName}\Work");
+                WebBanStartDirectory = Directory.CreateDirectory($@"{WebBanDirectory.FullName}\Start");
 
-            _ = Task.Run(WClient.QueueCameraHandler);
+                MemuLib.Globals.IsLog = true;
 
-            SetupFile = new FileInfo($@"{DataDirectory.FullName}\{NameSetupFile}");
+                //await ChromeUpdate.DownloadChromium();
 
-            Locker = new();
+                _ = Task.Run(WClient.QueueCameraHandler);
 
-            Setup = (File.Exists(SetupFile.FullName)
-                ? JsonConvert.DeserializeObject<Setup>(File.ReadAllText(SetupFile.FullName))
-                : new Setup())!;
+                SetupFile = new FileInfo($@"{DataDirectory.FullName}\{NameSetupFile}");
 
-            Camera = new VirtualOutput(276, 276, 20, FourCC.FOURCC_24BG);
-            _ = Task.Run(OBSCamera);
+                Locker = new();
+
+                Setup = (File.Exists(SetupFile.FullName)
+                    ? JsonConvert.DeserializeObject<Setup>(File.ReadAllText(SetupFile.FullName))
+                    : new Setup())!;
+
+                Camera = new VirtualOutput(276, 276, 20, FourCC.FOURCC_24BG);
+                _ = Task.Run(OBSCamera);
+            }
+            catch (Exception ex)
+            {
+                await File.WriteAllTextAsync("critical.txt", $"[Critical-Init] - {ex.Message}");
+            }
         }
 
         public static async Task OBSCamera()
@@ -117,13 +134,19 @@ namespace UBot
                     {
                         if (currentPhones != null)
                         {
+                            var arrayPhones = new List<string>();
+
                             foreach (var currentPhone in currentPhones)
                                 if (Directory.Exists($@"{Setup.PathToFolderAccounts}\{currentPhone}") && File.Exists($@"{Setup.PathToFolderAccounts}\{currentPhone}\Data.json"))
                                 {
                                     var data = JsonConvert.DeserializeObject<AccountData>(File.ReadAllText($@"{accountDirectory}\Data.json"));
-                                    if (data.MessageHistory != null && data.MessageHistory.Count > 0 && !data.MessageHistory.ContainsKey(phone))
-                                        accounts.Add((phone, accountDirectory));
+
+                                    if (data.MessageHistory != null && data.MessageHistory.Count != 0)
+                                        arrayPhones.AddRange(data.MessageHistory.Keys);
                                 }
+
+                            if (!arrayPhones.Select(phone => phone[0] == '+' ? phone.Remove(0, 1) : phone).Contains(phone[0] == '+' ? phone.Remove(0, 1) : phone))
+                                accounts.Add((phone, accountDirectory));
                         }
                         else
                             accounts.Add((phone, accountDirectory));

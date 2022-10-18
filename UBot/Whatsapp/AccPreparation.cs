@@ -87,6 +87,14 @@ public class AccPreparation
         var c1BansCount = 0;
         var c2BansCount = 0;
 
+        await c1.GetInstance().ShellCmd("settings put global window_animation_scale 0");
+        await c1.GetInstance().ShellCmd("settings put global transition_animation_scale 0");
+        await c1.GetInstance().ShellCmd("settings put global animator_duration_scale 0");
+
+        await c2.GetInstance().ShellCmd("settings put global window_animation_scale 0");
+        await c2.GetInstance().ShellCmd("settings put global transition_animation_scale 0");
+        await c2.GetInstance().ShellCmd("settings put global animator_duration_scale 0");
+
         await c1.GetInstance().RunApk("net.sourceforge.opencamera");
         await c2.GetInstance().RunApk("net.sourceforge.opencamera");
         await c1.GetInstance().StopApk("net.sourceforge.opencamera");
@@ -379,7 +387,7 @@ public class AccPreparation
                 {
                     await client.Web!.Init(true, @$"{client.Account}\{client.Phone.Remove(0, 1)}", await GetProxy());
 
-                    initWithErrors = false;
+                    initWithErrors = false; 
                 }
                 catch (Exception ex)
                 {
@@ -455,22 +463,25 @@ public class AccPreparation
         {
             var countTry = 0;
         tryAgain:
+            await Task.Delay(2_000);
             var dump = await client.GetInstance().DumpScreen();
-            if (await client.GetInstance().ExistsElement("text=\"НЕ СЕЙЧАС\"", dump, false))
-            {
-                await client.GetInstance().Click("text=\"НЕ СЕЙЧАС\"", dump);
-                await Task.Delay(500);
-                dump = await client.GetInstance().DumpScreen();
-            }
 
-            if (await client.GetInstance().ExistsElement("text=\"Выберите частоту резервного копирования\"", dump, false))
+            if (await client.GetInstance().ExistsElement("text=\"Выберите частоту резервного копирования\"", dump))
             {
                 await client.GetInstance().Click("text=\"Выберите частоту резервного копирования\"", dump);
                 await client.GetInstance().Click("text=\"Никогда\"", dump);
                 await client.GetInstance().Click("text=\"ГОТОВО\"", dump);
+                await Task.Delay(1_000);
                 await client.GetInstance().StopApk(client.PackageName);
                 await client.GetInstance().RunApk(client.PackageName);
                 await Task.Delay(1_000);
+                dump = await client.GetInstance().DumpScreen();
+            }
+
+            if (await client.GetInstance().ExistsElement("text=\"НЕ СЕЙЧАС\"", dump, false))
+            {
+                await client.GetInstance().Click("text=\"НЕ СЕЙЧАС\"", dump);
+                await Task.Delay(500);
                 dump = await client.GetInstance().DumpScreen();
             }
 

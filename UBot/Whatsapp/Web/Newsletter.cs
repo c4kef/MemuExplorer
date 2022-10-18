@@ -138,15 +138,18 @@ public class Newsletter
                 while (!IsStop)
                 {
                     peopleReal = GetFreeNumberUser();
-
+                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};1", _logFile.FullName);
                     if (string.IsNullOrEmpty(peopleReal))
                         break;
 
+                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};2", _logFile.FullName);
                     if (!await client.Web!.IsConnected())
                         throw new Exception("Client has disconected");
 
+                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};3", _logFile.FullName);
                     if (await client.Web!.CheckValidPhone(peopleReal))
                     {
+                        Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};4", _logFile.FullName);
                         var text = DashboardView.GetInstance().Text.Split('\r').ToList();
                         var file = text.TakeLast(1).ToArray()[0];
 
@@ -158,6 +161,7 @@ public class Newsletter
                         if (await client.Web!.SendText(peopleReal, SelectWord(string.Join('\n', text).Replace("\n", "\n").Replace("\r", "\r")), isFile ? new FileInfo(file) : null))
                         {
                             ++DashboardView.GetInstance().CompletedTasks;
+                            Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};5-1", _logFile.FullName);
                             Log.Write(
                             $"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{peopleReal}",
                             _reportFile.FullName);
@@ -168,12 +172,16 @@ public class Newsletter
                             await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
                         }
                         else
+                        {
+                            Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};6", _logFile.FullName);
                             _usedPhonesUsers.Remove(peopleReal);
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
+                Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};5-2", _logFile.FullName);
                 _sendedMessagesCountFromAccount[phone] = countSendedMessages;
 
                 if (countSendedMessages < 10 && File.Exists(Globals.Setup.PathToFileProxy))
@@ -186,7 +194,7 @@ public class Newsletter
 
                 await client.Web!.Free();
                 ++DashboardView.GetInstance().DeniedTasks;
-                await Globals.TryMove(path, $@"{Globals.BanDirectory.FullName}\{phone}");
+                await Globals.TryMove(path, $@"{Globals.WebBanDirectory.FullName}\{phone}");
 
                 var count = 0;
                 var messages = _sendedMessagesCountFromAccount.TakeLast(10);

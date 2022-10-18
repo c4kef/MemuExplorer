@@ -84,7 +84,7 @@ public class WClient
                 {
                     //124 = 1 minute - 60 sec
                     //2 = 1 sec
-                    if (aliveLastId++ > 400)
+                    if (aliveLastId++ > 620)
                     {
                         QueueProcess.Clear();
                         lastId = 0;
@@ -242,7 +242,6 @@ public class WClient
     {
         if (!await IsConnected())
             throw new Exception($"RemoveAvatar: client has disconected");
-
     }
 
     /// <summary>

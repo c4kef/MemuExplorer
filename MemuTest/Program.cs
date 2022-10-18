@@ -1,6 +1,8 @@
 ﻿using System.Text;
+using PuppeteerExtraSharp;
+using PuppeteerExtraSharp.Plugins.ExtraStealth;
 
-Console.OutputEncoding = Console.InputEncoding = Encoding.Unicode;
+/*Console.OutputEncoding = Console.InputEncoding = Encoding.Unicode;
 
 while (true)
 {
@@ -17,11 +19,18 @@ while (true)
 
     Console.WriteLine("Not found");
 }
-/*using PuppeteerSharp;
+*/using PuppeteerSharp;
+// Initialization plugin builder
+var extra = new PuppeteerExtra();
 
 using var browserFetcher = new BrowserFetcher();
 await browserFetcher.DownloadAsync();
-await using var browser = await Puppeteer.LaunchAsync(
+
+// Use stealth plugin
+extra.Use(new StealthPlugin());
+
+// Launch the puppeteer browser with plugins
+var browser = await extra.LaunchAsync(
     new LaunchOptions { Headless = false, Args = new string[] { 
     
         // `--app=${WAUrl}`,
@@ -60,18 +69,19 @@ await using var browser = await Puppeteer.LaunchAsync(
     "--disable-accelerated-video-decode",
     "--user-data-dir=C:\\Users\\artem\\source\\repos\\MemuExplorer\\UBot\\bin\\Debug\\net6.0-windows10.0.19041.0\\win10-x64\\WppConnect\\test",
     "--disable-dev-shm-usage",
-    "--proxy-server=https=217.29.62.212:10451"
+    "--proxy-server=https=217.29.63.91:13597"
     } });
+
 await using var page = await browser.NewPageAsync();
 //await page.EvaluateExpressionOnNewDocumentAsync(await File.ReadAllTextAsync(@"C:\Users\artem\Downloads\removeWorkers.js"));
 //await page.SetRequestInterceptionAsync(true);
 await page.AuthenticateAsync(new Credentials()
 {
-    Username = "C37jer",
-    Password = "dSEdPU"
+    Username = "5bbKEG",
+    Password = "Th6DNj"
 });
 //page.Request += Page_Request;
-await page.GoToAsync("https://web.whatsapp.com");
+await page.GoToAsync("https://bot.sannysoft.com/");
 await page.ReloadAsync();
 
 while (true)
@@ -100,4 +110,4 @@ async void Page_Request(object? sender, RequestEventArgs e)
         ContentType = "text/html",
         Body = await File.ReadAllTextAsync(@"C:\Users\artem\Downloads\2.2238.7-beta.html")
     });
-}*/
+}

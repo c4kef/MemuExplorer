@@ -16,6 +16,15 @@ using PuppeteerSharp;
 
 namespace WPP4DotNet
 {
+    public static class ChromeUpdate
+    {
+        public static async Task<RevisionInfo> DownloadChromium()
+        {
+            using var browserFetcher = new BrowserFetcher();
+            return await browserFetcher.DownloadAsync();
+        }
+    }
+
     public abstract class IWpp
     {
         #region WPP4DotNet - Library Functions

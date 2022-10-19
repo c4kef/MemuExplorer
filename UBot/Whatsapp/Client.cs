@@ -47,7 +47,18 @@ public class Client
 
     public async Task Stop() => await Mem.Stop();
 
-    public async Task UpdateData() => await File.WriteAllTextAsync($@"{Account}\Data.json", JsonConvert.SerializeObject(AccountData, Formatting.Indented));
+    public async Task UpdateData(bool PullAccount)
+    {
+        await File.WriteAllTextAsync($@"{Account}\Data.json", JsonConvert.SerializeObject(AccountData, Formatting.Indented));
+        
+        if (!PullAccount)
+            return;
+
+        await Mem.Pull($@"{Account}\{PackageName}", @$"/data/data/{PackageName}/databases/");
+        await Mem.Pull($@"{Account}\{PackageName}", @$"/data/data/{PackageName}/files/");
+        await Mem.Pull($@"{Account}\{PackageName}", @$"/data/data/{PackageName}/shared_prefs/");
+
+    }
 
     public async Task<bool> Login([Optional] string path, [Optional] string name)
     {
@@ -99,7 +110,7 @@ public class Client
             await Mem.Input($"resource-id=\"{PackageName}:id/code\"", Globals.Setup.PinCodeAccount.ToString(), dump);
             await Mem.StopApk(PackageName);
             await Mem.RunApk(PackageName);
-            await Task.Delay(1_000);
+            await Task.Delay(1_500);
             dump = await Mem.DumpScreen();
 
         s3:
@@ -202,7 +213,7 @@ public class Client
 
     public async Task<bool> IsValid()
     {
-        await Task.Delay(MemuLib.Settings.WaitingSecs);
+        await Task.Delay(2_000);
 
         var dump = await Mem.DumpScreen();
 

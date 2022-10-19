@@ -31,40 +31,50 @@ public class AccPreparation
         _currentProfile = actionProfileWork;
         var mainTasks = new List<Task>();
 
-        for (var cycleId = 0; cycleId < Globals.Setup.CountGroups; cycleId++)
+        for (var repeatId = 0; repeatId < Globals.Setup.RepeatCounts; repeatId++)
         {
-            var id = cycleId;
-            await Task.Delay(100);
-            mainTasks.Add(Task.Run(async () =>
+            for (var groupId = 0; groupId < Globals.Setup.CountGroups; groupId++)
             {
-                var tasks = new List<Task>();
-
-                while (!IsStop)
+                var id = groupId;
+                await Task.Delay(100);
+                mainTasks.Add(Task.Run(async () =>
                 {
-                    DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json")).ToArray().Length;
+                    var tasks = new List<Task>();
 
-                    for (var i = 0; i < Globals.Setup.CountThreads; i++)
+                    while (!IsStop)
                     {
-                        await Task.Delay(100);
-                        tasks.Add(Task.Run(async () => await Handler(message.Split('\n'), id)));
+                        DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json") && !_usedPhones.Select(phone => phone.Remove(0, 1)).Contains(dir)).ToArray().Length;
+
+                        for (var i = 0; i < Globals.Setup.CountThreads; i++)
+                        {
+                            await Task.Delay(100);
+                            tasks.Add(Task.Run(async () => await Handler(message.Split('\n'), id)));
+                        }
+
+                        Task.WaitAll(tasks.ToArray(), -1);
+
+                        _activePhones.RemoveAll(obj => obj[0].ToString() == id.ToString());
+                        tasks.Clear();
+
+                        if (_accountsNotFound)
+                            break;
                     }
 
-                    Task.WaitAll(tasks.ToArray(), -1);
+                    //_usedPhones.RemoveAll(obj => obj[0].ToString() == id.ToString());
+                }));
+            }
 
-                    _activePhones.RemoveAll(obj => obj[0].ToString() == id.ToString());
-                    tasks.Clear();
+            Task.WaitAll(mainTasks.ToArray(), -1);
 
-                    if (_accountsNotFound)
-                        break;
-                }
+            mainTasks.Clear();
 
-                _usedPhones.RemoveAll(obj => obj[0].ToString() == id.ToString());
-            }));
+            if (repeatId < Globals.Setup.RepeatCounts)
+                DashboardView.GetInstance().CompletedTasks = 0;
+
+            _accountsNotFound = false;
+            _usedPhones.Clear();
+            _activePhones.Clear();
         }
-
-        Task.WaitAll(mainTasks.ToArray(), -1);
-
-        _accountsNotFound = false;
 
         Stop();
     }
@@ -224,7 +234,7 @@ public class AccPreparation
                 {
                     await client.Web!.Free();
                     ++client.AccountData.TrustLevelAccount;
-                    await client.UpdateData();
+                    await client.UpdateData(false);
                     ++DashboardView.GetInstance().CompletedTasks;
                 }
             }

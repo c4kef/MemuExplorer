@@ -118,7 +118,7 @@ namespace UBot.Views.User
 
             if ((result.Value.Warm || result.Value.CheckBan) && result.Value.IsWeb)
             {
-                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (Globals.Setup.CountThreads <= 1 && !result.Value.CheckBan) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountMessages < 1)
+                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (Globals.Setup.CountThreads <= 1 && !result.Value.CheckBan) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountMessages < 1 || Globals.Setup.RepeatCounts < 1)
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));
                     return;

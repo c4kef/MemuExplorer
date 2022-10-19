@@ -100,6 +100,12 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.CountGroups, value);
         }
 
+        public int? RepeatCounts
+        {
+            get => Globals.Setup.RepeatCounts;
+            set => SetProperty(ref Globals.Setup.RepeatCounts, value);
+        }
+
         public int? CountMessages
         {
             get => Globals.Setup.CountMessages;

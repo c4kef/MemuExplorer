@@ -218,6 +218,7 @@ namespace UBot
         public int? CountBansToSleep;
         public int? CountMessages;
         public int? CountGroups;
+        public int? RepeatCounts;
         public int? CountThreads;
         public int? MinTrustLevel;
 

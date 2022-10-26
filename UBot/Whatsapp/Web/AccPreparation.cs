@@ -1,5 +1,6 @@
 ﻿using MemuLib.Core;
 using UBot.Views.User;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace UBot.Whatsapp.Web;
 
@@ -33,7 +34,7 @@ public class AccPreparation
 
         for (var repeatId = 0; repeatId < Globals.Setup.RepeatCounts; repeatId++)
         {
-            for (var groupId = 0; groupId < Globals.Setup.CountGroups; groupId++)
+            for (var groupId = 0; groupId < ((_currentProfile.CheckBan) ? 1 : Globals.Setup.CountGroups); groupId++)
             {
                 var id = groupId;
                 await Task.Delay(100);
@@ -107,7 +108,7 @@ public class AccPreparation
 
         var (phone, path) = result[0];
 
-        if (_usedPhones.Contains(threadId + phone))
+        if (_usedPhones.Select(phone => phone.Remove(0, 1)).Contains(phone))
         {
             Log.Write($"[I] - дубликат аккаунта\n", _logFile.FullName);
             goto getAccount;
@@ -174,7 +175,7 @@ public class AccPreparation
 
                     foreach (var warmPhone in phones.Where(_phone => _phone != phone))
                     {
-                        if (!await client.Web!.SendText(warmPhone, messages[new Random().Next(0, messages.Length - 1)].Replace("\n", "\n").Replace("\r", "\r")))
+                        if (!await client.Web!.SendText(warmPhone, messages[new Random().Next(0, messages.Length - 1)].Replace("\"", "").Replace("\'", "")))
                             continue;
 
                         await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));

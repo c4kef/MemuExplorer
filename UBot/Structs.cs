@@ -49,7 +49,7 @@ public class AccountData
     /// <summary>
     /// Дата бана
     /// </summary>
-    public DateTime BannedDate;
+    public DateTime? BannedDate;
 
     /// <summary>
     /// С кем переписывался

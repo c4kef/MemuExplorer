@@ -1,113 +1,36 @@
-﻿using System.Text;
-using PuppeteerExtraSharp;
-using PuppeteerExtraSharp.Plugins.ExtraStealth;
+﻿Console.WriteLine("Hello".Remove(0, "Hello".Length - 1));
 
-/*Console.OutputEncoding = Console.InputEncoding = Encoding.Unicode;
+/*using System.Text;
+//eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvbWlrYXdpc2UuY29tXC9ydV9ydVwvIiwiaWF0IjoxNjY2NDU2NjIyLCJuYmYiOjE2NjY0NTY2MjIsImV4cCI6MTY2NzA2MTQyMiwiZGF0YSI6eyJ1c2VyIjp7ImlkIjoiNzIifX19.1SCeDJf9rBWAfid5aAXt7NK7PMKnagc2Z0jtfDp7usI
+Console.WriteLine(await GetAsync("https://mikawise.com/wp-json/api/userdata"));
 
-while (true)
+ async Task<HttpResponseMessage> HttpPost(string url, Dictionary<string, string> values)
 {
-    var document = await File.ReadAllTextAsync(@"C:\Users\artem\Downloads\MEmu Download\window_dump.xml");
-    var xpath = Console.ReadLine()!.Replace(@"\", "");
+    HttpClientHandler handler = new HttpClientHandler();
+    HttpClient request = new HttpClient(handler);
 
-    if (document.Contains(xpath))
-    {
-        string Cord = document.Split(xpath)[1].Split("bounds=\"")[1].Split('\"')[0].Replace("[", "");
+    request.DefaultRequestHeaders.Add("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvbWlrYXdpc2UuY29tXC9ydV9ydVwvIiwiaWF0IjoxNjY2NDU2NjIyLCJuYmYiOjE2NjY0NTY2MjIsImV4cCI6MTY2NzA2MTQyMiwiZGF0YSI6eyJ1c2VyIjp7ImlkIjoiNzIifX19.1SCeDJf9rBWAfid5aAXt7NK7PMKnagc2Z0jtfDp7usI");
+    request.DefaultRequestHeaders.UserAgent.ParseAdd(@"Mozilla/5.0 (Windows; Windows NT 6.1) AppleWebKit/534.23 (KHTML, like Gecko) Chrome/11.0.686.3 Safari/534.23");
 
-        Console.WriteLine($"{(Convert.ToInt32(Cord.Split(']')[0].Split(',')[0]) + Convert.ToInt32(Cord.Split(']')[1].Split(',')[0])) / 2}, {(Convert.ToInt32(Cord.Split(']')[0].Split(',')[1]) + Convert.ToInt32(Cord.Split(']')[1].Split(',')[1])) / 2}");
-        continue;
-    }
+    FormUrlEncodedContent content = new FormUrlEncodedContent(values);
 
-    Console.WriteLine("Not found");
-}
-*/using PuppeteerSharp;
-// Initialization plugin builder
-var extra = new PuppeteerExtra();
-
-using var browserFetcher = new BrowserFetcher();
-await browserFetcher.DownloadAsync();
-
-// Use stealth plugin
-extra.Use(new StealthPlugin());
-
-// Launch the puppeteer browser with plugins
-var browser = await extra.LaunchAsync(
-    new LaunchOptions { Headless = false, Args = new string[] { 
-    
-        // `--app=${WAUrl}`,
-    "--log-level=3", // fatal only
-    "--start-maximized",
-    "--no-default-browser-check",
-    "--disable-site-isolation-trials",
-    "--no-experiments",
-    "--ignore-gpu-blacklist",
-    "--ignore-certificate-errors",
-    "--ignore-certificate-errors-spki-list",
-    "--disable-gpu",
-    "--disable-extensions",
-    "--disable-default-apps",
-    "--enable-features=NetworkService",
-    "--disable-setuid-sandbox",
-    "--no-sandbox",
-    // Extras
-    "--disable-webgl",
-    "--disable-infobars",
-    "--window-position=0,0",
-    "--ignore-certifcate-errors",
-    "--ignore-certifcate-errors-spki-list",
-    "--disable-threaded-animation",
-    "--disable-threaded-scrolling",
-    "--disable-in-process-stack-traces",
-    "--disable-histogram-customizer",
-    "--disable-gl-extensions",
-    "--disable-composited-antialiasing",
-    "--disable-canvas-aa",
-    "--disable-3d-apis",
-    "--disable-accelerated-2d-canvas",
-    "--disable-accelerated-jpeg-decoding",
-    "--disable-accelerated-mjpeg-decode",
-    "--disable-app-list-dismiss-on-blur",
-    "--disable-accelerated-video-decode",
-    "--user-data-dir=C:\\Users\\artem\\source\\repos\\MemuExplorer\\UBot\\bin\\Debug\\net6.0-windows10.0.19041.0\\win10-x64\\WppConnect\\test",
-    "--disable-dev-shm-usage",
-    "--proxy-server=https=217.29.63.91:13597"
-    } });
-
-await using var page = await browser.NewPageAsync();
-//await page.EvaluateExpressionOnNewDocumentAsync(await File.ReadAllTextAsync(@"C:\Users\artem\Downloads\removeWorkers.js"));
-//await page.SetRequestInterceptionAsync(true);
-await page.AuthenticateAsync(new Credentials()
-{
-    Username = "5bbKEG",
-    Password = "Th6DNj"
-});
-//page.Request += Page_Request;
-await page.GoToAsync("https://bot.sannysoft.com/");
-await page.ReloadAsync();
-
-while (true)
-{
+    return await request.PostAsync(url, content);
 }
 
-async void Page_Request(object? sender, RequestEventArgs e)
+ async Task<string> GetAsync(string url, int timeout = 10)
 {
-    var req = e.Request;
-    Console.WriteLine($"Url: {req.Url}");
-    if (req.Url.StartsWith("https://web.whatsapp.com/check-update"))
-    {
-        await req.AbortAsync();
-        return;
-    }
-    if (req.Url != "https://web.whatsapp.com/")
-    {
-        await req.ContinueAsync();
-        return;
-    }
+        HttpClient request = new HttpClient();
 
-    Console.WriteLine("Redirect");
-    await req.RespondAsync(new ResponseData
-    {
-        Status = System.Net.HttpStatusCode.OK,
-        ContentType = "text/html",
-        Body = await File.ReadAllTextAsync(@"C:\Users\artem\Downloads\2.2238.7-beta.html")
-    });
+        request.Timeout = TimeSpan.FromSeconds(timeout);
+
+    request.DefaultRequestHeaders.Add("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvbWlrYXdpc2UuY29tXC9ydV9ydVwvIiwiaWF0IjoxNjY2NDU2NjIyLCJuYmYiOjE2NjY0NTY2MjIsImV4cCI6MTY2NzA2MTQyMiwiZGF0YSI6eyJ1c2VyIjp7ImlkIjoiNzIifX19.1SCeDJf9rBWAfid5aAXt7NK7PMKnagc2Z0jtfDp7usI");
+        request.DefaultRequestHeaders.UserAgent.ParseAdd(@"Mozilla/5.0 (Windows; Windows NT 6.1) AppleWebKit/534.23 (KHTML, like Gecko) Chrome/11.0.686.3 Safari/534.23");
+
+        HttpResponseMessage response = await request.GetAsync(url);
+
+        //Bypass UTF8 error encoding
+        byte[] buf = await response.Content.ReadAsByteArrayAsync();
+        return Encoding.UTF8.GetString(buf);
+    return string.Empty;
 }
+*/

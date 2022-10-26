@@ -533,7 +533,7 @@ namespace WPP4DotNet
         /// <param name="message">Inform the Message.</param>
         /// <param name="simulateTyping">Inform true or false.</param>
         /// <returns>Returns the Models.SendReturnModels object</returns>
-        public async Task<Models.SendReturnModels> SendMessage(string chat, string message, bool simulateTyping=false)
+        public async Task<Models.SendReturnModels> SendMessage(string chat, string message, List<string> options, bool simulateTyping=false)
         {
             var resp = $"return await WPP.chat.sendTextMessage('{chat}', '{message}', {{\n  createChat: true\n}});";
             try
@@ -544,7 +544,15 @@ namespace WPP4DotNet
                     await MarkIsComposing(chat, 5000);
                 }
 
-                var response = JObject.Parse((await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("(chat, message) => window.WPP?.chat.sendTextMessage(chat, message, {\n  createChat: true\n})", chat, message)).ToString()!);
+                var option = "";
+                foreach (var item in options)
+                {
+                    option += string.Format(",{0}", item);
+                }
+                option = "{" + option.TrimStart(',') + "}";
+                var optionJit = JObject.Parse(option);
+
+                var response = JObject.Parse((await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("(chat, message, options) => window.WPP?.chat.sendTextMessage(chat, message, options)", chat, message, optionJit)).ToString()!);
                 if (!string.IsNullOrEmpty((string)response["id"]!))
                 { 
                     ret.Id = (string)response["id"]!;
@@ -604,7 +612,7 @@ namespace WPP4DotNet
                 else
                 {
                     ret.Status = false;
-                    ret.Error = "Error trying to send message.";
+                    ret.Error = "Error trying to send message.  " + res;
                 }
                 return ret;
             }
@@ -631,6 +639,23 @@ namespace WPP4DotNet
             {
                 dynamic response = await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("(chat) => window.WPP?.contact.queryExists(chat)", chat);
                 return response == null ? false : true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// This method delete message
+        /// </summary>
+        /// <returns>Return True or False</returns>
+        public async Task<bool> DeleteMessage (string chat, string msgid)
+        {
+            try
+            {
+                dynamic response = await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<object>("(chat, id) => window.WPP?.chat.deleteMessage(chat, id)", chat, msgid);
+                return true;
             }
             catch (Exception)
             {

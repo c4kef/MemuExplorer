@@ -8,6 +8,7 @@ using MemuLib.Core;
 using System.Text.RegularExpressions;
 using MemuLib.Core.Contacts;
 using UBot.Whatsapp.Web;
+using System.Runtime.CompilerServices;
 
 namespace UBot.Whatsapp;
 
@@ -15,16 +16,17 @@ public class AccPreparation
 {
     public AccPreparation()
     {
-        _tetheredDevices = new Dictionary<int, Client[]>();
         _usedPhones = new List<string>();
+        _activePhones = new List<string>();
         _names = new[] { "" };
         _lock = new();
     }
 
-    private readonly Dictionary<int, Client[]> _tetheredDevices;
     private readonly List<string> _usedPhones;
+    private readonly List<string> _activePhones;
     private readonly object _lock;
 
+    private bool _accountsNotFound;
     private FileInfo _logFile;
     private string[] _names;
     private ActionProfileWork _currentProfile;
@@ -42,29 +44,57 @@ public class AccPreparation
         _names = (await File.ReadAllLinesAsync(Globals.Setup.PathToFileNames)).Where(name => new Regex("^[a-zA-Z0-9. -_?]*$").IsMatch(name)).ToArray();
         _currentProfile = actionProfileWork;
         var mainTasks = new List<Task>();
-        var busyDevices = new List<int>();
+        var busyDevices = new Dictionary<DataEmulator, int>();
 
         for (var repeatId = 0; repeatId < Globals.Setup.RepeatCounts; repeatId++)
         {
-            while (true)
+            for (var groupId = 0; groupId < ((_currentProfile.CheckBan) ? 1 : Globals.Setup.CountGroups); groupId++)
             {
-                var devices = ManagerView.GetInstance().Emulators.Where(device => !busyDevices.Contains(device.Index) && device.IsEnabled)
-                    .Take(2).ToArray();
+                var id = groupId;
+                await Task.Delay(100);
+                mainTasks.Add(Task.Run(async () =>
+                {
+                    var tasks = new List<Task>();
 
-                if (devices.Length != 2)
-                    break;
+                    while (!IsStop)
+                    {
+                        DataEmulator[] devices = null;
 
-                var id = new Random().Next(0, 10_000);
+                        lock (_lock)
+                        {
+                            devices = ManagerView.GetInstance().Emulators.Where(device => !busyDevices.Select(device => device.Key.Index).Contains(device.Index) && device.IsEnabled)
+                               .Take((int)Globals.Setup.CountThreads).ToArray();
 
-                _tetheredDevices[id] = new[] { new Client(deviceId: devices[0].Index), new Client(deviceId: devices[1].Index) };
+                            if (devices.Length != (int)Globals.Setup.CountThreads)
+                            {
+                                Log.Write($"[I] - Больше девайсов не найдено, остаточное кол-во: {devices.Length}\n", _logFile.FullName);
+                                break;
+                            }
 
-                var task = Handler(message.Split('\n'), id);
+                            foreach (var device in devices)
+                                busyDevices[device] = id;
+                        }
 
-                await Task.Delay(2_000);
+                        foreach (var device in devices)
+                        {
+                            tasks.Add(Handler(message.Split('\n'), id, new Client(deviceId: device.Index)));
+                            await Task.Delay(1_500);
+                        }
 
-                mainTasks.Add(task);
+                        Task.WaitAll(tasks.ToArray(), -1);
 
-                busyDevices.AddRange(new[] { devices[0].Index, devices[1].Index });
+                        _activePhones.RemoveAll(obj => obj[0].ToString() == id.ToString());
+                        tasks.Clear();
+
+                        if (_accountsNotFound)
+                            break;
+
+                        foreach (var busyDevice in busyDevices.Where(device => device.Value == id))
+                            busyDevices.Remove(busyDevice.Key);
+                    }
+
+                    //_usedPhones.RemoveAll(obj => obj[0].ToString() == id.ToString());
+                }));
             }
 
             Task.WaitAll(mainTasks.ToArray(), -1);
@@ -75,10 +105,11 @@ public class AccPreparation
             if (repeatId < Globals.Setup.RepeatCounts)
                 DashboardView.GetInstance().CompletedTasks = repeatId + 1;
 
+            _accountsNotFound = false;
             busyDevices.Clear();
             mainTasks.Clear();
             _usedPhones.Clear();
-            _tetheredDevices.Clear();
+            _activePhones.Clear();
         }
 
         Stop();
@@ -87,277 +118,196 @@ public class AccPreparation
     public void Stop()
     {
         _logFile = null;
+        _accountsNotFound = false;
         IsStop = false;
 
         _usedPhones.Clear();
-        _tetheredDevices.Clear();
+        _activePhones.Clear();
     }
 
-    private async Task Handler(string[] messages, int threadId)
+    private async Task Handler(string[] messages, int threadId, Client client)
     {
         try
         {
-            var (c1, c2) = (_tetheredDevices[threadId][0], _tetheredDevices[threadId][1]);
-            var (c1Index, c2Index) = (_tetheredDevices[threadId][0].GetInstance().Index, _tetheredDevices[threadId][1].GetInstance().Index);
+            var lastCountThreads = Globals.Setup.CountThreads;
+            var countBans = 0;
 
-            var c1BansCount = 0;
-            var c2BansCount = 0;
+            await client.GetInstance().ShellCmd("settings put global window_animation_scale 0");
+            await client.GetInstance().ShellCmd("settings put global transition_animation_scale 0");
+            await client.GetInstance().ShellCmd("settings put global animator_duration_scale 0");
 
-            await c1.GetInstance().ShellCmd("settings put global window_animation_scale 0");
-            await c1.GetInstance().ShellCmd("settings put global transition_animation_scale 0");
-            await c1.GetInstance().ShellCmd("settings put global animator_duration_scale 0");
+            await client.GetInstance().RunApk("net.sourceforge.opencamera");
+            await client.GetInstance().StopApk("net.sourceforge.opencamera");
 
-            await c2.GetInstance().ShellCmd("settings put global window_animation_scale 0");
-            await c2.GetInstance().ShellCmd("settings put global transition_animation_scale 0");
-            await c2.GetInstance().ShellCmd("settings put global animator_duration_scale 0");
+            Log.Write($"Поток {threadId} запущен с устройством {client.GetInstance().Index}\n", _logFile.FullName);
 
-            await c1.GetInstance().RunApk("net.sourceforge.opencamera");
-            await c2.GetInstance().RunApk("net.sourceforge.opencamera");
-            await c1.GetInstance().StopApk("net.sourceforge.opencamera");
-            await c2.GetInstance().StopApk("net.sourceforge.opencamera");
+        getAccount:
+            if (IsStop)
+                return;
 
-            var c1Auth = false;
-            var c2Auth = false;
+            var result = Globals.GetAccounts(_usedPhones.Select(phone => phone.Remove(0, 1)).ToArray(), true, _lock, _currentProfile.Warm ? _activePhones.Where(phone => phone[0].ToString() == threadId.ToString()).Select(phone => phone.Remove(0, 1)).ToArray() : null);
 
-            Log.Write($"Поток {threadId} запущен\n", _logFile.FullName);
+            DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json") && !_usedPhones.Contains(dir)).ToArray().Length;
 
-            while (!IsStop)
+            if (result.Length < 1)
             {
-                var usedPhones = _usedPhones;
-                if (c1Auth && _currentProfile.Warm)
-                    usedPhones.AddRange(c1.AccountData.MessageHistory.Keys.Select(phone => phone.Remove(0, 1)));
+                Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
+                _accountsNotFound = true;
+                return;
+            }
 
-                var result = Globals.GetAccounts(usedPhones.ToArray(), true, _lock);
+            var (phone, path) = result[0];
 
-                DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json") && !_usedPhones.Contains(dir)).ToArray().Length;
+            if (_usedPhones.Select(phone => phone.Remove(0, 1)).Contains(phone))
+            {
+                Log.Write($"[I] - дубликат аккаунта\n", _logFile.FullName);
+                goto getAccount;
+            }
 
-                if (result.Length < 2)
-                {
-                    Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
-                    break;
-                }
+            _usedPhones.Add(threadId + phone);
 
-                var (phone, path) = result[0];
+            if (!await TryLogin(client, phone, path))
+            {
+                ++DashboardView.GetInstance().DeniedTasks;
+                Log.Write($"[{phone}] - не смогли войти\n", _logFile.FullName);
+                goto getAccount;
+            }
+            else
+                Log.Write($"[{phone}] - смогли войти\n", _logFile.FullName);
 
-                if (_usedPhones.Contains(phone))
-                {
-                    Log.Write($"[I] - телефон ранее был использован\n", _logFile.FullName);
-                    continue;
-                }
+            if (_currentProfile.CheckBan)
+            {
+                ++DashboardView.GetInstance().CompletedTasks;
+                goto getAccount;
+            }
 
-                _usedPhones.Add(phone);
-
-                if (!c1Auth)
-                {
-                    c1Auth = await TryLogin(c1, phone, path);
-
-                    if (!c1Auth)
-                        ++DashboardView.GetInstance().DeniedTasks;
-
-                    Log.Write($"[{phone}] - {(c1Auth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
-                    continue;
-                }
-
-                if (!c2Auth)
-                {
-                    c2Auth = await TryLogin(c2, phone, path);
-                    Log.Write($"[{phone}] - {(c2Auth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
-
-                    if (!c2Auth)
-                    {
-                        ++DashboardView.GetInstance().DeniedTasks;
-                        continue;
-                    }
-                }
-
-                if (_currentProfile.CheckBan)
-                {
-                    DashboardView.GetInstance().CompletedTasks += 2;
-                    c1Auth = c2Auth = false;
-                    continue;
-                }
+            try
+            {
+                if (_currentProfile.Warm)
+                    _activePhones.Add(threadId + phone);
 
                 if (_currentProfile.Warm)
                 {
-                    await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf", ContactManager.Export(
-                        new List<CObj>()
-                        {
-                        new(MemuLib.Globals.RandomString(new Random().Next(5, 15)), c1.Phone),
-                        new(MemuLib.Globals.RandomString(new Random().Next(5, 15)), c2.Phone)
-                        }
-                    ));
+                    while (lastCountThreads != _activePhones.Count(phone => phone[0].ToString() == threadId.ToString()))
+                    {
+                        if (_accountsNotFound || IsStop)
+                            break;
 
-                    await c1.ImportContacts($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf");
+                        await Task.Delay(500);
+                    }
 
-                    await c2.ImportContacts($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf");
+                    if (_accountsNotFound || IsStop)
+                    {
+                        await client.Web!.Free();
+                        return;
+                    }
 
-                    File.Delete($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf");
+                    var phones = _activePhones.Where(phone => phone[0].ToString() == threadId.ToString()).Select(phone => phone.Remove(0, 1)).ToArray();
 
-                    var countMessages = new Random().Next(5, 10);
+                    var contactPhones = new List<CObj>();
+                    foreach (var phoneForContact in phones)
+                        contactPhones.Add(new(MemuLib.Globals.RandomString(new Random().Next(5, 15)), "+" + phoneForContact));
+
+                    await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{phone}_contacts.vcf", ContactManager.Export(contactPhones));
+
+                    await client.ImportContacts($@"{Globals.TempDirectory.FullName}\{phone}_contacts.vcf");
+
+                    File.Delete($@"{Globals.TempDirectory.FullName}\{phone}_contacts.vcf");
 
                     var rnd = new Random();
 
-                    for (var i = 0; i < countMessages; i++)
+                    for (var i = 0; i < Globals.Setup.CountMessages; i++)//Первый этап - переписки между собой
                     {
-                        if (!c1Auth || !c2Auth || IsStop)
-                            break;
+                        if (IsStop)
+                            return;
 
-                        if (i == 0)
+                        if (!await client.IsValid())
                         {
-                            if (!await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]))
-                            {
-                                i = -1;
-                                if (!await c1.IsValid())
-                                {
-                                    c1Auth = false;
-                                    ++DashboardView.GetInstance().DeniedTasks;
-                                    await DeleteAccount(c1);
-                                    break;
-                                }
-                                continue;
-                            }
-
-                            if (!await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]))
-                            {
-                                i = -1;
-                                if (!await c2.IsValid())
-                                {
-                                    c2Auth = false;
-                                    ++DashboardView.GetInstance().DeniedTasks;
-                                    await DeleteAccount(c2);
-                                    break;
-                                }
-                                continue;
-                            }
+                            ++DashboardView.GetInstance().DeniedTasks;
+                            await DeleteAccount(client);
+                            return;
                         }
-                        else
+
+                        foreach (var warmPhone in phones.Where(_phone => _phone != phone).Select(_phone => "+" + _phone))
                         {
-                            var isBanned = false;
-                            var mc1 = rnd.Next(2, 4);
-                            var mc2 = rnd.Next(2, 4);
-
-                            for (var mcc = 0; mcc < mc1; mcc++)
-                            {
-                                if (!await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]))
-                                    if (!await c1.IsValid())
-                                    {
-                                        c1Auth = false;
-                                        ++DashboardView.GetInstance().DeniedTasks;
-                                        isBanned = true;
-                                        await DeleteAccount(c1);
-                                        break;
-                                    }
-                            }
-
-                            if (isBanned)
+                            if (!await client.SendMessage(warmPhone, messages[rnd.Next(0, messages.Length - 1)]))
                                 break;
-
-                            for (var mcc = 0; mcc < mc2; mcc++)
-                            {
-                                if (!await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]))
-                                    if (!await c2.IsValid())
-                                    {
-                                        c2Auth = false;
-                                        ++DashboardView.GetInstance().DeniedTasks;
-                                        await DeleteAccount(c2);
-                                        break;
-                                    }
-                            }
                         }
                     }
+
+                    client.AccountData.FirstMsg = phones[0] == phone;
+                    ++client.AccountData.TrustLevelAccount;
+
+                    await client.UpdateData(true);
+
+                    await client.GetInstance().StopApk(client.PackageName);
+                    await client.GetInstance().RunApk(client.PackageName);
                 }
 
-                c1.AccountData.FirstMsg = true;
-                c2.AccountData.FirstMsg = false;
-                ++c1.AccountData.TrustLevelAccount;
-                ++c2.AccountData.TrustLevelAccount;
-
-                await c1.UpdateData(true);
-                await c2.UpdateData(true);
-
-                await c1.GetInstance().StopApk(c1.PackageName);
-                await c1.GetInstance().RunApk(c1.PackageName);
-
-                await c2.GetInstance().StopApk(c2.PackageName);
-                await c2.GetInstance().RunApk(c2.PackageName);
-
-                if (!c1Auth || !c2Auth || IsStop)
-                    continue;
+                if (IsStop)
+                    return;
 
                 if (_currentProfile.Scaning)
                 {
-                    try
+                    if (_currentProfile.Warm)
+                        if (!(Globals.Setup.SelectEmulatorScan.Value.Index == 0 || Globals.Setup.SelectEmulatorScan.Value.Index == 1 && !client.AccountData.FirstMsg)//Получатель
+                        && !(Globals.Setup.SelectEmulatorScan.Value.Index == 0 || Globals.Setup.SelectEmulatorScan.Value.Index == 2 && client.AccountData.FirstMsg))//Отправитель
+                            return;
+
+                    var resultWeb = await TryLoginWeb(client, phone);
+                    if (!resultWeb.Item1)
                     {
-                        if (Globals.Setup.SelectEmulatorScan.Value.Index == 0 || Globals.Setup.SelectEmulatorScan.Value.Index == 1)//Получатель
+                        client.Web.RemoveQueue();
+                        if (resultWeb.Item2 >= 3)
                         {
-                            if (!await TryLoginWeb(c2, c2.Phone.Remove(0, 1)))
-                            {
-                                c2Auth = false;
-                                c2.Web.RemoveQueue();
-                                ++DashboardView.GetInstance().DeniedTasks;
-                                await DeleteAccount(c2);
-                                if (++c2BansCount >= Globals.Setup.CountBansToSleep)
-                                {
-                                    await c2.Stop();
-                                    break;
-                                }
-
-                                continue;
-                            }
-
-                            c2BansCount = 0;
-                            ++DashboardView.GetInstance().CompletedTasks;
+                            _usedPhones.Remove(threadId + phone);
                         }
                         else
-                            _usedPhones.Remove(c2.Phone.Remove(0, 1));
+                        {
+                            ++DashboardView.GetInstance().DeniedTasks;
+                            await DeleteAccount(client);
+                        }
+
+                        if (++countBans >= Globals.Setup.CountBansToSleep)
+                        {
+                            await client.Stop();
+                            return;
+                        }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        c2.Web.RemoveQueue();
-                        _usedPhones.Remove(c2.Phone.Remove(0, 1));
-
-                        Log.Write($"[Handler - Acc2] - Произошла ошибка, аккаунт возвращен в очередь: {ex.Message}\n", _logFile.FullName);
+                        countBans = 0;
+                        ++DashboardView.GetInstance().CompletedTasks;
                     }
 
-                    try
-                    {
-                        if (Globals.Setup.SelectEmulatorScan.Value.Index == 0 || Globals.Setup.SelectEmulatorScan.Value.Index == 2)//Отправитель
-                            if (await TryLoginWeb(c1, c1.Phone.Remove(0, 1)))
-                            {
-                                c1BansCount = 0;
-                                ++DashboardView.GetInstance().CompletedTasks;
-                                await DeleteAccount(c1);
-                            }
-                            else
-                            {
-                                c1.Web.RemoveQueue();
-
-                                if (++c1BansCount >= Globals.Setup.CountBansToSleep)
-                                {
-                                    await c1.Stop();
-                                    break;
-                                }
-
-                            }
-                        else
-                            _usedPhones.Remove(c1.Phone.Remove(0, 1));
-                    }
-                    catch (Exception ex)
-                    {
-                        c1.Web.RemoveQueue();
-                        _usedPhones.Remove(c1.Phone.Remove(0, 1));
-
-                        Log.Write($"[Handler - Acc1] - Произошла ошибка, аккаунт возвращен в очередь: {ex.Message}\n", _logFile.FullName);
-                    }
+                    if (!_currentProfile.Warm)
+                        goto getAccount;
                 }
 
-                c1Auth = c2Auth = false;
+                if (_currentProfile.Warm)
+                    _activePhones.Remove(threadId + phone);
+            }
+            catch (Exception ex)
+            {
+                client.Web.RemoveQueue();
+                _usedPhones.Remove(threadId + phone);
+
+                Log.Write($"[Handler] - Произошла ошибка, аккаунт возвращен в очередь: {ex.Message}\n", _logFile.FullName);
             }
 
-
-            async Task<bool> TryLoginWeb(Client client, string phone)
+            async Task<(bool, int)> TryLoginWeb(Client client, string phone)
             {
+                await client.GetInstance().StopApk(client.PackageName);
+                await client.GetInstance().RunApk(client.PackageName);
+                await Task.Delay(1_000);
+
                 await MoveToScan(client, true);
+                /*{
+                    client.Web!.RemoveQueue();
+                    Log.Write($"[{phone}] - Почему то не смогли найти кнопки :(\n", _logFile.FullName);
+                    return false;
+                }*/
+
                 int i = 0;
                 try
                 {
@@ -381,19 +331,22 @@ public class AccPreparation
                     {
                         client.Web!.RemoveQueue();
                         Log.Write($"[{phone}] - Аккаунт оказался не валидным\n", _logFile.FullName);
-                        return false;
+                        return (false, i);
                     }
 
                     if (i > 0)
                         if (!await MoveToScan(client, false))
+                        {
+                            ++i;
                             goto initAgain;
+                        }
 
                     initWithErrors = true;
 
-                    //await client.GetInstance().Click(360, 571);
+                    /*//await client.GetInstance().Click(360, 571);
                     var dump = await client.GetInstance().DumpScreen();
                     if (await client.GetInstance().ExistsElement("text=\"ПРИВЯЗКА УСТРОЙСТВА\"", dump, false))
-                        await client.GetInstance().Click("text=\"ПРИВЯЗКА УСТРОЙСТВА\"", dump);
+                        await client.GetInstance().Click("text=\"ПРИВЯЗКА УСТРОЙСТВА\"", dump);*/
 
                     try
                     {
@@ -408,12 +361,16 @@ public class AccPreparation
 
                     await client.Web!.Free();
 
-                    dump = await client.GetInstance().DumpScreen();
+                    await Task.Delay(1_000);
+
+                    var dump = await client.GetInstance().DumpScreen();
 
                     if (await client.GetInstance().ExistsElement("text=\"ПОДТВЕРДИТЬ\"", dump, false))
                     {
                         Globals.QrCode = null;
-                        return false;
+                        await client.GetInstance().StopApk(client.PackageName);
+
+                        return (false, i);
                     }
 
                     if (await client.GetInstance().ExistsElement("text=\"OK\"", dump, isWait: false))
@@ -429,8 +386,8 @@ public class AccPreparation
                         }*/
 
 
-                        await client.GetInstance().StopApk(c1.PackageName);
-                        await client.GetInstance().RunApk(c1.PackageName);
+                        await client.GetInstance().StopApk(client.PackageName);
+                        await client.GetInstance().RunApk(client.PackageName);
 
                         goto initAgain;
                     }
@@ -441,15 +398,15 @@ public class AccPreparation
                         Globals.QrCode = null;
                         Log.Write($"[{phone}] - Инициализировалось с ошибками\n", _logFile.FullName);
 
-                        await client.GetInstance().StopApk(c1.PackageName);
-                        await client.GetInstance().RunApk(c1.PackageName);
+                        await client.GetInstance().StopApk(client.PackageName);
+                        await client.GetInstance().RunApk(client.PackageName);
 
                         goto initAgain;
                     }
 
-                    await Task.Delay(3_000);
+                    //await Task.Delay(1_000);
                     //resource-id="com.whatsapp.w4b:id/device_name_edit_text"
-                    dump = await client.GetInstance().DumpScreen();
+                    //dump = await client.GetInstance().DumpScreen();
                     if (await client.GetInstance().ExistsElement("resource-id=\"com.whatsapp.w4b:id/device_name_edit_text\"", dump, false))
                     {
                         await client.GetInstance().Input("resource-id=\"com.whatsapp.w4b:id/device_name_edit_text\"", _names[new Random().Next(0, _names.Length)].Replace(' ', 'I'), dump);
@@ -459,15 +416,19 @@ public class AccPreparation
                     client.Web.RemoveQueue();
 
                     await SuccesfulMoveAccount(client);
-                    return true;
+                    return (true, i);
                 }
                 catch (Exception ex)
                 {
                     Log.Write($"[main] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
                     Globals.QrCode = null;
+                    
                     client.Web.RemoveQueue();
+
                     await client.Web.Free();
-                    return false;
+                    await client.GetInstance().StopApk(client.PackageName);
+
+                    return (false, i);
                 }
             }
 
@@ -475,7 +436,6 @@ public class AccPreparation
             {
                 var countTry = 0;
             tryAgain:
-                await Task.Delay(2_000);
                 var dump = await client.GetInstance().DumpScreen();
 
                 if (await client.GetInstance().ExistsElement("text=\"Выберите частоту резервного копирования\"", dump))
@@ -506,21 +466,23 @@ public class AccPreparation
                     dump = await client.GetInstance().DumpScreen();
                 }
 
-                if (!await client.GetInstance().ExistsElement("content-desc=\"Ещё\""))
+                if (!await client.GetInstance().ExistsElement("content-desc=\"Ещё\"", dump))
                 {
                     Log.Write($"Не можем найти кнопку ещё, пробуем сдампить еще раз\n", _logFile.FullName);
 
-                    if (++countTry >= 2)
+                    if (++countTry >= 3)
                         return false;
 
+                    await Task.Delay(1_000);
                     goto tryAgain;
                 }
 
-                await client.GetInstance().Click("content-desc=\"Ещё\"");
+                await client.GetInstance().Click("content-desc=\"Ещё\"", dump);
                 await client.GetInstance().Click("text=\"Связанные устройства\"");
 
-                if (await client.GetInstance().ExistsElement("resource-id=\"android:id/button1\""))
-                    await client.GetInstance().Click("resource-id=\"android:id/button1\"");
+                dump = await client.GetInstance().DumpScreen();
+                if (await client.GetInstance().ExistsElement("resource-id=\"android:id/button1\"", dump))
+                    await client.GetInstance().Click("resource-id=\"android:id/button1\"", dump);
 
                 if (isWaitQueue)
                 {
@@ -530,8 +492,11 @@ public class AccPreparation
 
                 await client.GetInstance().Click("text=\"ПРИВЯЗКА УСТРОЙСТВА\"");
 
-                if (await client.GetInstance().ExistsElement("text=\"OK\""))
-                    await client.GetInstance().Click("text=\"OK\"");
+                await Task.Delay(500);
+
+                dump = await client.GetInstance().DumpScreen();
+                if (await client.GetInstance().ExistsElement("text=\"OK\"", dump))
+                    await client.GetInstance().Click("text=\"OK\"", dump);
 
                 return true;
             }
@@ -625,7 +590,6 @@ public class AccPreparation
                     return false;
                 }
             }
-
         }
         catch (Exception ex)
         {

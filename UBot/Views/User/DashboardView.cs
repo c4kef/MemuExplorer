@@ -19,6 +19,7 @@ namespace UBot.Views.User
         {
             Dashboard = _dashboard;
             OpenControlPanel = new Command(ExecuteOpenControlPanel);
+            ShowLastAccountsPanel = new Command(ExecuteShowLastAccountsPanel);
 
             _webPrep = new Whatsapp.Web.AccPreparation();
             _webNewsletter = new Whatsapp.Web.Newsletter();
@@ -81,6 +82,7 @@ namespace UBot.Views.User
         public Dashboard Dashboard { get; private set; }
 
         public Command OpenControlPanel { get; }
+        public Command ShowLastAccountsPanel { get; }
 
         private bool _isFree;
 
@@ -91,6 +93,18 @@ namespace UBot.Views.User
         #endregion
 
         public static DashboardView GetInstance() => _instance;
+
+        private async void ExecuteShowLastAccountsPanel()
+        {
+            var arr = _webNewsletter.SendedMessagesCountFromAccount.TakeLast(10);
+
+            var builder = new StringBuilder();
+            for (var i = 0; i < arr.Count(); i++)
+                builder.Append($"                              {i + 1}. {arr.ElementAt(i).Value}      {((i % 2 == 0) ? "" : "\n")}");
+
+
+            PopupExtensions.ShowPopup(MainPage.GetInstance(), new Message("Информация", builder.ToString(), false));
+        }
 
         private async void ExecuteOpenControlPanel()
         {
@@ -118,7 +132,7 @@ namespace UBot.Views.User
 
             if ((result.Value.Warm || result.Value.CheckBan) && result.Value.IsWeb)
             {
-                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (Globals.Setup.CountThreads <= 1 && !result.Value.CheckBan) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountMessages < 1 || Globals.Setup.RepeatCounts < 1)
+                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (Globals.Setup.CountThreads <= 1 && !result.Value.CheckBan) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.CountMessages < 1 || Globals.Setup.RepeatCounts < 1)
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));
                     return;
@@ -156,7 +170,7 @@ namespace UBot.Views.User
 
             if ((result.Value.Warm || result.Value.CheckBan || result.Value.Scaning) && !result.Value.IsWeb)
             {
-                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) % 2 != 0 && !result.Value.CheckBan))
+                if (!File.Exists(Globals.Setup.PathToFileNames) || !File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) < Globals.Setup.CountGroups * Globals.Setup.CountThreads && !result.Value.CheckBan) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.CountMessages < 1 || Globals.Setup.RepeatCounts < 1)
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));
                     return;

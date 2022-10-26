@@ -113,6 +113,9 @@
                                TextColor="{StaticResource White}"
                                FontSize="20"
                                HorizontalOptions="Start" />
+                        <HorizontalStackLayout.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ShowLastAccountsPanel}" />
+                        </HorizontalStackLayout.GestureRecognizers>
                     </HorizontalStackLayout>
 
                     <HorizontalStackLayout Spacing="5"

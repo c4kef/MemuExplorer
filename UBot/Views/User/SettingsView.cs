@@ -124,22 +124,70 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.MinTrustLevel, value);
         }
 
-        public int? DelaySendMessageFrom
+        public float? DelaySendMessageFrom
         {
             get => Globals.Setup.DelaySendMessageFrom;
             set => SetProperty(ref Globals.Setup.DelaySendMessageFrom, value);
         }
 
-        public int? DelaySendMessageTo
+        public float? DelaySendMessageTo
         {
             get => Globals.Setup.DelaySendMessageTo;
             set => SetProperty(ref Globals.Setup.DelaySendMessageTo, value);
+        }
+
+        public int? WriteChatBotsFrom
+        {
+            get => Globals.Setup.WriteChatBotsFrom;
+            set => SetProperty(ref Globals.Setup.WriteChatBotsFrom, value);
+        }
+
+        public int? WriteChatBotsTo
+        {
+            get => Globals.Setup.WriteChatBotsTo;
+            set => SetProperty(ref Globals.Setup.WriteChatBotsTo, value);
+        }
+
+        public int? WritePeoplesWarmFrom
+        {
+            get => Globals.Setup.WritePeoplesWarmFrom;
+            set => SetProperty(ref Globals.Setup.WritePeoplesWarmFrom, value);
+        }
+
+        public int? WritePeoplesWarmTo
+        {
+            get => Globals.Setup.WritePeoplesWarmTo;
+            set => SetProperty(ref Globals.Setup.WritePeoplesWarmTo, value);
+        }
+
+        public int? JoinToGroupsFrom
+        {
+            get => Globals.Setup.JoinToGroupsFrom;
+            set => SetProperty(ref Globals.Setup.JoinToGroupsFrom, value);
+        }
+
+        public int? JoinToGroupsTo
+        {
+            get => Globals.Setup.JoinToGroupsTo;
+            set => SetProperty(ref Globals.Setup.JoinToGroupsTo, value);
+        }
+
+        public float? DynamicDelaySendMessageMinus
+        {
+            get => Globals.Setup.DynamicDelaySendMessageMinus;
+            set => SetProperty(ref Globals.Setup.DynamicDelaySendMessageMinus, value);
         }
 
         public bool RemoveAvatar
         {
             get => Globals.Setup.RemoveAvatar;
             set => SetProperty(ref Globals.Setup.RemoveAvatar, value);
+        }
+
+        public bool AdditionalWarm
+        {
+            get => Globals.Setup.AdditionalWarm;
+            set => SetProperty(ref Globals.Setup.AdditionalWarm, value);
         }
 
         #endregion

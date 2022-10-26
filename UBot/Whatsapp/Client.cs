@@ -213,7 +213,7 @@ public class Client
 
     public async Task<bool> IsValid()
     {
-        await Task.Delay(2_000);
+        await Task.Delay(1_000);
 
         var dump = await Mem.DumpScreen();
 

@@ -20,5 +20,5 @@ public static class Settings
     /// <summary>
     /// Таймер операций (в м.секундах)
     /// </summary>
-    public const int WaitingSecs = 200;
+    public const int WaitingSecs = 400;
 }

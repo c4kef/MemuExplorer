@@ -163,7 +163,6 @@ public class Client
             return;
         }
 
-        await Task.Delay(200);
         await MemuCmd.ExecMemuc($"-i {Index} adb shell input tap {x} {y}");
 
         Log.Write($"[{Index}] -> input tap {x} {y}");
@@ -264,8 +263,6 @@ public class Client
             Log.Write($"[{Index}] -> VM not found");
             return;
         }
-
-        await Task.Delay(Settings.WaitingSecs);
 
         var (x, y) = await FindElement(uiElement, dump ?? await DumpScreen());
         

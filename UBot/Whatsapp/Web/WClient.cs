@@ -170,14 +170,14 @@ public class WClient
     /// </summary>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>
-    public async Task<bool> SendText(string number, string text, FileInfo? image = null)
+    public async Task<bool> SendText(string number, string text, FileInfo? image = null, string? buttonText = null, string title = "", string footer = "")
     {
         if (!await IsConnected())
             throw new Exception($"SendText: client has disconected");
 
         try
         {
-            var isSended = false;
+            SendReturnModels Status = null;
 
             if (image != null && image.Exists)
             {
@@ -188,13 +188,26 @@ public class WClient
                 options.Add($"caption: '{text}'");
                 options.Add($"createChat: true");
 
-                isSended = (await _wpp.SendFileMessage($"{number.Replace("+", string.Empty)}@c.us", base64, options)).Status;
+                Status = (await _wpp.SendFileMessage($"{number.Replace("+", string.Empty)}@c.us", base64, options));
             }
             else
-                isSended = (await _wpp.SendMessage($"{number.Replace("+", string.Empty)}@c.us", text)).Status;
+            {
+                List<string> options = new List<string>();
+                options.Add($"createChat: true");
+                var msgid = string.Empty;
+                if (buttonText is not null)
+                {
+                    options.Add($"useTemplateButtons: false");
+                    options.Add($"buttons: [ {{ id: '', text: '{buttonText}' }} ]");
+                    options.Add($"title: '{title}'");
+                    options.Add($"footer: '{footer}'");
+                }
 
-            if (!isSended)
-                throw new Exception($"SendText: message is not sended");
+                Status = await _wpp.SendMessage($"{number.Replace("+", string.Empty)}@c.us", text, options);
+            }
+
+            if (!Status.Status)
+                throw new Exception($"SendText: message not sended by {Status.Error}");
 
             return true;
         }

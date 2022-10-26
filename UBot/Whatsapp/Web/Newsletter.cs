@@ -17,14 +17,14 @@ public class Newsletter
 {
     public Newsletter()
     {
-        _sendedMessagesCountFromAccount = new Dictionary<string, int>();
+        SendedMessagesCountFromAccount = new Dictionary<string, int>();
         _usedPhones = new List<string>();
         _usedPhonesUsers = new List<string>();
 
         _lock = new();
     }
 
-    private readonly Dictionary<string, int> _sendedMessagesCountFromAccount;
+    public readonly Dictionary<string, int> SendedMessagesCountFromAccount;
     private readonly List<string> _usedPhones;
     private readonly List<string> _usedPhonesUsers;
     private readonly object _lock;
@@ -55,7 +55,9 @@ public class Newsletter
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhones);
 
-        DashboardView.GetInstance().AllTasks = _contacts.Length;
+        Log.Write($"Добро пожаловать в логи, текст рассылки:\n{DashboardView.GetInstance().Text}\n\n", _logFile.FullName);
+
+        DashboardView.GetInstance().AllTasks = _contacts.Count(contact => !string.IsNullOrEmpty(contact) && contact.Length > 5);
 
         for (var i = 0; i < Globals.Setup.CountThreads; i++)
             tasks.Add(Task.Run(async () => await Handler()));
@@ -83,6 +85,7 @@ public class Newsletter
     private async Task Handler()
     {
         var badProxyList = new List<string>();
+        var messagesToWam = File.Exists(Globals.Setup.PathToFileTextWarm) ? (await File.ReadAllTextAsync(Globals.Setup.PathToFileTextWarm)).Split('\n') : null;
         while (!IsStop)
         {
             var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
@@ -128,6 +131,17 @@ public class Newsletter
                 continue;
             }
 
+            if (Globals.Setup.AdditionalWarm)
+            {
+                var stepsAdditionalWarm = new List<Task>();
+                stepsAdditionalWarm.Add(WarmChatBots());
+                stepsAdditionalWarm.Add(WarmGroups());
+                stepsAdditionalWarm.Add(WarmPeoples());
+
+                foreach (var step in stepsAdditionalWarm.OrderBy(x => new Random().Next()).ToArray())
+                    await step;
+            }
+
             var peopleReal = string.Empty;
 
             try
@@ -135,33 +149,54 @@ public class Newsletter
                 if (Globals.Setup.RemoveAvatar)
                     await client.Web!.RemoveAvatar();
 
+                var currentMinus = (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f);
+
                 while (!IsStop)
                 {
                     peopleReal = GetFreeNumberUser();
-                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};1", _logFile.FullName);
                     if (string.IsNullOrEmpty(peopleReal))
                         break;
 
-                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};2", _logFile.FullName);
                     if (!await client.Web!.IsConnected())
                         throw new Exception("Client has disconected");
 
-                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};3", _logFile.FullName);
                     if (await client.Web!.CheckValidPhone(peopleReal))
                     {
-                        Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};4", _logFile.FullName);
-                        var text = DashboardView.GetInstance().Text.Split('\r').ToList();
-                        var file = text.TakeLast(1).ToArray()[0];
+                        var text = string.Join('\n', DashboardView.GetInstance().Text.Split('\r').ToList());
+                        FileInfo? image = null;
 
-                        var isFile = !string.IsNullOrEmpty(file) && File.Exists(file);
+                        string? buttonText = null;
+                        string title = string.Empty;
+                        string footer = string.Empty;
 
-                        if (isFile)
-                            text.RemoveAll(str => str.Contains(file));
+                        foreach (var match in new Regex(@"\{(.*?)\}").Matches(text).Select(match => match.Value.Replace("{", "").Replace("}", "")))
+                        {
+                            if (match.Contains(Globals.TagPicture))
+                            {
+                                var tmpImage = new FileInfo(match.Remove(0, Globals.TagPicture.Length));
+                                if (tmpImage.Exists)
+                                {
+                                    image = tmpImage;
+                                    break;
+                                }
+                            }
+                            else if (match.Contains(Globals.TagTitle))
+                            {
+                                title = match.Remove(0, Globals.TagTitle.Length);
+                            }
+                            else if(match.Contains(Globals.TagFooter))
+                            {
+                                footer = match.Remove(0, Globals.TagFooter.Length);
+                            }
+                            else if (match.Contains(Globals.TagButton))
+                            {
+                                buttonText = match.Remove(0, Globals.TagButton.Length);
+                            }
+                        }
 
-                        if (await client.Web!.SendText(peopleReal, SelectWord(string.Join('\n', text).Replace("\n", "\n").Replace("\r", "\r")), isFile ? new FileInfo(file) : null))
+                        if (await client.Web!.SendText(peopleReal, SelectWord(new Regex(@"\{([^)]*)\}").Replace(text, "").Replace("\"", "").Replace("\'", "")), image, buttonText, title, footer))
                         {
                             ++DashboardView.GetInstance().CompletedTasks;
-                            Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};5-1", _logFile.FullName);
                             Log.Write(
                             $"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{peopleReal}",
                             _reportFile.FullName);
@@ -169,11 +204,12 @@ public class Newsletter
                             if (++countSendedMessages >= Globals.Setup.CountMessages)
                                 break;
 
-                            await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
+                            var minus = (int)((Globals.Setup.DynamicDelaySendMessageMinus ?? 0) * 1000f);
+
+                            await Task.Delay(minus != 0 ? new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)) : currentMinus -= minus);
                         }
                         else
                         {
-                            Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};6", _logFile.FullName);
                             _usedPhonesUsers.Remove(peopleReal);
                         }
                     }
@@ -181,12 +217,10 @@ public class Newsletter
             }
             catch (Exception ex)
             {
-                Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};5-2", _logFile.FullName);
-                _sendedMessagesCountFromAccount[phone] = countSendedMessages;
+                SendedMessagesCountFromAccount[phone] = countSendedMessages;
 
                 if (countSendedMessages < 10 && File.Exists(Globals.Setup.PathToFileProxy))
                 {
-                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{proxy}", _badProxyFile.FullName);
                     badProxyList.Add(proxy);
                 }
 
@@ -197,7 +231,7 @@ public class Newsletter
                 await Globals.TryMove(path, $@"{Globals.WebBanDirectory.FullName}\{phone}");
 
                 var count = 0;
-                var messages = _sendedMessagesCountFromAccount.TakeLast(10);
+                var messages = SendedMessagesCountFromAccount.TakeLast(10);
 
                 foreach (var msg in messages)
                     count += msg.Value;
@@ -205,10 +239,10 @@ public class Newsletter
                 DashboardView.GetInstance().AverageMessages = (int)Math.Floor((decimal)count / messages.Count());
 
                 count = 0;
-                foreach (var msg in _sendedMessagesCountFromAccount)
+                foreach (var msg in SendedMessagesCountFromAccount)
                     count += msg.Value;
 
-                DashboardView.GetInstance().AverageAllMessages = (int)Math.Floor((decimal)count / _sendedMessagesCountFromAccount.Count);
+                DashboardView.GetInstance().AverageAllMessages = (int)Math.Floor((decimal)count / SendedMessagesCountFromAccount.Count);
 
                 Log.Write($"[MessageSender] - Ошибка, возможно клиент забанен: {ex.Message}\n", _logFile.FullName);
                 continue;
@@ -229,7 +263,7 @@ public class Newsletter
                     {
                         if (!_usedPhonesUsers.Contains(contact))
                         {
-                            if (contact.Length < 5)
+                            if (contact.Length < 5 || string.IsNullOrEmpty(contact))
                                 continue;
 
                             _usedPhonesUsers.Add(contact);
@@ -264,7 +298,7 @@ public class Newsletter
                         return "";
 
                     var proxyList = File.ReadAllLines(Globals.Setup.PathToFileProxy).ToList();
-                    
+
                     proxyList.RemoveAll(badProxyList.ToArray().Contains);
 
                     File.WriteAllLines(Globals.Setup.PathToFileProxy, proxyList.ToArray());
@@ -273,6 +307,56 @@ public class Newsletter
                         return "0";
 
                     return proxyList.OrderBy(x => new Random().Next()).ToArray()[0];
+                }
+            }
+
+            async Task WarmGroups()
+            {
+                if (File.Exists(Globals.Setup.PathToFileGroups))
+                {
+                    var allGroups = await File.ReadAllLinesAsync(Globals.Setup.PathToFileGroups);
+                    var groups = allGroups.Where(group => new Random().Next(0, 100) >= 50).ToList().Take(new Random().Next(Globals.Setup.JoinToGroupsFrom ?? 1, Globals.Setup.JoinToGroupsTo ?? 1)).ToList();
+
+                    if (groups.Count == 0)
+                        groups.Add(allGroups[0]);
+
+                    foreach (var group in groups)
+                        await client.Web!.JoinGroup(group);
+                }
+            }
+
+            async Task WarmChatBots()
+            {
+                if (File.Exists(Globals.Setup.PathToFileChatBots) && messagesToWam != null && messagesToWam.Length > 0)
+                {
+                    var allChatBots = await File.ReadAllLinesAsync(Globals.Setup.PathToFileChatBots);
+                    var chatbots = allChatBots.Where(group => new Random().Next(0, 100) >= 50).ToList().Take(new Random().Next(Globals.Setup.WriteChatBotsFrom ?? 1, Globals.Setup.WriteChatBotsTo ?? 1)).ToList();
+
+                    if (chatbots.Count == 0)
+                        chatbots.Add(allChatBots[0]);
+
+                    foreach (var chatbot in chatbots)
+                        await client.Web!.SendText(chatbot, messagesToWam[new Random().Next(0, messagesToWam.Length - 1)]);
+                }
+            }
+
+            async Task WarmPeoples()
+            {
+                if (File.Exists(Globals.Setup.PathToFilePeoples) && messagesToWam != null && messagesToWam.Length > 0)
+                {
+                    var allPeoples = await File.ReadAllLinesAsync(Globals.Setup.PathToFilePeoples);
+                    var localMessages = new List<string>();
+
+                    if (File.Exists(Globals.Setup.PathToFileTextPeopleWarm))
+                        localMessages.AddRange(await File.ReadAllLinesAsync(Globals.Setup.PathToFileTextPeopleWarm));
+
+                    var peoples = allPeoples.Where(group => new Random().Next(0, 100) >= 50).ToList().Take(new Random().Next(Globals.Setup.WritePeoplesWarmFrom ?? 1, Globals.Setup.WritePeoplesWarmTo ?? 1)).ToList();
+
+                    if (peoples.Count == 0)
+                        peoples.Add(allPeoples[0]);
+
+                    foreach (var people in peoples)
+                        await client.Web!.SendText(people, localMessages.Count == 0 ? messagesToWam[new Random().Next(0, messagesToWam.Length - 1)] : localMessages[new Random().Next(0, localMessages.Count - 1)]);
                 }
             }
         }

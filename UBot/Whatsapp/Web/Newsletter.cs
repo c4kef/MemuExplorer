@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using UBot.Controls;
 using UBot.Pages.Dialogs;
 using UBot.Pages.User;
 using UBot.Views.User;
@@ -40,7 +41,7 @@ public class Newsletter
     {
         IsStop = false;
         _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_log.txt");
-        _reportFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_report.txt");
+        _reportFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{new FileInfo(Globals.Setup.PathToFilePhones).Name}_report.txt");
 
         if (File.Exists(Globals.Setup.PathToFileProxy))
         {
@@ -54,8 +55,6 @@ public class Newsletter
         var tasks = new List<Task>();
 
         _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhones);
-
-        Log.Write($"Добро пожаловать в логи, текст рассылки:\n{DashboardView.GetInstance().Text}\n\n", _logFile.FullName);
 
         DashboardView.GetInstance().AllTasks = _contacts.Count(contact => !string.IsNullOrEmpty(contact) && contact.Length > 5);
 
@@ -86,6 +85,7 @@ public class Newsletter
     {
         var badProxyList = new List<string>();
         var messagesToWam = File.Exists(Globals.Setup.PathToFileTextWarm) ? (await File.ReadAllTextAsync(Globals.Setup.PathToFileTextWarm)).Split('\n') : null;
+
         while (!IsStop)
         {
             var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
@@ -206,7 +206,7 @@ public class Newsletter
 
                             var minus = (int)((Globals.Setup.DynamicDelaySendMessageMinus ?? 0) * 1000f);
 
-                            await Task.Delay(minus != 0 ? new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)) : currentMinus -= minus);
+                            await Task.Delay(minus <= 0 ? new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)) : currentMinus -= minus);
                         }
                         else
                         {
@@ -219,10 +219,13 @@ public class Newsletter
             {
                 SendedMessagesCountFromAccount[phone] = countSendedMessages;
 
-                if (countSendedMessages < 10 && File.Exists(Globals.Setup.PathToFileProxy))
+                if (countSendedMessages < (Globals.Setup.BlackProxyDeleteBefore is null or 0 ? 10 : Globals.Setup.BlackProxyDeleteBefore) && File.Exists(Globals.Setup.PathToFileProxy))
                 {
                     badProxyList.Add(proxy);
                 }
+
+                if (!string.IsNullOrEmpty(Globals.Setup.LinkToChangeIP))
+                    await ResourceHelper.GetAsync(Globals.Setup.LinkToChangeIP);
 
                 _usedPhonesUsers.Remove(peopleReal);
 

@@ -346,6 +346,29 @@
                             </VerticalStackLayout>
 
                             <VerticalStackLayout>
+                                <Label Text="Смена IP"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Смена IP"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding LinkToChangeIP}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}" />
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout>
                                 <Label Text="Дин. Задержка"
                                        FontFamily="SegoeUI"
                                        TextColor="{StaticResource White}"
@@ -364,6 +387,30 @@
                                            Placeholder="Задержка"
                                            Margin="0,5,5,0"
                                            Text="{Binding DynamicDelaySendMessageMinus}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}" />
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout>
+                                <Label Text="Черная прокся"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Неудач"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding BlackProxyDeleteBefore}"
                                            TextChanged="TextSave"
                                            BackgroundColor="{StaticResource Black}">
                                         <Entry.Behaviors>

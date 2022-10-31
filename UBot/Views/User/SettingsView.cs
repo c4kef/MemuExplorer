@@ -106,6 +106,12 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.RepeatCounts, value);
         }
 
+        public string LinkToChangeIP
+        {
+            get => Globals.Setup.LinkToChangeIP;
+            set => SetProperty(ref Globals.Setup.LinkToChangeIP, value);
+        }
+
         public int? CountMessages
         {
             get => Globals.Setup.CountMessages;
@@ -170,6 +176,12 @@ namespace UBot.Views.User
         {
             get => Globals.Setup.JoinToGroupsTo;
             set => SetProperty(ref Globals.Setup.JoinToGroupsTo, value);
+        }
+
+        public int? BlackProxyDeleteBefore
+        {
+            get => Globals.Setup.BlackProxyDeleteBefore;
+            set => SetProperty(ref Globals.Setup.BlackProxyDeleteBefore, value);
         }
 
         public float? DynamicDelaySendMessageMinus

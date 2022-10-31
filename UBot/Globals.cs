@@ -73,35 +73,42 @@ namespace UBot
             }
             catch (Exception ex)
             {
-                await File.WriteAllTextAsync("critical.txt", $"[Critical-Init] - {ex.Message}");
+                await File.AppendAllTextAsync("critical.txt", $"[Critical-Init] - {ex.Message}\n");
             }
         }
 
         public static async Task OBSCamera()
         {
-            while (true)
+            try
             {
-                var converter = new ImageConverter();
-                var imageBytes = (byte[])converter.ConvertTo(ConvertTo24Bpp(QrCode ?? Base64NeutralQr.Base64StringToBitmap()), typeof(byte[]))!;
-
-                var count = 0;
-
-                while (count < 40)
+                while (true)
                 {
-                    Camera.Send(imageBytes);
-                    await Task.Delay(50);
-                    count++;
+                    var converter = new ImageConverter();
+                    var imageBytes = (byte[])converter.ConvertTo(ConvertTo24Bpp(QrCode ?? Base64NeutralQr.Base64StringToBitmap()), typeof(byte[]))!;
+
+                    var count = 0;
+
+                    while (count < 40)
+                    {
+                        Camera.Send(imageBytes);
+                        await Task.Delay(50);
+                        count++;
+                    }
+                }
+
+                static Bitmap ConvertTo24Bpp(System.Drawing.Image img)
+                {
+                    var ms = new MemoryStream();
+                    var bmp = new Bitmap(img.Width, img.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                    var gr = Graphics.FromImage(bmp);
+                    gr.DrawImage(img, new Rectangle(0, 0, img.Width, img.Height));
+                    bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                    return new Bitmap(ms);
                 }
             }
-
-            static Bitmap ConvertTo24Bpp(System.Drawing.Image img)
+            catch (Exception ex)
             {
-                var ms = new MemoryStream();
-                var bmp = new Bitmap(img.Width, img.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                var gr = Graphics.FromImage(bmp);
-                gr.DrawImage(img, new Rectangle(0, 0, img.Width, img.Height));
-                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-                return new Bitmap(ms);
+                await File.AppendAllTextAsync("critical.txt", $"[Critical-Init] - {ex.Message}\n");
             }
         }
 
@@ -216,11 +223,13 @@ namespace UBot
         public string PathToFileTextPeopleWarm;
         public string PathToFilePhones;
         public string PathToFileProxy;
+        public string LinkToChangeIP;
         public bool RemoveAvatar;
         public bool AdditionalWarm;
         public float? DynamicDelaySendMessageMinus;
         public int? PinCodeAccount;
 
+        public int? BlackProxyDeleteBefore;
         public int? CountBansToSleep;
         public int? CountMessages;
         public int? CountGroups;

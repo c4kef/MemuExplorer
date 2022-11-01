@@ -50,7 +50,8 @@ public class Newsletter
         }
 
         _logFile.Create().Close();
-        _reportFile.Create().Close();
+        if (!_reportFile.Exists)
+            _reportFile.Create().Close();
 
         var tasks = new List<Task>();
 

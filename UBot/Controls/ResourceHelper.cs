@@ -52,7 +52,6 @@ namespace UBot.Controls
             return null;
         }
 
-
         public static void Sort<T>(this ObservableCollection<T> collection, Comparison<T> comparison)
         {
             var sortableList = new List<T>(collection);

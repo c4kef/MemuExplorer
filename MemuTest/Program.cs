@@ -1,5 +1,8 @@
-﻿Console.WriteLine("Hello".Remove(0, "Hello".Length - 1));
+﻿var _badProxyFile = new FileInfo($@"test_badproxy.txt");
+if (!_badProxyFile.Exists)
+    _badProxyFile.Create().Close();
 
+await File.AppendAllTextAsync(_badProxyFile.FullName, "test");
 /*using System.Text;
 //eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvbWlrYXdpc2UuY29tXC9ydV9ydVwvIiwiaWF0IjoxNjY2NDU2NjIyLCJuYmYiOjE2NjY0NTY2MjIsImV4cCI6MTY2NzA2MTQyMiwiZGF0YSI6eyJ1c2VyIjp7ImlkIjoiNzIifX19.1SCeDJf9rBWAfid5aAXt7NK7PMKnagc2Z0jtfDp7usI
 Console.WriteLine(await GetAsync("https://mikawise.com/wp-json/api/userdata"));

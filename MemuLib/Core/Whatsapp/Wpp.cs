@@ -165,49 +165,65 @@ namespace WPP4DotNet
         /// <param name="driver">Insert the IWebDriver object.</param>
         public virtual async Task StartSession(IBrowser driver, Credentials? auth)
         {
-            this.Driver = driver;
-
-            if (auth != null)
-                await (await Driver.PagesAsync())[0].AuthenticateAsync(auth);
-
-            await (await Driver.PagesAsync())[0].SetUserAgentAsync("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36");
-
-            await (await Driver.PagesAsync())[0].EvaluateExpressionOnNewDocumentAsync("navigator.serviceWorker.getRegistrations().then((registrations)=>{for(let registration of registrations){registration.unregister()}}).catch((err)=>null);navigator.serviceWorker.register=new Promise(()=>{});");
-            await (await Driver.PagesAsync())[0].EvaluateFunctionOnNewDocumentAsync("()=>{navigator.serviceWorker.getRegistrations().then((registrations)=>{for(let registration of registrations){registration.unregister()}}).catch((err)=>null);navigator.serviceWorker.register=new Promise(()=>{})}");
-            await (await Driver.PagesAsync())[0].SetRequestInterceptionAsync(true);
-
-            (await Driver.PagesAsync())[0].Request += async (sender, e) =>
+            try
             {
-                var req = e.Request;
-                if (req.Url.StartsWith("https://web.whatsapp.com/check-update"))
-                {
-                    await req.AbortAsync();
-                    return;
-                }
-                if (req.Url != "https://web.whatsapp.com/")
-                {
-                    await req.ContinueAsync();
-                    return;
-                }
+                this.Driver = driver;
 
-                await req.RespondAsync(new ResponseData
+                if (auth != null)
+                    await (await Driver.PagesAsync())[0].AuthenticateAsync(auth);
+
+                await (await Driver.PagesAsync())[0].SetUserAgentAsync("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36");
+
+                await (await Driver.PagesAsync())[0].EvaluateExpressionOnNewDocumentAsync("navigator.serviceWorker.getRegistrations().then((registrations)=>{for(let registration of registrations){registration.unregister()}}).catch((err)=>null);navigator.serviceWorker.register=new Promise(()=>{});");
+                await (await Driver.PagesAsync())[0].EvaluateFunctionOnNewDocumentAsync("()=>{navigator.serviceWorker.getRegistrations().then((registrations)=>{for(let registration of registrations){registration.unregister()}}).catch((err)=>null);navigator.serviceWorker.register=new Promise(()=>{})}");
+                await (await Driver.PagesAsync())[0].SetRequestInterceptionAsync(true);
+
+                (await Driver.PagesAsync())[0].Request += async (sender, e) =>
                 {
-                    Status = HttpStatusCode.OK,
-                    ContentType = "text/html",
-                    Body = await File.ReadAllTextAsync(@"Data\whatsapp-page.html")
-                });
-            };
+                    var req = e.Request;
+                    if (req.Url.StartsWith("https://web.whatsapp.com/check-update"))
+                    {
+                        await req.AbortAsync();
+                        return;
+                    }
+                    if (req.Url != "https://web.whatsapp.com/")
+                    {
+                        await req.ContinueAsync();
+                        return;
+                    }
 
-            await (await Driver.PagesAsync())[0].GoToAsync("https://web.whatsapp.com");
-            await (await Driver.PagesAsync())[0].ReloadAsync();
+                    await req.RespondAsync(new ResponseData
+                    {
+                        Status = HttpStatusCode.OK,
+                        ContentType = "text/html",
+                        Body = await File.ReadAllTextAsync(@"Data\whatsapp-page.html")
+                    });
+                };
 
-            await GetWppJS();
+                await (await Driver.PagesAsync())[0].GoToAsync("https://web.whatsapp.com");
+                await (await Driver.PagesAsync())[0].ReloadAsync();
+
+                await GetWppJS();
+            }
+            catch (Exception ex)
+            {
+                await File.AppendAllTextAsync("critical_init_wpp.log", ex.Message);
+            }
         }
 
         public static async Task DownloadChromium()
         {
             using var browserFetcher = new BrowserFetcher();
             await browserFetcher.DownloadAsync();
+        }
+
+        public async Task SetGeoPosition(decimal lat, decimal longit)
+        {
+            await (await Driver.PagesAsync())[0].SetGeolocationAsync(new GeolocationOption()
+            {
+                Latitude = lat,
+                Longitude = longit
+            });
         }
 
         /// <summary>
@@ -299,6 +315,7 @@ namespace WPP4DotNet
             }
             catch (Exception ex)
             {
+                await File.AppendAllTextAsync("critical_init_wpp.log", ex.Message);
                 var msg = ex.Message;
                 return false;
             }

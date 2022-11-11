@@ -226,7 +226,7 @@ public class Newsletter
                 }
 
                 if (!string.IsNullOrEmpty(Globals.Setup.LinkToChangeIP))
-                    await ResourceHelper.GetAsync(Globals.Setup.LinkToChangeIP);
+                    Log.Write(await ResourceHelper.GetAsync(Globals.Setup.LinkToChangeIP), _logFile.FullName);
 
                 _usedPhonesUsers.Remove(peopleReal);
 
@@ -272,10 +272,12 @@ public class Newsletter
 
                             _usedPhonesUsers.Add(contact);
 
-                            DashboardView.GetInstance().AllTasks = _contacts.Count(cont => !_usedPhonesUsers.Contains(cont));
+                            var newContacts = _contacts.Except(_usedPhonesUsers).ToArray();
+
+                            DashboardView.GetInstance().AllTasks = newContacts.Length;
 
                             if (_usedPhonesUsers.Count % 100 == 0)
-                                File.WriteAllLines(Globals.Setup.PathToFilePhones, _contacts.Where(cont => !_usedPhonesUsers.Contains(cont)));
+                                File.WriteAllLines(Globals.Setup.PathToFilePhones, newContacts);
 
                             return contact[0] == '+' ? contact.Remove(0, 1) : contact;
                         }

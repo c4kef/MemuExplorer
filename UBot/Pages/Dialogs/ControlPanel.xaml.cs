@@ -41,8 +41,8 @@ public partial class ControlPanel : Popup
                 case "Прогрев":
                     _actionProfileWork.Warm = checkedBtn.Value;
                     break;
-                case "Регистрация":
-                    _actionProfileWork.Registration = checkedBtn.Value;
+                case "Чекер":
+                    _actionProfileWork.CheckNumberValid = checkedBtn.Value;
                     break;
                 case "Сканирование":
                     _actionProfileWork.Scaning = checkedBtn.Value;

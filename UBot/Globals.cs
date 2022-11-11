@@ -229,6 +229,11 @@ namespace UBot
         public float? DynamicDelaySendMessageMinus;
         public int? PinCodeAccount;
 
+        public int? CountPhonesFromStack;
+        public int? CountCheckedPhonesFromAccount;
+        public int? DelayBetweenStacks;
+        public string PathToCheckNumbers;
+
         public int? BlackProxyDeleteBefore;
         public int? CountBansToSleep;
         public int? CountMessages;
@@ -236,6 +241,9 @@ namespace UBot
         public int? RepeatCounts;
         public int? CountThreads;
         public int? MinTrustLevel;
+
+        public float? Latitude;
+        public float? Longitude;
 
         public float? DelaySendMessageFrom;
         public float? DelaySendMessageTo;

@@ -23,8 +23,8 @@ public struct ActionProfileWork
     public bool IsNewsLetter { get; set; }
     public bool IsWeb { get; set; }
     public bool CheckBan { get; set; }
+    public bool CheckNumberValid { get; set; }
     public bool Warm { get; set; }
-    public bool Registration { get; set; }
     public bool Scaning { get; set; }
 }
 

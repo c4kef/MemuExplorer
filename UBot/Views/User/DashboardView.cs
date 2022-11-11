@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Maui.Views;
+using MemuLib.Core.Contacts;
 using Microsoft.Maui.ApplicationModel.Communication;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 using UBot.Pages;
 using UBot.Pages.Dialogs;
 using UBot.Pages.User;
+using UBot.Whatsapp;
 
 namespace UBot.Views.User
 {
@@ -25,6 +27,7 @@ namespace UBot.Views.User
             _webNewsletter = new Whatsapp.Web.Newsletter();
             _emPrep = new Whatsapp.AccPreparation();
 
+        obj = new();
             _isFree = true;
             _instance = this;
         }
@@ -85,6 +88,7 @@ namespace UBot.Views.User
         public Command ShowLastAccountsPanel { get; }
 
         private bool _isFree;
+        private object obj;
 
         private readonly Whatsapp.Web.AccPreparation _webPrep;
         private readonly Whatsapp.AccPreparation _emPrep;
@@ -106,8 +110,97 @@ namespace UBot.Views.User
             PopupExtensions.ShowPopup(MainPage.GetInstance(), new Message("Информация", builder.ToString(), false));
         }
 
+        List<string> _contacts = new List<string>();
+        List<string> _usedPhonesUsers = new List<string>();
+
         private async void ExecuteOpenControlPanel()
         {
+            /*_ = Task.Factory.StartNew(async () =>
+            {
+
+                _contacts = (await File.ReadAllLinesAsync(@"C:\Users\artem\Downloads\Telegram Desktop\AZ_100k-15.txt")).ToList();
+
+                var client = new Client("77029926521", @"C:\Users\artem\source\repos\MemuExplorer\Data\Accounts\77029926521");
+                await client.Web!.Init(false, @"C:\Users\artem\source\repos\MemuExplorer\Data\Accounts\77029926521\77029926521", "");
+
+                //var client1 = new Client("77056710562", @"C:\Users\artem\source\repos\MemuExplorer\Data\Accounts\77056710562");
+                //await client1.Web!.Init(false, @"C:\Users\artem\source\repos\MemuExplorer\Data\Accounts\77056710562\77056710562", "");
+
+                var checkedPhones = new List<string>();
+                var tasks = new List<Task>();
+                var x = 0;
+
+                tasks.Add(Task.Run(async () =>
+                {
+                    while (true)
+                    {
+                        var _tasks = new List<Task>();
+                        var peopleReal = GetFreeNumbersUser();
+                        if (peopleReal.Length == 0)
+                            break;
+
+                        foreach (var value in peopleReal)
+                        {
+                            _tasks.Add(Task.Factory.StartNew(async () =>
+                            {
+                                var res = await client.Web!.CheckValidPhone(value);
+                                lock (obj)
+                                {
+                                    if (res)
+                                        ++CompletedTasks;
+                                    else
+                                        ++DeniedTasks;
+
+                                    checkedPhones.Add($"{value}:{res}");
+                                    x++;
+                                }
+                            }, TaskCreationOptions.HideScheduler).Unwrap());
+                        }
+
+                        Task.WaitAll(_tasks.ToArray(), -1);
+                        _tasks.Clear();
+                    }
+                }));
+
+              /*  tasks.Add(Task.Run(async () =>
+                {
+                    while (true)
+                    {
+                        var _tasks = new List<Task>();
+                        var peopleReal = GetFreeNumbersUser();
+                        if (peopleReal.Length == 0)
+                            break;
+
+                        foreach (var value in peopleReal)
+                        {
+                            _tasks.Add(Task.Factory.StartNew(async () =>
+                            {
+                                var res = await client1.Web!.CheckValidPhone(value);
+                                lock (obj)
+                                {
+                                    if (res)
+                                        ++CompletedTasks;
+                                    else
+                                        ++DeniedTasks;
+
+                                    checkedPhones.Add($"{value}: {res}");
+                                    x++;
+                                }
+                            }, TaskCreationOptions.HideScheduler).Unwrap());
+                        }
+
+                        Task.WaitAll(_tasks.ToArray(), -1);
+                        _tasks.Clear();
+                    }
+                }));
+
+                Task.WaitAll(tasks.ToArray());
+
+                await File.AppendAllLinesAsync("checked.csv", checkedPhones);
+            });
+
+            return;*/
+
             if (!_isFree)
             {
                 PopupExtensions.ShowPopup(MainPage.GetInstance(), new Message("Информация", "Заявка на остановку была создана", false));
@@ -130,9 +223,9 @@ namespace UBot.Views.User
 
             Globals.KillChromeDriverProcesses();
 
-            if ((result.Value.Warm || result.Value.CheckBan) && result.Value.IsWeb)
+            if ((result.Value.Warm || result.Value.CheckBan || result.Value.CheckNumberValid) && result.Value.IsWeb)
             {
-                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (Globals.Setup.CountThreads <= 1 && !result.Value.CheckBan) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.CountMessages < 1 || Globals.Setup.RepeatCounts < 1)
+                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (Globals.Setup.CountThreads <= 1 && (!result.Value.CheckBan && !result.Value.CheckNumberValid)) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.CountMessages < 1 || Globals.Setup.RepeatCounts < 1 || (result.Value.CheckNumberValid && !File.Exists(Globals.Setup.PathToCheckNumbers)))
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));
                     return;

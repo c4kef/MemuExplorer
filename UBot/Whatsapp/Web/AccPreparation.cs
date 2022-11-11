@@ -1,4 +1,6 @@
 ﻿using MemuLib.Core;
+using MemuLib.Core.Contacts;
+using System.Linq;
 using UBot.Views.User;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -9,16 +11,20 @@ public class AccPreparation
     public AccPreparation()
     {
         _usedPhones = new List<string>();
+        _usedPhonesUsers = new List<string>();
         _activePhones = new List<string>();
         _lock = new();
     }
 
+    private readonly List<string> _usedPhonesUsers;
     private readonly List<string> _activePhones;
     private readonly List<string> _usedPhones;
     private readonly object _lock;
 
+    private string[] _contacts;
     private bool _accountsNotFound;
     private FileInfo _logFile;
+    private FileInfo _checkedFile;
     private ActionProfileWork _currentProfile;
 
     public bool IsStop;
@@ -30,11 +36,20 @@ public class AccPreparation
         _logFile.Create().Close();
 
         _currentProfile = actionProfileWork;
+
+        if (_currentProfile.CheckNumberValid)
+        {
+            _checkedFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{new FileInfo(Globals.Setup.PathToCheckNumbers).Name}_checked.txt");
+            if (!_checkedFile.Exists)
+                _checkedFile.Create().Close();
+            _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToCheckNumbers);
+        }
+
         var mainTasks = new List<Task>();
 
         for (var repeatId = 0; repeatId < Globals.Setup.RepeatCounts; repeatId++)
         {
-            for (var groupId = 0; groupId < ((_currentProfile.CheckBan) ? 1 : Globals.Setup.CountGroups); groupId++)
+            for (var groupId = 0; groupId < ((_currentProfile.CheckBan || _currentProfile.CheckNumberValid) ? 1 : Globals.Setup.CountGroups); groupId++)
             {
                 var id = groupId;
                 await Task.Delay(100);
@@ -44,7 +59,8 @@ public class AccPreparation
 
                     while (!IsStop)
                     {
-                        DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json") && !_usedPhones.Select(phone => phone.Remove(0, 1)).Contains(dir)).ToArray().Length;
+                        if (!_currentProfile.CheckNumberValid)
+                            DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json") && !_usedPhones.Select(phone => phone.Remove(0, 1)).Contains(dir)).ToArray().Length;
 
                         for (var i = 0; i < Globals.Setup.CountThreads; i++)
                         {
@@ -86,6 +102,7 @@ public class AccPreparation
         _accountsNotFound = false;
         IsStop = false;
 
+        _usedPhonesUsers.Clear();
         _usedPhones.Clear();
         _activePhones.Clear();
     }
@@ -133,14 +150,14 @@ public class AccPreparation
             ++DashboardView.GetInstance().DeniedTasks;
             goto getAccount;
         }
-
+        
         if (_currentProfile.CheckBan)
         {
             await client.Web!.Free();
             ++DashboardView.GetInstance().CompletedTasks;
             goto getAccount;
         }
-
+        
         try
         {
             _activePhones.Add(threadId + phone);
@@ -240,6 +257,77 @@ public class AccPreparation
                 }
             }
 
+            if (_currentProfile.CheckNumberValid)
+            {
+                if (_contacts.Except(_usedPhonesUsers.ToArray()).Count() == 0)
+                {
+                    _accountsNotFound = true;
+                    await client.Web!.Free();
+                    return;
+                }
+
+                var checkedCount = 0;
+                while (true)
+                {
+                    var _tasks = new List<Task>();
+                    var peopleReal = GetFreeNumbersUser();
+                    if (peopleReal.Length == 0)
+                    {
+                        _accountsNotFound = true;
+                        await client.Web!.Free();
+                        return;
+                    }
+
+                    if (IsStop)
+                    {
+                        await client.Web!.Free();
+                        return;
+                    }
+
+                    foreach (var value in peopleReal)
+                    {
+                        var _value = value;
+                        _tasks.Add(Task.Run(async () =>
+                        {
+                            var res = await client.Web!.CheckValidPhone(_value);
+                            if (!res && !await client.Web!.IsConnected())
+                            {
+                                _usedPhonesUsers.Remove(_value);
+                                return;
+                            }
+
+                            lock (_lock)
+                            {
+                                File.AppendAllText(_checkedFile.FullName, $"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{_value};{res}\n");
+                                ++DashboardView.GetInstance().CompletedTasks;
+
+                                if (++checkedCount >= (Globals.Setup.CountCheckedPhonesFromAccount ?? 1000))
+                                    return;
+                            }
+                        }));
+                    }
+
+                    Task.WaitAll(_tasks.ToArray(), -1);
+                    _tasks.Clear();
+
+                    if (!await client.Web!.IsConnected())
+                    {
+                        await client.Web!.Free();
+                        await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
+                        ++DashboardView.GetInstance().DeniedTasks;
+                        return;
+                    }
+
+                    if (checkedCount >= (Globals.Setup.CountCheckedPhonesFromAccount ?? 1000) || IsStop)
+                    {
+                        await client.Web!.Free();
+                        return;
+                    }
+
+                    await Task.Delay((Globals.Setup.DelayBetweenStacks ?? 0) * 1000);
+                }
+            }
+
             _activePhones.Remove(threadId + phone);
         }
         catch (Exception ex)
@@ -261,6 +349,23 @@ public class AccPreparation
                 return "";
 
             return proxyList.OrderBy(x => new Random().Next()).ToArray()[0];
+        }
+
+        string[] GetFreeNumbersUser()
+        {
+            lock (_lock)
+            {
+                var contacts = _contacts.Except(_usedPhonesUsers.ToArray()).Take(Globals.Setup.CountPhonesFromStack ?? 5).ToArray();
+                //var contacts = _contacts.Where(con => !_usedPhonesUsers.Contains(con)).Take(Globals.Setup.CountPhonesFromStack ?? 5).ToArray();
+
+                _usedPhonesUsers.AddRange(contacts);
+
+                var newContacts = _contacts.Except(_usedPhonesUsers.ToArray());// _contacts.Where(con => !_usedPhonesUsers.Contains(con)).ToList();
+                File.WriteAllLines(Globals.Setup.PathToCheckNumbers, newContacts);
+                DashboardView.GetInstance().AllTasks = newContacts.Count();
+
+                return contacts;
+            }
         }
     }
 }

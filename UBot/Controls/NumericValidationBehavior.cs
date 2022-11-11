@@ -22,12 +22,20 @@ namespace UBot.Controls
 
         private static void OnEntryTextChanged(object sender, TextChangedEventArgs args)
         {
-
             if (!string.IsNullOrWhiteSpace(args.NewTextValue))
             {
-                bool isValid = args.NewTextValue.ToCharArray().All(x => char.IsDigit(x));
+                bool isValid = args.NewTextValue.ToCharArray().All(x => char.IsDigit(x) || x.Equals(','));
+                object completeNumber = 0;
 
-                ((Entry)sender).Text = isValid ? args.NewTextValue : args.NewTextValue.Remove(args.NewTextValue.Length - 1);
+                if (isValid)
+                    if (args.NewTextValue[args.NewTextValue.Length - 1] == ',')
+                        completeNumber = args.NewTextValue;
+                    else if (int.TryParse(args.NewTextValue, out _))
+                        completeNumber = int.Parse(args.NewTextValue);
+                    else if (float.TryParse(args.NewTextValue, out _))
+                        completeNumber = float.Parse(args.NewTextValue);
+
+                ((Entry)sender).Text = isValid ? completeNumber.ToString() : args.NewTextValue.Remove(args.NewTextValue.Length - 1);
             }
         }
     }

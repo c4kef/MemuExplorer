@@ -71,6 +71,9 @@ namespace UBot.Views.User
 
         public Color ButtonPickerFileProxy =>
             (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFileProxy) ? "Active" : "NotActive");
+
+        public Color ButtonPickerCheckNumbers =>
+            (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToCheckNumbers) ? "Active" : "NotActive");
         #endregion
 
         #region variables text
@@ -81,6 +84,24 @@ namespace UBot.Views.User
         }
 
         public List<SelectEmulatorScan> ActionSelectEmulatorScan { get; set; }
+
+        public int? DelayBetweenStacks
+        {
+            get => Globals.Setup.DelayBetweenStacks;
+            set => SetProperty(ref Globals.Setup.DelayBetweenStacks, value);
+        }
+
+        public int? CountCheckedPhonesFromAccount
+        {
+            get => Globals.Setup.CountCheckedPhonesFromAccount;
+            set => SetProperty(ref Globals.Setup.CountCheckedPhonesFromAccount, value);
+        }
+
+        public int? CountPhonesFromStack
+        {
+            get => Globals.Setup.CountPhonesFromStack;
+            set => SetProperty(ref Globals.Setup.CountPhonesFromStack, value);
+        }
 
         public int? PinCodeAccount
         {
@@ -164,6 +185,18 @@ namespace UBot.Views.User
         {
             get => Globals.Setup.WritePeoplesWarmTo;
             set => SetProperty(ref Globals.Setup.WritePeoplesWarmTo, value);
+        }
+
+        public float? Longitude
+        {
+            get => Globals.Setup.Longitude;
+            set => SetProperty(ref Globals.Setup.Longitude, value);
+        }
+
+        public float? Latitude
+        {
+            get => Globals.Setup.Latitude;
+            set => SetProperty(ref Globals.Setup.Latitude, value);
         }
 
         public int? JoinToGroupsFrom
@@ -399,6 +432,25 @@ namespace UBot.Views.User
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerFileProxy));
+
+                    break;
+
+                case 11:
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToCheckNumbers))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+
+                        if (string.IsNullOrEmpty(pick))
+                            return;
+
+                        Globals.Setup.PathToCheckNumbers = pick;
+                    }
+                    else
+                        Globals.Setup.PathToCheckNumbers = string.Empty;
+
+                    await Globals.SaveSetup();
+
+                    OnPropertyChanged(nameof(ButtonPickerCheckNumbers));
 
                     break;
             }

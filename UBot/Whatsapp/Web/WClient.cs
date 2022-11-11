@@ -161,10 +161,31 @@ public class WClient
 
         if (timerLoading >= 45)
             throw new Exception("Cant load account");
+
+        if ((Globals.Setup.Latitude ?? 0) > 0 && (Globals.Setup.Longitude ?? 0) > 0)
+            await _wpp.SetGeoPosition((decimal)Globals.Setup.Latitude, (decimal)Globals.Setup.Longitude);
     }
 
-    public async Task<bool> IsConnected() => !IsDisposed && (await (await _wpp.WebDriver.PagesAsync())[0].QuerySelectorAsync("#app > div > div > div.landing-window > div.landing-main > div > a")) is null && await _wpp.IsMainLoaded() && await _wpp.IsAuthenticated() && await _wpp.IsMainReady();
+    public async Task<bool> IsConnected()
+    {
+        try
+        {
+            if (_wpp is null)
+                return false;
 
+            if (_wpp.WebDriver is null)
+                return false;
+
+            if ((await _wpp.WebDriver.PagesAsync()).Length == 0)
+                return false;
+
+            return !IsDisposed && (await (await _wpp.WebDriver.PagesAsync())[0].QuerySelectorAsync("#app > div > div > div.landing-window > div.landing-main > div > a")) is null && await _wpp.IsMainLoaded() && await _wpp.IsAuthenticated() && await _wpp.IsMainReady();
+        }
+        catch
+        {
+            return false;
+        }
+    }
     /// <summary>
     /// Отправить сообщение
     /// </summary>

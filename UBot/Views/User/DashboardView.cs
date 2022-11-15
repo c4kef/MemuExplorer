@@ -22,23 +22,22 @@ namespace UBot.Views.User
             Dashboard = _dashboard;
             OpenControlPanel = new Command(ExecuteOpenControlPanel);
             ShowLastAccountsPanel = new Command(ExecuteShowLastAccountsPanel);
+            ShowTemplateMessagesPanel = new Command(ExecuteShowTemplateMessagesPanel);
 
             _webPrep = new Whatsapp.Web.AccPreparation();
             _webNewsletter = new Whatsapp.Web.Newsletter();
             _emPrep = new Whatsapp.AccPreparation();
 
-        obj = new();
             _isFree = true;
             _instance = this;
         }
 
         #region UI variables
 
-        private string _text;
         public string Text
         {
-            get => _text;
-            set { SetProperty(ref _text, value); }
+            get => Globals.Setup.TextMessage;
+            set => SetProperty(ref Globals.Setup.TextMessage, value);
         }
 
         private int _allTasks;
@@ -83,12 +82,11 @@ namespace UBot.Views.User
         private static DashboardView _instance;
         
         public Dashboard Dashboard { get; private set; }
-
         public Command OpenControlPanel { get; }
         public Command ShowLastAccountsPanel { get; }
+        public Command ShowTemplateMessagesPanel { get; }
 
         private bool _isFree;
-        private object obj;
 
         private readonly Whatsapp.Web.AccPreparation _webPrep;
         private readonly Whatsapp.AccPreparation _emPrep;
@@ -106,100 +104,23 @@ namespace UBot.Views.User
             for (var i = 0; i < arr.Count(); i++)
                 builder.Append($"                              {i + 1}. {arr.ElementAt(i).Value}      {((i % 2 == 0) ? "" : "\n")}");
 
-
-            PopupExtensions.ShowPopup(MainPage.GetInstance(), new Message("Информация", builder.ToString(), false));
+            PopupExtensions.ShowPopup(MainPage.GetInstance(), new Message("Среднее", builder.ToString(), false));
         }
 
-        List<string> _contacts = new List<string>();
-        List<string> _usedPhonesUsers = new List<string>();
+        private async void ExecuteShowTemplateMessagesPanel()
+        {
+            var arr = _webNewsletter.TemplateMessagesInfo;
+
+            var builder = new StringBuilder();
+            for (var i = 0; i < arr.Count(); i++)
+                builder.AppendLine($"{arr.ElementAt(i).Key}: (Осталось {arr.ElementAt(i).Value.AllPhones}) (Выполнено {arr.ElementAt(i).Value.CurrentPhones})");
+
+            PopupExtensions.ShowPopup(MainPage.GetInstance(), new Message("Общее", builder.ToString(), false));
+        }
 
         private async void ExecuteOpenControlPanel()
         {
-            /*_ = Task.Factory.StartNew(async () =>
-            {
-
-                _contacts = (await File.ReadAllLinesAsync(@"C:\Users\artem\Downloads\Telegram Desktop\AZ_100k-15.txt")).ToList();
-
-                var client = new Client("77029926521", @"C:\Users\artem\source\repos\MemuExplorer\Data\Accounts\77029926521");
-                await client.Web!.Init(false, @"C:\Users\artem\source\repos\MemuExplorer\Data\Accounts\77029926521\77029926521", "");
-
-                //var client1 = new Client("77056710562", @"C:\Users\artem\source\repos\MemuExplorer\Data\Accounts\77056710562");
-                //await client1.Web!.Init(false, @"C:\Users\artem\source\repos\MemuExplorer\Data\Accounts\77056710562\77056710562", "");
-
-                var checkedPhones = new List<string>();
-                var tasks = new List<Task>();
-                var x = 0;
-
-                tasks.Add(Task.Run(async () =>
-                {
-                    while (true)
-                    {
-                        var _tasks = new List<Task>();
-                        var peopleReal = GetFreeNumbersUser();
-                        if (peopleReal.Length == 0)
-                            break;
-
-                        foreach (var value in peopleReal)
-                        {
-                            _tasks.Add(Task.Factory.StartNew(async () =>
-                            {
-                                var res = await client.Web!.CheckValidPhone(value);
-                                lock (obj)
-                                {
-                                    if (res)
-                                        ++CompletedTasks;
-                                    else
-                                        ++DeniedTasks;
-
-                                    checkedPhones.Add($"{value}:{res}");
-                                    x++;
-                                }
-                            }, TaskCreationOptions.HideScheduler).Unwrap());
-                        }
-
-                        Task.WaitAll(_tasks.ToArray(), -1);
-                        _tasks.Clear();
-                    }
-                }));
-
-              /*  tasks.Add(Task.Run(async () =>
-                {
-                    while (true)
-                    {
-                        var _tasks = new List<Task>();
-                        var peopleReal = GetFreeNumbersUser();
-                        if (peopleReal.Length == 0)
-                            break;
-
-                        foreach (var value in peopleReal)
-                        {
-                            _tasks.Add(Task.Factory.StartNew(async () =>
-                            {
-                                var res = await client1.Web!.CheckValidPhone(value);
-                                lock (obj)
-                                {
-                                    if (res)
-                                        ++CompletedTasks;
-                                    else
-                                        ++DeniedTasks;
-
-                                    checkedPhones.Add($"{value}: {res}");
-                                    x++;
-                                }
-                            }, TaskCreationOptions.HideScheduler).Unwrap());
-                        }
-
-                        Task.WaitAll(_tasks.ToArray(), -1);
-                        _tasks.Clear();
-                    }
-                }));
-
-                Task.WaitAll(tasks.ToArray());
-
-                await File.AppendAllLinesAsync("checked.csv", checkedPhones);
-            });
-
-            return;*/
+            await Globals.SaveSetup();
 
             if (!_isFree)
             {
@@ -250,10 +171,24 @@ namespace UBot.Views.User
                     return;
                 }
 
+                foreach (Match template in new Regex(@"\{tag=(.*?)\rtext=(.*?)\rphones=(.*?)\}").Matches(Text))
+                    result.Value.TemplateMessages.Add(new TemplateMessage()
+                    {
+                        Tag = template.Groups[1].Value,
+                        Text = template.Groups[2].Value,
+                        PathPhones = new FileInfo(template.Groups[3].Value)
+                    });
+
+                if (result.Value.TemplateMessages.Count >= 1)
+                {
+                    if ((MessageCloseStatus)(await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Информация", $"Проверьте шаблоны, верны?\n{string.Join("\n", result.Value.TemplateMessages.Select(template => template.Tag))}", true))) != MessageCloseStatus.Ok)
+                        return;
+                }
+
                 _isFree = false;
                 var _activeTask = Task.Run(async () =>
                 {
-                    await _webNewsletter.Run();
+                    await _webNewsletter.Run(result.Value);
                 });
 
                 await _activeTask;

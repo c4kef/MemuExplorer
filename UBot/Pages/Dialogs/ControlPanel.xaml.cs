@@ -17,6 +17,8 @@ public partial class ControlPanel : Popup
 
         _selectedCheckBox= new Dictionary<Button, bool>();
         _selectedRadio = new Dictionary<Button, bool>();
+
+        _actionProfileWork.TemplateMessages = new List<TemplateMessage>();
     }
 
     private void PressStart(object sender, EventArgs e)

@@ -16,9 +16,19 @@ namespace UBot.Whatsapp.Web;
 
 public class Newsletter
 {
+    public struct InfoTemplateNewsletter
+    {
+        public int AllPhones { get; set; }
+        public int CurrentPhones { get; set; }
+        public List<string> UsedPhonesUsers { get; set; }
+        public string[] Contacts { get; set; }
+        public FileInfo ReportFile { get; set; }
+    }
+
     public Newsletter()
     {
         SendedMessagesCountFromAccount = new Dictionary<string, int>();
+        TemplateMessagesInfo = new Dictionary<string, InfoTemplateNewsletter>();
         _usedPhones = new List<string>();
         _usedPhonesUsers = new List<string>();
 
@@ -26,6 +36,7 @@ public class Newsletter
     }
 
     public readonly Dictionary<string, int> SendedMessagesCountFromAccount;
+    public readonly Dictionary<string, InfoTemplateNewsletter> TemplateMessagesInfo;
     private readonly List<string> _usedPhones;
     private readonly List<string> _usedPhonesUsers;
     private readonly object _lock;
@@ -34,14 +45,20 @@ public class Newsletter
     private FileInfo _logFile;
     private FileInfo _reportFile;
     private FileInfo _badProxyFile;
+    private ActionProfileWork _currentProfile;
+
 
     public bool IsStop;
 
-    public async Task Run()
+    public async Task Run(ActionProfileWork actionProfileWork)
     {
         IsStop = false;
+        _currentProfile = actionProfileWork;
+
+        SendedMessagesCountFromAccount.Clear();
+        TemplateMessagesInfo.Clear();
+
         _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_log.txt");
-        _reportFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{new FileInfo(Globals.Setup.PathToFilePhones).Name}_report.txt");
 
         if (File.Exists(Globals.Setup.PathToFileProxy))
         {
@@ -50,24 +67,63 @@ public class Newsletter
         }
 
         _logFile.Create().Close();
-        if (!_reportFile.Exists)
-            _reportFile.Create().Close();
 
         var tasks = new List<Task>();
 
-        _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhones);
 
-        DashboardView.GetInstance().AllTasks = _contacts.Count(contact => !string.IsNullOrEmpty(contact) && contact.Length > 5);
+        if (_currentProfile.TemplateMessages.Count != 0)
+        {
+            DashboardView.GetInstance().CompletedTasks = -1;
+            DashboardView.GetInstance().AllTasks = -1;
 
-        for (var i = 0; i < Globals.Setup.CountThreads; i++)
-            tasks.Add(Task.Run(async () => await Handler()));
+            foreach (var template in _currentProfile.TemplateMessages)
+            {
+                var tmpContacts = await File.ReadAllLinesAsync(template.PathPhones.FullName);
+                TemplateMessagesInfo[template.Tag] = new InfoTemplateNewsletter()
+                {
+                    UsedPhonesUsers = new List<string>(),
+                    AllPhones = tmpContacts.Count(contact => !string.IsNullOrEmpty(contact) && contact.Length > 5),
+                    Contacts = tmpContacts,
+                    CurrentPhones = 0,
+                    ReportFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{template.PathPhones.Name}_report.txt")
+                };
 
-        Task.WaitAll(tasks.ToArray(), -1);
+                if (!TemplateMessagesInfo[template.Tag].ReportFile.Exists)
+                    TemplateMessagesInfo[template.Tag].ReportFile.Create().Close();
+            }
+        }
+        else
+        {
+            _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhones);
+            DashboardView.GetInstance().CompletedTasks = 0;
+            if (!_reportFile.Exists)
+                _reportFile.Create().Close();
+        }
 
-        if (IsStop)
+            DashboardView.GetInstance().AllTasks = _contacts.Count(contact => !string.IsNullOrEmpty(contact) && contact.Length > 5);
+
+            _reportFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{new FileInfo(Globals.Setup.PathToFilePhones).Name}_report.txt");
+
+        for (var repeatId = 0; repeatId < Globals.Setup.RepeatCounts; repeatId++)
+        {
+            for (var i = 0; i < Globals.Setup.CountThreads; i++)
+                tasks.Add(Task.Run(async () => await Handler()));
+
+            Task.WaitAll(tasks.ToArray(), -1);
+
+            tasks.Clear();
+
+            if (IsStop || _usedPhones.Count == 0)
+                break;
+
+            _usedPhones.Clear();
+        }
+
+        if (TemplateMessagesInfo.Count == 0)
             File.WriteAllLines(Globals.Setup.PathToFilePhones, _contacts.Where(cont => !_usedPhonesUsers.Contains(cont)));
-
-        tasks.Clear();
+        else
+            foreach (var template in _currentProfile.TemplateMessages)
+                File.WriteAllLines(template.PathPhones.FullName, TemplateMessagesInfo[template.Tag].Contacts.Where(cont => !TemplateMessagesInfo[template.Tag].UsedPhonesUsers.Contains(cont)));
 
         Stop();
     }
@@ -144,6 +200,7 @@ public class Newsletter
             }
 
             var peopleReal = string.Empty;
+            var index = 0;
 
             try
             {
@@ -154,66 +211,99 @@ public class Newsletter
 
                 while (!IsStop)
                 {
-                    peopleReal = GetFreeNumberUser();
-                    if (string.IsNullOrEmpty(peopleReal))
+                    if (countSendedMessages >= Globals.Setup.CountMessages * ((_currentProfile.TemplateMessages.Count == 0) ? 1 : _currentProfile.TemplateMessages.Count))
                         break;
 
-                    if (!await client.Web!.IsConnected())
-                        throw new Exception("Client has disconected");
-
-                    if (await client.Web!.CheckValidPhone(peopleReal))
+                    if (TemplateMessagesInfo.Count != 0)
                     {
-                        var text = string.Join('\n', DashboardView.GetInstance().Text.Split('\r').ToList());
-                        FileInfo? image = null;
-
-                        string? buttonText = null;
-                        string title = string.Empty;
-                        string footer = string.Empty;
-
-                        foreach (var match in new Regex(@"\{(.*?)\}").Matches(text).Select(match => match.Value.Replace("{", "").Replace("}", "")))
-                        {
-                            if (match.Contains(Globals.TagPicture))
+                        var foundNumber = false;
+                        foreach (var template in TemplateMessagesInfo)
+                            if (template.Value.Contacts.Except(template.Value.UsedPhonesUsers).ToArray().Length > 0)
                             {
-                                var tmpImage = new FileInfo(match.Remove(0, Globals.TagPicture.Length));
-                                if (tmpImage.Exists)
+                                foundNumber = true;
+                                break;
+                            }
+
+                        if (!foundNumber)
+                            break;
+                    }
+
+                    for (var i = 0; i < (TemplateMessagesInfo.Count == 0 ? 1 : TemplateMessagesInfo.Count); i++)
+                    {
+                        index = i;
+                        peopleReal = GetFreeNumberUser(i);
+                        if (string.IsNullOrEmpty(peopleReal))
+                            continue;
+
+                        if (!await client.Web!.IsConnected())
+                            throw new Exception("Client has disconected");
+
+                        if (await client.Web!.CheckValidPhone(peopleReal))
+                        {
+                            var text = string.Join('\n', ((TemplateMessagesInfo.Count == 0) ? DashboardView.GetInstance().Text.Split('\r').ToList() : _currentProfile.TemplateMessages[i].Text.Split('\r').ToList()));
+                            FileInfo? image = null;
+
+                            string? buttonText = null;
+                            string title = string.Empty;
+                            string footer = string.Empty;
+                            //\{path(.*?)=(.*?)\}
+
+                            foreach (var match in new Regex(@"\{(.*?)\}").Matches(text).Select(match => match.Value.Replace("{", "").Replace("}", "")))
+                            {
+                                if (match.Contains(Globals.TagPicture))
                                 {
-                                    image = tmpImage;
-                                    break;
+                                    var tmpImage = new FileInfo(match.Remove(0, Globals.TagPicture.Length));
+                                    if (tmpImage.Exists)
+                                    {
+                                        image = tmpImage;
+                                        break;
+                                    }
+                                }
+                                else if (match.Contains(Globals.TagTitle))
+                                {
+                                    title = match.Remove(0, Globals.TagTitle.Length);
+                                }
+                                else if (match.Contains(Globals.TagFooter))
+                                {
+                                    footer = match.Remove(0, Globals.TagFooter.Length);
+                                }
+                                else if (match.Contains(Globals.TagButton))
+                                {
+                                    buttonText = match.Remove(0, Globals.TagButton.Length);
                                 }
                             }
-                            else if (match.Contains(Globals.TagTitle))
+
+                            if (await client.Web!.SendText(peopleReal, SelectWord(new Regex(@"\{([^)]*)\}").Replace(text, "").Replace("\"", "").Replace("\'", "")), image, buttonText, title, footer))
                             {
-                                title = match.Remove(0, Globals.TagTitle.Length);
+                                if (_currentProfile.TemplateMessages.Count == 0)
+                                {
+                                    ++DashboardView.GetInstance().CompletedTasks;
+                                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{peopleReal}", _reportFile.FullName);
+                                }
+                                else
+                                {
+                                    InfoTemplateNewsletter profile = TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag];
+                                    ++profile.CurrentPhones;
+                                    TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag] = profile;
+                                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{peopleReal}", profile.ReportFile.FullName);
+                                }
+
+                                if (++countSendedMessages >= Globals.Setup.CountMessages * ((_currentProfile.TemplateMessages.Count == 0) ? 1 : _currentProfile.TemplateMessages.Count))
+                                    break;
                             }
-                            else if(match.Contains(Globals.TagFooter))
+                            else
                             {
-                                footer = match.Remove(0, Globals.TagFooter.Length);
+                                if (_currentProfile.TemplateMessages.Count == 0)
+                                    _usedPhonesUsers.Remove(peopleReal);
+                                else
+                                    TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag].UsedPhonesUsers.Remove(peopleReal);
                             }
-                            else if (match.Contains(Globals.TagButton))
-                            {
-                                buttonText = match.Remove(0, Globals.TagButton.Length);
-                            }
-                        }
-
-                        if (await client.Web!.SendText(peopleReal, SelectWord(new Regex(@"\{([^)]*)\}").Replace(text, "").Replace("\"", "").Replace("\'", "")), image, buttonText, title, footer))
-                        {
-                            ++DashboardView.GetInstance().CompletedTasks;
-                            Log.Write(
-                            $"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{peopleReal}",
-                            _reportFile.FullName);
-
-                            if (++countSendedMessages >= Globals.Setup.CountMessages)
-                                break;
-
-                            var minus = (int)((Globals.Setup.DynamicDelaySendMessageMinus ?? 0) * 1000f);
-
-                            await Task.Delay(minus <= 0 ? new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)) : currentMinus -= minus);
-                        }
-                        else
-                        {
-                            _usedPhonesUsers.Remove(peopleReal);
                         }
                     }
+
+                    var minus = (int)((Globals.Setup.DynamicDelaySendMessageMinus ?? 0) * 1000f);
+
+                    await Task.Delay(minus <= 0 ? new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)) : currentMinus -= minus);
                 }
             }
             catch (Exception ex)
@@ -228,7 +318,10 @@ public class Newsletter
                 if (!string.IsNullOrEmpty(Globals.Setup.LinkToChangeIP))
                     Log.Write(await ResourceHelper.GetAsync(Globals.Setup.LinkToChangeIP), _logFile.FullName);
 
-                _usedPhonesUsers.Remove(peopleReal);
+                if (_currentProfile.TemplateMessages.Count == 0)
+                    _usedPhonesUsers.Remove(peopleReal);
+                else
+                    TemplateMessagesInfo[_currentProfile.TemplateMessages[index].Tag].UsedPhonesUsers.Remove(peopleReal);
 
                 await client.Web!.Free();
                 ++DashboardView.GetInstance().DeniedTasks;
@@ -255,29 +348,49 @@ public class Newsletter
             //Успех
             await Task.Delay(2_000);
             await client.Web!.Free();
+            if (_currentProfile.TemplateMessages.Count == 0)
+            {
+                if (!_contacts.Any(cont => !_usedPhonesUsers.Contains(cont)))
+                    break;
+            }
+            else
+            {
+                var template = TemplateMessagesInfo[_currentProfile.TemplateMessages[index].Tag];
+                if (!template.Contacts.Any(cont => !template.UsedPhonesUsers.Contains(cont)))
+                    break;
+            }
 
-            if (!_contacts.Any(cont => !_usedPhonesUsers.Contains(cont)))
-                break;
-
-            string GetFreeNumberUser()
+            string GetFreeNumberUser(int index)
             {
                 lock (_lock)
                 {
-                    foreach (var contact in _contacts)
+                    var tag = (TemplateMessagesInfo.Count == 0) ? "" : _currentProfile.TemplateMessages[index].Tag;
+                    InfoTemplateNewsletter profile = (TemplateMessagesInfo.Count == 0) ? default : TemplateMessagesInfo[tag];
+
+                    foreach (var contact in (TemplateMessagesInfo.Count == 0) ? _contacts : profile.Contacts)
                     {
-                        if (!_usedPhonesUsers.Contains(contact))
+                        if (!((TemplateMessagesInfo.Count == 0) ? _usedPhonesUsers.Contains(contact) : profile.UsedPhonesUsers.Contains(contact)))
                         {
                             if (contact.Length < 5 || string.IsNullOrEmpty(contact))
                                 continue;
 
-                            _usedPhonesUsers.Add(contact);
+                            if (TemplateMessagesInfo.Count == 0)
+                                _usedPhonesUsers.Add(contact);
+                            else
+                                profile.UsedPhonesUsers.Add(contact);
 
-                            var newContacts = _contacts.Except(_usedPhonesUsers).ToArray();
+                            var newContacts = (TemplateMessagesInfo.Count == 0) ? _contacts.Except(_usedPhonesUsers).ToArray() : profile.Contacts.Except(profile.UsedPhonesUsers).ToArray();
 
-                            DashboardView.GetInstance().AllTasks = newContacts.Length;
+                            if (TemplateMessagesInfo.Count == 0)
+                                DashboardView.GetInstance().AllTasks = newContacts.Length;
+                            else
+                                profile.AllPhones = newContacts.Length;
 
                             if (_usedPhonesUsers.Count % 100 == 0)
-                                File.WriteAllLines(Globals.Setup.PathToFilePhones, newContacts);
+                                File.WriteAllLines((TemplateMessagesInfo.Count == 0) ? Globals.Setup.PathToFilePhones : _currentProfile.TemplateMessages[index].PathPhones.FullName, newContacts);
+
+                            if (TemplateMessagesInfo.Count != 0)
+                                TemplateMessagesInfo[tag] = profile;
 
                             return contact[0] == '+' ? contact.Remove(0, 1) : contact;
                         }

@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using MemuLib.Core.Contacts;
 using UBot.Whatsapp.Web;
 using System.Runtime.CompilerServices;
+using UBot.Controls;
 
 namespace UBot.Whatsapp;
 
@@ -279,6 +280,9 @@ public class AccPreparation
                         countBans = 0;
                         ++DashboardView.GetInstance().CompletedTasks;
                     }
+
+                    if (!string.IsNullOrEmpty(Globals.Setup.LinkToChangeIP))
+                        Log.Write(await ResourceHelper.GetAsync(Globals.Setup.LinkToChangeIP), _logFile.FullName);
 
                     if (!_currentProfile.Warm)
                         goto getAccount;

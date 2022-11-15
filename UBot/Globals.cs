@@ -224,6 +224,7 @@ namespace UBot
         public string PathToFilePhones;
         public string PathToFileProxy;
         public string LinkToChangeIP;
+        public string TextMessage;
         public bool RemoveAvatar;
         public bool AdditionalWarm;
         public float? DynamicDelaySendMessageMinus;

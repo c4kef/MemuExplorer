@@ -18,8 +18,16 @@ public struct ServerData
     public List<object> Values;
 }
 
+public struct TemplateMessage
+{
+    public string Tag { get; set; }
+    public string Text { get; set; }
+    public FileInfo PathPhones { get; set; }
+}
+
 public struct ActionProfileWork
 {
+    public List<TemplateMessage> TemplateMessages { get; set; }
     public bool IsNewsLetter { get; set; }
     public bool IsWeb { get; set; }
     public bool CheckBan { get; set; }

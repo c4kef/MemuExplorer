@@ -179,6 +179,18 @@ public class AccPreparation
 
             if (_currentProfile.TouchAccount)
             {
+                var contactPhones = new List<CObj>();
+                foreach (var phoneForContact in await File.ReadAllLinesAsync(Globals.Setup.PathToFilePeoples))
+                    contactPhones.Add(new(MemuLib.Globals.RandomString(new Random().Next(5, 15)), "+" + phoneForContact));
+
+                foreach (var phoneForContact in await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhonesContacts))
+                    if (new Random().Next(0, 100) >= 50)
+                        contactPhones.Add(new(MemuLib.Globals.RandomString(new Random().Next(5, 15)), "+" + phoneForContact));
+
+                await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{phone}_contacts.vcf", ContactManager.Export(contactPhones));
+
+                await client.ImportContacts($@"{Globals.TempDirectory.FullName}\{phone}_contacts.vcf");
+
                 await Task.Delay((Globals.Setup.DelayTouchAccount ?? 0) * 1000);
 
                 if (!await client.IsValid())
@@ -255,6 +267,7 @@ public class AccPreparation
                     {
                         _usedPhones.Remove(threadId + phone);
                         Log.Write($"[Handler - WelcomeMessage] - Произошла ошибка, аккаунт возвращен в очередь: {ex.Message}\n", _logFile.FullName);
+                        goto getAccount;
                     }
                 }
 
@@ -610,9 +623,9 @@ public class AccPreparation
                     dump = await client.GetInstance().DumpScreen();
                 }
 
-                if (!await client.GetInstance().ExistsElement("content-desc=\"Инструменты для бизнеса\"", dump))
+                if (!await client.GetInstance().ExistsElement("content-desc=\"Ещё\"", dump))
                 {
-                    Log.Write($"Не можем найти кнопку инструментов для бизнеса, пробуем сдампить еще раз\n", _logFile.FullName);
+                    Log.Write($"Не можем найти кнопку ещё, пробуем сдампить еще раз\n", _logFile.FullName);
 
                     if (++countTry >= 3)
                         return false;
@@ -621,7 +634,9 @@ public class AccPreparation
                     goto tryAgain;
                 }
 
-                await client.GetInstance().Click("content-desc=\"Инструменты для бизнеса\"", dump);
+                await client.GetInstance().Click("content-desc=\"Ещё\"", dump);
+
+                await client.GetInstance().Click("text=\"Инструменты для бизнеса\"");
                 await client.GetInstance().Click("text=\"Приветственное сообщение\"");
 
                 dump = await client.GetInstance().DumpScreen();

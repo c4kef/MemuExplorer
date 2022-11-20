@@ -198,7 +198,7 @@ namespace UBot.Views.User
 
             if ((result.Value.Warm || result.Value.CheckBan || result.Value.Scaning || result.Value.TouchAccount || result.Value.WelcomeMessage) && !result.Value.IsWeb)
             {
-                if (!File.Exists(Globals.Setup.PathToFileNames) || !File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) < Globals.Setup.CountGroups * Globals.Setup.CountThreads && !result.Value.CheckBan) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.CountMessages < 1 || Globals.Setup.RepeatCounts < 1 || (result.Value.WelcomeMessage && (!File.Exists(Globals.Setup.PathToFilePeoples) || !File.Exists(Globals.Setup.PathToFilePhonesContacts))))
+                if (!File.Exists(Globals.Setup.PathToFileNames) || !File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) < Globals.Setup.CountGroups * Globals.Setup.CountThreads && !result.Value.CheckBan) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.CountMessages < 1 || Globals.Setup.RepeatCounts < 1 || ((result.Value.WelcomeMessage || result.Value.TouchAccount) && (!File.Exists(Globals.Setup.PathToFilePeoples) || !File.Exists(Globals.Setup.PathToFilePhonesContacts))))
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));
                     return;

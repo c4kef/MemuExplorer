@@ -5,12 +5,12 @@
                xmlns:btbAnimate="clr-namespace:UBot.Controls"
                CanBeDismissedByTappingOutsideOfPopup="False"
                Color="Transparent"
-               Size="800,440"
+               Size="1200,440"
                x:Class="UBot.Pages.Dialogs.ControlPanel">
     <Frame Background="{StaticResource BlackDialog}"
            CornerRadius="11"
            HeightRequest="440"
-           WidthRequest="800"
+           WidthRequest="1200"
            BorderColor="{StaticResource NotActive}">
         <Grid RowSpacing="15">
             <Grid.RowDefinitions>
@@ -131,6 +131,29 @@
                         CornerRadius="11">
                 </Button>
                 <Button Text="Сканирование"
+                        HeightRequest="56"
+                        WidthRequest="177"
+                        FontFamily="SegoeUI"
+                        FontSize="20"
+                        VerticalOptions="Center"
+                        Clicked="PressCheckBox"
+                        TextColor="{StaticResource White}"
+                        BackgroundColor="{StaticResource NotActive}"
+                        IsVisible="{Binding IsNoVisible}"
+                        CornerRadius="11" />
+                <Button Text="Приветствие"
+                        HeightRequest="56"
+                        WidthRequest="177"
+                        FontFamily="SegoeUI"
+                        FontSize="20"
+                        VerticalOptions="Center"
+                        Clicked="PressCheckBox"
+                        TextColor="{StaticResource White}"
+                        BackgroundColor="{StaticResource NotActive}"
+                        IsVisible="{Binding IsNoVisible}"
+                        CornerRadius="11" />
+                <Button Text="Прощупать"
+                        ClassId="34"
                         HeightRequest="56"
                         WidthRequest="177"
                         FontFamily="SegoeUI"

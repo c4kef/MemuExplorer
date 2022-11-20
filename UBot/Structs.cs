@@ -34,6 +34,8 @@ public struct ActionProfileWork
     public bool CheckNumberValid { get; set; }
     public bool Warm { get; set; }
     public bool Scaning { get; set; }
+    public bool TouchAccount { get; set; }
+    public bool WelcomeMessage { get; set; }
 }
 
 [Serializable]

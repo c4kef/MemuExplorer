@@ -17,6 +17,7 @@ namespace UBot
         public const string NameSetupFile = "Setup.data";
         public const string TagPicture = "pict=";
         public const string TagTitle = "title=";
+        public const string TagRandom = "random=";
         public const string TagFooter = "footer=";
         public const string TagButton = "btn=";
         #endregion
@@ -230,10 +231,12 @@ namespace UBot
         public float? DynamicDelaySendMessageMinus;
         public int? PinCodeAccount;
 
+        public int? DelayTouchAccount;
         public int? CountPhonesFromStack;
         public int? CountCheckedPhonesFromAccount;
         public int? DelayBetweenStacks;
         public string PathToCheckNumbers;
+        public string PathToFilePhonesContacts;
 
         public int? BlackProxyDeleteBefore;
         public int? CountBansToSleep;

@@ -49,6 +49,12 @@ public partial class ControlPanel : Popup
                 case "Сканирование":
                     _actionProfileWork.Scaning = checkedBtn.Value;
                     break;
+                case "Прощупать":
+                    _actionProfileWork.TouchAccount = checkedBtn.Value;
+                    break;
+                case "Приветствие":
+                    _actionProfileWork.WelcomeMessage = checkedBtn.Value;
+                    break;
             }
 
         this.Close((_selectedCheckBox.Values.Any(checkbox => checkbox) || _selectedRadio.Values.Any(radio => radio)) ? _actionProfileWork : null);
@@ -76,12 +82,12 @@ public partial class ControlPanel : Popup
     {
         var btn = sender as Button;
 
-        if (_selectedCheckBox.Any(checkbox => checkbox.Key.ClassId == "33" && checkbox.Value) && btn.ClassId != "33")
+        if (_selectedCheckBox.Any(checkbox => (checkbox.Key.ClassId == "33" || checkbox.Key.ClassId == "34") && checkbox.Value) && btn.ClassId != "33" && btn.ClassId != "34")
             return;
 
         _selectedCheckBox[btn] = (_selectedCheckBox.ContainsKey(btn) ? !_selectedCheckBox[btn] : true);
 
-        if (btn.ClassId == "33")
+        if (btn.ClassId == "33" || btn.ClassId == "34")
             foreach (var _btn in _selectedCheckBox.ToList())
                 if (_btn.Key != btn)
                 {

@@ -146,7 +146,7 @@ namespace UBot.Views.User
 
             if ((result.Value.Warm || result.Value.CheckBan || result.Value.CheckNumberValid) && result.Value.IsWeb)
             {
-                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (Globals.Setup.CountThreads <= 1 && (!result.Value.CheckBan && !result.Value.CheckNumberValid)) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.CountMessages < 1 || Globals.Setup.RepeatCounts < 1 || (result.Value.CheckNumberValid && !File.Exists(Globals.Setup.PathToCheckNumbers)))
+                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (Globals.Setup.CountThreads <= 1 && (!result.Value.CheckBan && !result.Value.CheckNumberValid && !result.Value.TouchAccount && !result.Value.WelcomeMessage)) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.RepeatCounts < 1 || (result.Value.CheckNumberValid && !File.Exists(Globals.Setup.PathToCheckNumbers)))
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));
                     return;
@@ -196,9 +196,9 @@ namespace UBot.Views.User
                 _isFree = true;
             }
 
-            if ((result.Value.Warm || result.Value.CheckBan || result.Value.Scaning) && !result.Value.IsWeb)
+            if ((result.Value.Warm || result.Value.CheckBan || result.Value.Scaning || result.Value.TouchAccount || result.Value.WelcomeMessage) && !result.Value.IsWeb)
             {
-                if (!File.Exists(Globals.Setup.PathToFileNames) || !File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) < Globals.Setup.CountGroups * Globals.Setup.CountThreads && !result.Value.CheckBan) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.CountMessages < 1 || Globals.Setup.RepeatCounts < 1)
+                if (!File.Exists(Globals.Setup.PathToFileNames) || !File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) < Globals.Setup.CountGroups * Globals.Setup.CountThreads && !result.Value.CheckBan) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.CountMessages < 1 || Globals.Setup.RepeatCounts < 1 || (result.Value.WelcomeMessage && (!File.Exists(Globals.Setup.PathToFilePeoples) || !File.Exists(Globals.Setup.PathToFilePhonesContacts))))
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));
                     return;

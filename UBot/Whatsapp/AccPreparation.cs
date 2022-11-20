@@ -10,6 +10,7 @@ using MemuLib.Core.Contacts;
 using UBot.Whatsapp.Web;
 using System.Runtime.CompilerServices;
 using UBot.Controls;
+using System.Diagnostics.Metrics;
 
 namespace UBot.Whatsapp;
 
@@ -176,6 +177,21 @@ public class AccPreparation
             else
                 Log.Write($"[{phone}] - смогли войти\n", _logFile.FullName);
 
+            if (_currentProfile.TouchAccount)
+            {
+                await Task.Delay((Globals.Setup.DelayTouchAccount ?? 0) * 1000);
+
+                if (!await client.IsValid())
+                {
+                    ++DashboardView.GetInstance().DeniedTasks;
+                    await DeleteAccount(client);
+                }
+                else
+                    ++DashboardView.GetInstance().CompletedTasks;
+
+                goto getAccount;
+            }
+
             if (_currentProfile.CheckBan)
             {
                 ++DashboardView.GetInstance().CompletedTasks;
@@ -184,8 +200,63 @@ public class AccPreparation
 
             try
             {
+                if (await client.GetInstance().ExistsElement("text=\"ЧАТЫ\""))
+                    await client.GetInstance().Click("text=\"ЧАТЫ\"");
+
                 if (_currentProfile.Warm)
                     _activePhones.Add(threadId + phone);
+
+                if (_currentProfile.WelcomeMessage)
+                {
+                    var rnd = new Random();
+                    await client.GetInstance().StopApk(client.PackageName);
+                    await client.GetInstance().RunApk(client.PackageName);
+                    await Task.Delay(1_000);
+
+                    if (!await client.IsValid())
+                    {
+                        ++DashboardView.GetInstance().DeniedTasks;
+                        await DeleteAccount(client);
+                        goto getAccount;
+                        //return;
+                    }
+
+                    var contactPhones = new List<CObj>();
+                    foreach (var phoneForContact in await File.ReadAllLinesAsync(Globals.Setup.PathToFilePeoples))
+                        contactPhones.Add(new(MemuLib.Globals.RandomString(rnd.Next(5, 15)), "+" + phoneForContact));
+
+                    foreach (var phoneForContact in await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhonesContacts))
+                        if (rnd.Next(0, 100) >= 50)
+                            contactPhones.Add(new(MemuLib.Globals.RandomString(rnd.Next(5, 15)), "+" + phoneForContact));
+
+                    await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{phone}_contacts.vcf", ContactManager.Export(contactPhones));
+
+                    await client.ImportContacts($@"{Globals.TempDirectory.FullName}\{phone}_contacts.vcf");
+
+                    try
+                    {
+                        if (!await MoveToWelcomeMessage(client, messages[rnd.Next(0, messages.Length - 1)]))
+                        {
+                            if (!await client.IsValid())
+                            {
+                                ++DashboardView.GetInstance().DeniedTasks;
+                                await DeleteAccount(client);
+                                goto getAccount;
+                            }
+                        }
+                        else if (!_currentProfile.Warm)
+                        {
+                            await client.UpdateData(true);
+                            ++DashboardView.GetInstance().CompletedTasks;
+                            goto getAccount;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _usedPhones.Remove(threadId + phone);
+                        Log.Write($"[Handler - WelcomeMessage] - Произошла ошибка, аккаунт возвращен в очередь: {ex.Message}\n", _logFile.FullName);
+                    }
+                }
 
                 if (_currentProfile.Warm)
                 {
@@ -502,6 +573,68 @@ public class AccPreparation
                 if (await client.GetInstance().ExistsElement("text=\"OK\"", dump))
                     await client.GetInstance().Click("text=\"OK\"", dump);
 
+                return true;
+            }
+
+            async Task<bool> MoveToWelcomeMessage(Client client, string text)
+            {
+                var countTry = 0;
+            tryAgain:
+                var dump = await client.GetInstance().DumpScreen();
+
+                if (await client.GetInstance().ExistsElement("text=\"Выберите частоту резервного копирования\"", dump))
+                {
+                    await client.GetInstance().Click("text=\"Выберите частоту резервного копирования\"", dump);
+                    await client.GetInstance().Click("text=\"Никогда\"", dump);
+                    await client.GetInstance().Click("text=\"ГОТОВО\"", dump);
+                    await Task.Delay(1_000);
+                    await client.GetInstance().StopApk(client.PackageName);
+                    await client.GetInstance().RunApk(client.PackageName);
+                    await Task.Delay(1_000);
+                    dump = await client.GetInstance().DumpScreen();
+                }
+
+                if (await client.GetInstance().ExistsElement("text=\"НЕ СЕЙЧАС\"", dump, false))
+                {
+                    await client.GetInstance().Click("text=\"НЕ СЕЙЧАС\"", dump);
+                    await Task.Delay(500);
+                    dump = await client.GetInstance().DumpScreen();
+                }
+
+                if (await client.GetInstance().ExistsElement($"resource-id=\"{client.PackageName}:id/code\"", dump))
+                {
+                    await client.GetInstance().Input($"resource-id=\"{client.PackageName}:id/code\"", Globals.Setup.PinCodeAccount.ToString(), dump);
+                    await client.GetInstance().StopApk(client.PackageName);
+                    await client.GetInstance().RunApk(client.PackageName);
+                    await Task.Delay(1_000);
+                    dump = await client.GetInstance().DumpScreen();
+                }
+
+                if (!await client.GetInstance().ExistsElement("content-desc=\"Инструменты для бизнеса\"", dump))
+                {
+                    Log.Write($"Не можем найти кнопку инструментов для бизнеса, пробуем сдампить еще раз\n", _logFile.FullName);
+
+                    if (++countTry >= 3)
+                        return false;
+
+                    await Task.Delay(1_000);
+                    goto tryAgain;
+                }
+
+                await client.GetInstance().Click("content-desc=\"Инструменты для бизнеса\"", dump);
+                await client.GetInstance().Click("text=\"Приветственное сообщение\"");
+
+                dump = await client.GetInstance().DumpScreen();
+                if (await client.GetInstance().ExistsElement("text=\"ВЫКЛ\"", dump))
+                    await client.GetInstance().Click("text=\"ВЫКЛ\"", dump);
+
+                await Task.Delay(500);
+                await client.GetInstance().Click("resource-id=\"com.whatsapp.w4b:id/greeting_settings_edit_greeting_message_btn\"", dump);
+                dump = await client.GetInstance().DumpScreen();
+                await client.GetInstance().Input("resource-id=\"com.whatsapp.w4b:id/edit_text\"", text, clickToFieldInput: false);
+                await client.GetInstance().Click("text=\"OK\"", dump);
+                await Task.Delay(500);
+                await client.GetInstance().Click("text=\"СОХРАНИТЬ\"");
                 return true;
             }
 

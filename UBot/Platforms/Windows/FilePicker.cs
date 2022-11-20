@@ -35,5 +35,21 @@ namespace UBot.Platforms.Windows
 
             return result?.Path ?? string.Empty;
         }
+
+        public async Task<string> PickFile(string[] filters)
+        {
+            var filePicker = new WindowsFilePicker();
+
+            foreach (var filter in filters)
+                filePicker.FileTypeFilter.Add(filter);
+
+            var hwnd = ((MauiWinUIWindow)App.Current.Windows[0].Handler.PlatformView).WindowHandle;
+
+            WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
+
+            var result = await filePicker.PickSingleFileAsync();
+
+            return result?.Path ?? string.Empty;
+        }
     }
 }

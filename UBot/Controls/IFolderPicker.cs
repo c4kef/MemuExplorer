@@ -10,5 +10,6 @@ namespace UBot.Controls
     {
         Task<string> PickFolder();
         Task<string> PickFile(string filter);
+        Task<string> PickFile(string[] filters);
     }
 }

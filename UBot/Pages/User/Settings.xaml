@@ -85,16 +85,6 @@
                                 CommandParameter="6"
                                 Command="{Binding Path=ButtonClick}"
                                 CornerRadius="11" />
-                        <Button Text="Люди"
-                                HeightRequest="56"
-                                WidthRequest="140"
-                                FontFamily="SegoeUI"
-                                FontSize="20"
-                                TextColor="{StaticResource White}"
-                                BackgroundColor="{Binding Path=ButtonPickerPeoplesColor}"
-                                CommandParameter="7"
-                                Command="{Binding Path=ButtonClick}"
-                                CornerRadius="11" />
                     </VerticalStackLayout>
                 </VerticalStackLayout>
             </StackLayout>
@@ -311,6 +301,34 @@
                             </VerticalStackLayout>
 
                             <VerticalStackLayout>
+                                <Label Text="Пробег"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Задержка"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding DelayTouchAccount}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}">
+                                        <Entry.Behaviors>
+                                            <controls:NumericValidationBehavior />
+                                        </Entry.Behaviors>
+                                    </Entry>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout>
                                 <Label Text="Геопозиция"
                                        FontFamily="SegoeUI"
                                        TextColor="{StaticResource White}"
@@ -415,6 +433,28 @@
                                     TextColor="{StaticResource White}"
                                     BackgroundColor="{Binding Path=ButtonPickerCheckNumbers}"
                                     CommandParameter="11"
+                                    Command="{Binding Path=ButtonClick}"
+                                    CornerRadius="11" />
+
+                            <Button Text="Номера ран"
+                                    HeightRequest="56"
+                                    WidthRequest="140"
+                                    FontFamily="SegoeUI"
+                                    FontSize="20"
+                                    TextColor="{StaticResource White}"
+                                    BackgroundColor="{Binding Path=ButtonPickerFilePhonesContacts}"
+                                    CommandParameter="12"
+                                    Command="{Binding Path=ButtonClick}"
+                                    CornerRadius="11" />
+
+                            <Button Text="Номера акк"
+                                    HeightRequest="56"
+                                    WidthRequest="140"
+                                    FontFamily="SegoeUI"
+                                    FontSize="20"
+                                    TextColor="{StaticResource White}"
+                                    BackgroundColor="{Binding Path=ButtonPickerPeoplesColor}"
+                                    CommandParameter="7"
                                     Command="{Binding Path=ButtonClick}"
                                     CornerRadius="11" />
 

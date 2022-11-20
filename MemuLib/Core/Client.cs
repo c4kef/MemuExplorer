@@ -273,13 +273,13 @@ public class Client
 
         Log.Write($"[{Index}] -> input tap uiElement");
     }
-    
+
     /// <summary>
     /// Симуляция ввода текста
     /// </summary>
     /// <param name="uiElement">название элемента в интерфейсе</param>
     /// <param name="text">текст передаваемый на интерфейс</param>
-    public async Task Input(string uiElement, string text, string? dump = null)
+    public async Task Input(string uiElement, string text, string? dump = null, bool clickToFieldInput = true)
     {
         if (!await Memu.Exists(Index))
         {
@@ -289,12 +289,16 @@ public class Client
 
         await Task.Delay(Settings.WaitingSecs);
 
-        var (x, y) = await FindElement(uiElement, dump ?? await DumpScreen());
+        if (clickToFieldInput)
+        {
+            var (x, y) = await FindElement(uiElement, dump ?? await DumpScreen());
 
-        if (x == -1 && y == -1)
-            throw new Exception($"[{Index}] Can't found element by name \"{uiElement}\"");
+            if (x == -1 && y == -1)
+                throw new Exception($"[{Index}] Can't found element by name \"{uiElement}\"");
 
-        await Click(x, y);
+            await Click(x, y);
+        }
+
         await Input(text);
 
         Log.Write($"[{Index}] -> input text uiElement");

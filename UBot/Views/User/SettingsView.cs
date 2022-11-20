@@ -74,6 +74,9 @@ namespace UBot.Views.User
 
         public Color ButtonPickerCheckNumbers =>
             (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToCheckNumbers) ? "Active" : "NotActive");
+
+        public Color ButtonPickerFilePhonesContacts =>
+            (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFilePhonesContacts) ? "Active" : "NotActive");
         #endregion
 
         #region variables text
@@ -209,6 +212,12 @@ namespace UBot.Views.User
         {
             get => Globals.Setup.JoinToGroupsTo;
             set => SetProperty(ref Globals.Setup.JoinToGroupsTo, value);
+        }
+
+        public int? DelayTouchAccount
+        {
+            get => Globals.Setup.DelayTouchAccount;
+            set => SetProperty(ref Globals.Setup.DelayTouchAccount, value);
         }
 
         public int? BlackProxyDeleteBefore
@@ -400,7 +409,7 @@ namespace UBot.Views.User
                 case 9:
                     if (string.IsNullOrEmpty(Globals.Setup.PathToFilePhones))
                     {
-                        pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+                        pick = await App.GetInstance().FolderPicker.PickFile(new string[] { ".txt", ".csv" });
 
                         if (string.IsNullOrEmpty(pick))
                             return;
@@ -451,6 +460,26 @@ namespace UBot.Views.User
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerCheckNumbers));
+
+                    break;
+
+
+                case 12:
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFilePhonesContacts))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+
+                        if (string.IsNullOrEmpty(pick))
+                            return;
+
+                        Globals.Setup.PathToFilePhonesContacts = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFilePhonesContacts = string.Empty;
+
+                    await Globals.SaveSetup();
+
+                    OnPropertyChanged(nameof(ButtonPickerFilePhonesContacts));
 
                     break;
             }

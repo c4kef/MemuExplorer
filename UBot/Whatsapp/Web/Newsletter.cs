@@ -70,7 +70,6 @@ public class Newsletter
 
         var tasks = new List<Task>();
 
-
         if (_currentProfile.TemplateMessages.Count != 0)
         {
             DashboardView.GetInstance().CompletedTasks = -1;
@@ -95,14 +94,14 @@ public class Newsletter
         else
         {
             _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhones);
-            DashboardView.GetInstance().CompletedTasks = 0;
+            _reportFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{new FileInfo(Globals.Setup.PathToFilePhones).Name}_report.txt");
+
             if (!_reportFile.Exists)
                 _reportFile.Create().Close();
-        }
 
+            DashboardView.GetInstance().CompletedTasks = 0;
             DashboardView.GetInstance().AllTasks = _contacts.Count(contact => !string.IsNullOrEmpty(contact) && contact.Length > 5);
-
-            _reportFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{new FileInfo(Globals.Setup.PathToFilePhones).Name}_report.txt");
+        }
 
         for (var repeatId = 0; repeatId < Globals.Setup.RepeatCounts; repeatId++)
         {
@@ -231,7 +230,9 @@ public class Newsletter
                     for (var i = 0; i < (TemplateMessagesInfo.Count == 0 ? 1 : TemplateMessagesInfo.Count); i++)
                     {
                         index = i;
-                        peopleReal = GetFreeNumberUser(i);
+                        (string contactPhone, string contactMessage) = GetFreeNumberUser(i);
+                        peopleReal = contactPhone;
+
                         if (string.IsNullOrEmpty(peopleReal))
                             continue;
 
@@ -240,7 +241,7 @@ public class Newsletter
 
                         if (await client.Web!.CheckValidPhone(peopleReal))
                         {
-                            var text = string.Join('\n', ((TemplateMessagesInfo.Count == 0) ? DashboardView.GetInstance().Text.Split('\r').ToList() : _currentProfile.TemplateMessages[i].Text.Split('\r').ToList()));
+                            var text = string.Join('\n', (!string.IsNullOrEmpty(contactMessage) ? contactMessage.Split('\r').ToList() : (TemplateMessagesInfo.Count == 0) ? DashboardView.GetInstance().Text.Split('\r').ToList() : _currentProfile.TemplateMessages[i].Text.Split('\r').ToList()));
                             FileInfo? image = null;
 
                             string? buttonText = null;
@@ -273,7 +274,7 @@ public class Newsletter
                                 }
                             }
 
-                            if (await client.Web!.SendText(peopleReal, SelectWord(new Regex(@"\{([^)]*)\}").Replace(text, "").Replace("\"", "").Replace("\'", "")), image, buttonText, title, footer))
+                            if (await client.Web!.SendText(peopleReal, SelectWord(text), image, buttonText, title, footer))
                             {
                                 if (_currentProfile.TemplateMessages.Count == 0)
                                 {
@@ -360,7 +361,7 @@ public class Newsletter
                     break;
             }
 
-            string GetFreeNumberUser(int index)
+            (string phone, string msg) GetFreeNumberUser(int index)
             {
                 lock (_lock)
                 {
@@ -392,21 +393,25 @@ public class Newsletter
                             if (TemplateMessagesInfo.Count != 0)
                                 TemplateMessagesInfo[tag] = profile;
 
-                            return contact[0] == '+' ? contact.Remove(0, 1) : contact;
+                            var dataContact = contact.Split(';');
+
+                            return (dataContact[0][0] == '+' ? dataContact[0].Remove(0, 1) : dataContact[0], dataContact.Length > 1 ? dataContact[1] : string.Empty);
                         }
                     }
 
-                    return string.Empty;
+                    return (string.Empty, string.Empty);
                 }
             }
 
             string SelectWord(string value)
             {
                 var backValue = value;
-                foreach (var match in new Regex(@"(\w+)\|\|(\w+)", RegexOptions.Multiline).Matches(backValue))
-                    backValue = backValue.Replace(match.ToString()!, match.ToString()!.Split("||")[new Random().Next(0, 100) >= 50 ? 1 : 0]);
-
-                return backValue;
+                foreach (var match in new Regex(@"\{random=(.*?)\}", RegexOptions.Multiline).Matches(backValue))
+                {
+                    var arrText = match.ToString()!.Split("||").Select(val => val.Replace("{", "").Replace("}", "").Replace(Globals.TagRandom, "")).ToArray();
+                    backValue = backValue.Replace(match.ToString()!, arrText[new Random().Next(0, arrText.Length)]);
+                }
+                return new Regex(@"\{([^)]*)\}").Replace(backValue, "").Replace("\"", "").Replace("\'", "");
             }
 
             string GetProxy()

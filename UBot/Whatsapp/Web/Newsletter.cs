@@ -140,7 +140,7 @@ public class Newsletter
     private async Task Handler()
     {
         var badProxyList = new List<string>();
-        var messagesToWam = File.Exists(Globals.Setup.PathToFileTextWarm) ? (await File.ReadAllTextAsync(Globals.Setup.PathToFileTextWarm)).Split('\n') : null;
+        var messagesToWarm = File.Exists(Globals.Setup.PathToFileTextWarm) ? (await File.ReadAllTextAsync(Globals.Setup.PathToFileTextWarm)).Split('\n') : null;
 
         while (!IsStop)
         {
@@ -183,6 +183,7 @@ public class Newsletter
             {
                 await client.Web!.Free();
                 await Globals.TryMove(path, $@"{Globals.LogoutDirectory.FullName}\{phone}");
+                ++DashboardView.GetInstance().DeniedTasksStart;
                 Log.Write($"[{phone}] - не смогли войти: {ex.Message}\n", _logFile.FullName);
                 continue;
             }
@@ -192,7 +193,7 @@ public class Newsletter
                 var stepsAdditionalWarm = new List<Task>();
                 stepsAdditionalWarm.Add(WarmChatBots());
                 stepsAdditionalWarm.Add(WarmGroups());
-                stepsAdditionalWarm.Add(WarmPeoples());
+                //stepsAdditionalWarm.Add(WarmPeoples());
 
                 foreach (var step in stepsAdditionalWarm.OrderBy(x => new Random().Next()).ToArray())
                     await step;
@@ -224,6 +225,11 @@ public class Newsletter
                             }
 
                         if (!foundNumber)
+                            break;
+                    }
+                    else
+                    {
+                        if (_contacts.Except(_usedPhonesUsers).ToArray().Length == 0)
                             break;
                     }
 
@@ -326,6 +332,7 @@ public class Newsletter
 
                 await client.Web!.Free();
                 ++DashboardView.GetInstance().DeniedTasks;
+                ++DashboardView.GetInstance().DeniedTasksWork;
                 await Globals.TryMove(path, $@"{Globals.WebBanDirectory.FullName}\{phone}");
 
                 var count = 0;
@@ -451,7 +458,7 @@ public class Newsletter
 
             async Task WarmChatBots()
             {
-                if (File.Exists(Globals.Setup.PathToFileChatBots) && messagesToWam != null && messagesToWam.Length > 0)
+                if (File.Exists(Globals.Setup.PathToFileChatBots) && messagesToWarm != null && messagesToWarm.Length > 0)
                 {
                     var allChatBots = await File.ReadAllLinesAsync(Globals.Setup.PathToFileChatBots);
                     var chatbots = allChatBots.Where(group => new Random().Next(0, 100) >= 50).ToList().Take(new Random().Next(Globals.Setup.WriteChatBotsFrom ?? 1, Globals.Setup.WriteChatBotsTo ?? 1)).ToList();
@@ -460,11 +467,11 @@ public class Newsletter
                         chatbots.Add(allChatBots[0]);
 
                     foreach (var chatbot in chatbots)
-                        await client.Web!.SendText(chatbot, messagesToWam[new Random().Next(0, messagesToWam.Length - 1)]);
+                        await client.Web!.SendText(chatbot, messagesToWarm[new Random().Next(0, messagesToWarm.Length - 1)]);
                 }
             }
 
-            async Task WarmPeoples()
+            /*async Task WarmPeoples()
             {
                 if (File.Exists(Globals.Setup.PathToFilePeoples) && messagesToWam != null && messagesToWam.Length > 0)
                 {
@@ -482,7 +489,7 @@ public class Newsletter
                     foreach (var people in peoples)
                         await client.Web!.SendText(people, localMessages.Count == 0 ? messagesToWam[new Random().Next(0, messagesToWam.Length - 1)] : localMessages[new Random().Next(0, localMessages.Count - 1)]);
                 }
-            }
+            }*/
         }
     }
 }

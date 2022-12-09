@@ -148,6 +148,7 @@ public class AccPreparation
             Log.Write($"[{phone}] - не смогли войти: {ex.Message}\n", _logFile.FullName);
 
             ++DashboardView.GetInstance().DeniedTasks;
+            ++DashboardView.GetInstance().DeniedTasksStart;
             goto getAccount;
         }
         
@@ -187,6 +188,7 @@ public class AccPreparation
                         await client.Web!.Free();
                         await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
                         ++DashboardView.GetInstance().DeniedTasks;
+                        ++DashboardView.GetInstance().DeniedTasksWork;
                         return;
                     }
 
@@ -214,15 +216,17 @@ public class AccPreparation
                 if (File.Exists(Globals.Setup.PathToFileChatBots))//Третий этап - начинаем писать чат ботам
                 {
                     var allChatBots = await File.ReadAllLinesAsync(Globals.Setup.PathToFileChatBots);
-                    var chatbots = allChatBots.Where(group => new Random().Next(0, 100) >= 50).ToList();
+                    /*var chatbots = allChatBots.Where(group => new Random().Next(0, 100) >= 50).ToList();
 
                     if (chatbots.Count == 0)
                         chatbots.Add(allChatBots[0]);
-
-                    foreach (var chatbot in chatbots)
+                    */
+                    foreach (var chatbot in allChatBots)
                         await client.Web!.SendText(chatbot, messages[new Random().Next(0, messages.Length - 1)]);
                 }
 
+                /*
+                 * PathToFilePeoples используется для совсем другого
                 if (File.Exists(Globals.Setup.PathToFilePeoples))//Четвертый этап - начинаем писать людишкам
                 {
                     var allPeoples = await File.ReadAllLinesAsync(Globals.Setup.PathToFilePeoples);
@@ -238,7 +242,7 @@ public class AccPreparation
 
                     foreach (var people in peoples)
                         await client.Web!.SendText(people, localMessages.Count == 0 ? messages[new Random().Next(0, messages.Length - 1)] : localMessages[new Random().Next(0, localMessages.Count - 1)]);
-                }
+                }*/
 
                 await Task.Delay(2_000);
 
@@ -246,6 +250,7 @@ public class AccPreparation
                 {
                     await client.Web!.Free();
                     ++DashboardView.GetInstance().DeniedTasks;
+                    ++DashboardView.GetInstance().DeniedTasksWork;
                     await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
                 }
                 else
@@ -315,6 +320,7 @@ public class AccPreparation
                         await client.Web!.Free();
                         await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
                         ++DashboardView.GetInstance().DeniedTasks;
+                        ++DashboardView.GetInstance().DeniedTasksWork;
                         return;
                     }
 
@@ -335,6 +341,7 @@ public class AccPreparation
             Log.Write($"[Handler] - крит. ошибка: {ex.Message}\n", _logFile.FullName);
             await client.Web!.Free();
             ++DashboardView.GetInstance().DeniedTasks;
+            ++DashboardView.GetInstance().DeniedTasksWork;
             await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
         }
 

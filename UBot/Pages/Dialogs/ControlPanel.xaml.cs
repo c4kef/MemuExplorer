@@ -49,11 +49,8 @@ public partial class ControlPanel : Popup
                 case "Сканирование":
                     _actionProfileWork.Scaning = checkedBtn.Value;
                     break;
-                case "Прощупать":
-                    _actionProfileWork.TouchAccount = checkedBtn.Value;
-                    break;
-                case "Приветствие":
-                    _actionProfileWork.WelcomeMessage = checkedBtn.Value;
+                case "Прожарка":
+                    _actionProfileWork.WarmMethodIlya = checkedBtn.Value;
                     break;
             }
 

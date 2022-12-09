@@ -126,13 +126,13 @@ namespace UBot
             }
         }
 
-        public static (string phone, string path)[] GetAccounts(string[] phoneFrom, bool isWarming = false, object locker = null, string[] currentPhones = null)
+        public static (string phone, string path)[] GetAccounts(string[] phoneFrom, bool isWarming = false, object locker = null, string[] currentPhones = null, string pathToFolderAccounts = "")
         {
             lock (locker is null ? Locker : locker)
             {
                 var accounts = new List<(string phone, string path)>();
 
-                foreach (var accountDirectory in Directory.GetDirectories(Setup.PathToFolderAccounts))
+                foreach (var accountDirectory in Directory.GetDirectories(string.IsNullOrEmpty(pathToFolderAccounts) ? Setup.PathToFolderAccounts : pathToFolderAccounts))
                 {
                     if (!File.Exists($@"{accountDirectory}\Data.json"))
                         continue;
@@ -197,13 +197,24 @@ namespace UBot
                 if (!File.Exists($@"{directory}\Data.json") && (Directory.Exists($@"{directory}\com.whatsapp") || Directory.Exists($@"{directory}\com.whatsapp.w4b")))
                     await File.WriteAllTextAsync($@"{directory}\Data.json",
                         JsonConvert.SerializeObject(new AccountData()
-                        { TrustLevelAccount = 0 }, Formatting.Indented));
+                        { TrustLevelAccount = 0, CreatedDate = DateTime.Now }, Formatting.Indented));
+
+            if (Directory.Exists(Setup.PathToFolderAccountsAdditional))
+                foreach (var directory in Directory.GetDirectories(Setup.PathToFolderAccountsAdditional))
+                    if (!File.Exists($@"{directory}\Data.json") && (Directory.Exists($@"{directory}\com.whatsapp") || Directory.Exists($@"{directory}\com.whatsapp.w4b")))
+                        await File.WriteAllTextAsync($@"{directory}\Data.json",
+                            JsonConvert.SerializeObject(new AccountData()
+                            { TrustLevelAccount = 0, CreatedDate = DateTime.Now }, Formatting.Indented));
         }
 
         public static void KillChromeDriverProcesses()
         {
-            Process[] chromeDriverProcesses = Process.GetProcessesByName("chromedriver");
-            foreach (var chromeDriverProcess in chromeDriverProcesses)
+            foreach (var chromeDriverProcess in Process.GetProcessesByName("chromedriver"))
+            {
+                chromeDriverProcess.Kill();
+            }
+
+            foreach (var chromeDriverProcess in Process.GetProcessesByName("chrome"))
             {
                 chromeDriverProcess.Kill();
             }
@@ -220,6 +231,7 @@ namespace UBot
         public string PathToFileNames;
         public string PathToFileImage;
         public string PathToFolderAccounts;
+        public string PathToFolderAccountsAdditional;
         public string PathToFileTextWarm;
         public string PathToFileTextPeopleWarm;
         public string PathToFilePhones;
@@ -237,6 +249,7 @@ namespace UBot
         public int? DelayBetweenStacks;
         public string PathToCheckNumbers;
         public string PathToFilePhonesContacts;
+        public string PathToDownloadsMemu;
 
         public int? BlackProxyDeleteBefore;
         public int? CountBansToSleep;
@@ -261,5 +274,8 @@ namespace UBot
         public int? WriteChatBotsFrom;
         public int? WriteChatBotsTo;
 
+        public int? CountMessageWarm;
+        public int? CountMessageWarmNewsletter;
+        public int? CountCritAliveAccountsToStopWarm;
     }
 }

@@ -165,14 +165,23 @@ public class Client
         return true;
     }
 
-    public async Task<bool> SendMessage(string to, string text)
+    public async Task<bool> SendMessage(string to, string text, FileInfo image = null)
     {
         //await Mem.Shell($@"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
         var command = new FileInfo($@"{Globals.TempDirectory.FullName}\{to}.sh");
         var isSended = false;
+        var commandImage = string.Empty;
+
+        if (image != null && image.Exists)
+        {
+            if (!File.Exists($@"{Globals.Setup.PathToDownloadsMemu}\{image.Name}"))
+                new FileInfo(image.FullName).CopyTo($@"{Globals.Setup.PathToDownloadsMemu}\{image.Name}");
+
+            commandImage = $" --eu android.intent.extra.STREAM file:///storage/emulated/0/Download/{image.Name}";//Тут добавлен пробел для синхроности, я мудак идите нахуй
+        }
 
         await File.WriteAllTextAsync(command.FullName,
-            $"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)} {PackageName}");//mb fix
+            $"NL=$'\\n' ; am start -a android.intent.action.SEND --es android.intent.extra.TEXT \"{text.Replace("\r", "${NL}").Replace("\n", "${NL}")}\" -t text/plain -e jid '{to}@s.whatsapp.net'{commandImage} -p com.whatsapp.w4b");//$"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)} {PackageName}");//mb fix
 
         await Mem.Push(command.FullName, "/data/local/tmp");
         await Mem.Shell($@"sh /data/local/tmp/{to}.sh");
@@ -195,7 +204,7 @@ public class Client
                 if (await Mem.ExistsElement("text=\"OK\"", document))
                     await Mem.Click("text=\"OK\"", document);*/
 
-                await Task.Delay(1_500);
+                await Task.Delay(500);
                 continue;
             }
 
@@ -222,24 +231,28 @@ public class Client
             await Mem.Click("text=\"Перезапустить приложение\"", dump);
             await Mem.StopApk(PackageName);
             await Mem.RunApk(PackageName);
+            await Task.Delay(500);
             dump = await Mem.DumpScreen();
         }
 
         if (await Mem.ExistsElement("text=\"ОК\"", dump, false))
         {
             await Mem.Click("text=\"ОК\"", dump);
+            await Task.Delay(500);
             dump = await Mem.DumpScreen();
         }
 
         if (await Mem.ExistsElement("text=\"OK\"", dump, false))
         {
             await Mem.Click("text=\"OK\"", dump);
+            await Task.Delay(500);
             dump = await Mem.DumpScreen();
         }
 
         if (await Mem.ExistsElement("text=\"ПРОПУСТИТЬ\"", dump, false))
         {
             await Mem.Click("text=\"ПРОПУСТИТЬ\"", dump);
+            await Task.Delay(500);
             dump = await Mem.DumpScreen();
         }
 
@@ -248,11 +261,14 @@ public class Client
             await Mem.Click("text=\"Закрыть приложение\"", dump);
             await Mem.StopApk(PackageName);
             await Mem.RunApk(PackageName);
+            await Task.Delay(500);
             dump = await Mem.DumpScreen();
         }
 
         return !await Mem.ExistsElements(new string[] {
         "text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"",
+        "text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"",//Думаешь ничем не отличается? А вот хуй тебе " "
+        "text=\"Принять и продолжить\"",
         "text=\"AGREE AND CONTINUE\"",
         "text=\"ДАЛЕЕ\"",
         "text=\"Перезапустить приложение\"",

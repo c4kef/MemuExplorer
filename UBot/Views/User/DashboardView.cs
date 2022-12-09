@@ -23,9 +23,11 @@ namespace UBot.Views.User
             OpenControlPanel = new Command(ExecuteOpenControlPanel);
             ShowLastAccountsPanel = new Command(ExecuteShowLastAccountsPanel);
             ShowTemplateMessagesPanel = new Command(ExecuteShowTemplateMessagesPanel);
+            ShowDetailBanPanel = new Command(ExecuteShowDetailBanPanel);
 
             _webPrep = new Whatsapp.Web.AccPreparation();
             _webNewsletter = new Whatsapp.Web.Newsletter();
+            _newsletter = new Whatsapp.Newsletter();
             _emPrep = new Whatsapp.AccPreparation();
 
             _isFree = true;
@@ -75,6 +77,9 @@ namespace UBot.Views.User
             set { SetProperty(ref _averageAllMessages, value); }
         }
 
+        public int DeniedTasksStart = 0;
+        public int DeniedTasksWork = 0;
+
         #endregion
 
         #region variables
@@ -84,6 +89,7 @@ namespace UBot.Views.User
         public Dashboard Dashboard { get; private set; }
         public Command OpenControlPanel { get; }
         public Command ShowLastAccountsPanel { get; }
+        public Command ShowDetailBanPanel { get; }
         public Command ShowTemplateMessagesPanel { get; }
 
         private bool _isFree;
@@ -91,6 +97,7 @@ namespace UBot.Views.User
         private readonly Whatsapp.Web.AccPreparation _webPrep;
         private readonly Whatsapp.AccPreparation _emPrep;
         private readonly Whatsapp.Web.Newsletter _webNewsletter;
+        private readonly Whatsapp.Newsletter _newsletter;
 
         #endregion
 
@@ -109,13 +116,31 @@ namespace UBot.Views.User
 
         private async void ExecuteShowTemplateMessagesPanel()
         {
-            var arr = _webNewsletter.TemplateMessagesInfo;
 
             var builder = new StringBuilder();
-            for (var i = 0; i < arr.Count(); i++)
-                builder.AppendLine($"{arr.ElementAt(i).Key}: (Осталось {arr.ElementAt(i).Value.AllPhones}) (Выполнено {arr.ElementAt(i).Value.CurrentPhones})");
+            if (_webNewsletter.TemplateMessagesInfo.Count > 0)
+            {
+                var arr = _webNewsletter.TemplateMessagesInfo;
+                for (var i = 0; i < arr.Count; i++)
+                    builder.AppendLine($"{arr.ElementAt(i).Key}: (Осталось {arr.ElementAt(i).Value.AllPhones}) (Выполнено {arr.ElementAt(i).Value.CurrentPhones})");
+            }
+            else
+            {
+                builder.AppendLine($"Отправлено: {_emPrep.TemplateWarm.sendedCount}");
+                builder.AppendLine($"Прогрето: {_emPrep.TemplateWarm.warmedAccount}");
+            }
 
             PopupExtensions.ShowPopup(MainPage.GetInstance(), new Message("Общее", builder.ToString(), false));
+        }
+
+        private async void ExecuteShowDetailBanPanel()
+        {
+            var builder = new StringBuilder();
+
+            builder.AppendLine($"На старте: {DeniedTasksStart}");
+            builder.AppendLine($"При работе: {DeniedTasksWork}");
+
+            PopupExtensions.ShowPopup(MainPage.GetInstance(), new Message("Бананы🍌 ", builder.ToString(), false));
         }
 
         private async void ExecuteOpenControlPanel()
@@ -126,6 +151,7 @@ namespace UBot.Views.User
             {
                 PopupExtensions.ShowPopup(MainPage.GetInstance(), new Message("Информация", "Заявка на остановку была создана", false));
                 _emPrep.IsStop = true;
+                _newsletter.IsStop = true;
                 _webPrep.IsStop = true;
                 _webNewsletter.IsStop = true;
                 return;
@@ -141,12 +167,14 @@ namespace UBot.Views.User
             DeniedTasks = 0;
             AverageMessages = 0;
             AverageAllMessages = 0;
+            DeniedTasksStart = 0;
+            DeniedTasksWork = 0;
 
             Globals.KillChromeDriverProcesses();
 
             if ((result.Value.Warm || result.Value.CheckBan || result.Value.CheckNumberValid) && result.Value.IsWeb)
             {
-                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (Globals.Setup.CountThreads <= 1 && (!result.Value.CheckBan && !result.Value.CheckNumberValid && !result.Value.TouchAccount && !result.Value.WelcomeMessage)) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.RepeatCounts < 1 || (result.Value.CheckNumberValid && !File.Exists(Globals.Setup.PathToCheckNumbers)))
+                if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (Globals.Setup.CountThreads <= 1 && (!result.Value.CheckBan && !result.Value.CheckNumberValid && !result.Value.WarmMethodIlya)) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.RepeatCounts < 1 || (result.Value.CheckNumberValid && !File.Exists(Globals.Setup.PathToCheckNumbers)))
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));
                     return;
@@ -196,9 +224,43 @@ namespace UBot.Views.User
                 _isFree = true;
             }
 
-            if ((result.Value.Warm || result.Value.CheckBan || result.Value.Scaning || result.Value.TouchAccount || result.Value.WelcomeMessage) && !result.Value.IsWeb)
+            if (result.Value.IsNewsLetter && !result.Value.IsWeb)
             {
-                if (!File.Exists(Globals.Setup.PathToFileNames) || !File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) < Globals.Setup.CountGroups * Globals.Setup.CountThreads && !result.Value.CheckBan) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.CountMessages < 1 || Globals.Setup.RepeatCounts < 1 || ((result.Value.WelcomeMessage || result.Value.TouchAccount) && (!File.Exists(Globals.Setup.PathToFilePeoples) || !File.Exists(Globals.Setup.PathToFilePhonesContacts))))
+                if (!File.Exists(Globals.Setup.PathToFilePhones) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || !Directory.Exists(Globals.Setup.PathToDownloadsMemu) || ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) < 1 || Globals.Setup.CountMessages < 1 || string.IsNullOrEmpty(Text) || Text.Length < 5)
+                {
+                    await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед рассылкой", false));
+                    return;
+                }
+
+                foreach (Match template in new Regex(@"\{tag=(.*?)\rtext=(.*?)\rphones=(.*?)\}").Matches(Text))
+                    result.Value.TemplateMessages.Add(new TemplateMessage()
+                    {
+                        Tag = template.Groups[1].Value,
+                        Text = template.Groups[2].Value,
+                        PathPhones = new FileInfo(template.Groups[3].Value)
+                    });
+
+                if (result.Value.TemplateMessages.Count >= 1)
+                {
+                    if ((MessageCloseStatus)(await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Информация", $"Проверьте шаблоны, верны?\n{string.Join("\n", result.Value.TemplateMessages.Select(template => template.Tag))}", true))) != MessageCloseStatus.Ok)
+                        return;
+                }
+
+                _isFree = false;
+                var _activeTask = Task.Run(async () =>
+                {
+                    await _newsletter.Run(result.Value);
+                });
+
+                await _activeTask;
+                await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Информация", "Рассылка была завершена", false));
+                _isFree = true;
+            }
+
+            if ((result.Value.Warm || result.Value.CheckBan || result.Value.Scaning || result.Value.WarmMethodIlya) && !result.Value.IsWeb)
+            {
+                if (!File.Exists(Globals.Setup.PathToFileNames) || (!File.Exists(Globals.Setup.PathToFileTextWarm) && (result.Value.Warm || result.Value.WarmMethodIlya)) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || !Directory.Exists(Globals.Setup.PathToDownloadsMemu) || (ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) < Globals.Setup.CountGroups * Globals.Setup.CountThreads && (!result.Value.CheckBan && !result.Value.WarmMethodIlya)) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || (Globals.Setup.CountMessages < 1 && (!result.Value.CheckBan && !result.Value.CheckNumberValid && !result.Value.WarmMethodIlya)) || Globals.Setup.RepeatCounts < 1 
+                    || ((result.Value.WarmMethodIlya) && (!Directory.Exists(Globals.Setup.PathToFolderAccountsAdditional) || !File.Exists(Globals.Setup.PathToFilePeoples) || !File.Exists(Globals.Setup.PathToFilePhonesContacts) || !File.Exists(Globals.Setup.PathToFilePhones) || Globals.Setup.CountMessageWarm < 1 || Globals.Setup.CountMessageWarmNewsletter < 1)))// || Globals.Setup.CountCritAliveAccountsToStopWarm < 1)))
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));
                     return;
@@ -207,7 +269,7 @@ namespace UBot.Views.User
                 _isFree = false;
                 var _activeTask = Task.Run(async () =>
                 {
-                    await _emPrep.Run(await File.ReadAllTextAsync(Globals.Setup.PathToFileTextWarm), result.Value);
+                    await _emPrep.Run(File.Exists(Globals.Setup.PathToFileTextWarm) ? await File.ReadAllTextAsync(Globals.Setup.PathToFileTextWarm) : string.Empty, result.Value);
                 });
 
                 await _activeTask;

@@ -51,6 +51,9 @@ namespace UBot.Views.User
         public Color ButtonPickerAccountsColor =>
             (Color)ResourceHelper.FindResource(MainPage.GetInstance(), Directory.Exists(Globals.Setup.PathToFolderAccounts) ? "Active" : "NotActive");
 
+        public Color ButtonPickerAccountsAdditionalColor =>
+            (Color)ResourceHelper.FindResource(MainPage.GetInstance(), Directory.Exists(Globals.Setup.PathToFolderAccountsAdditional) ? "Active" : "NotActive");
+
         public Color ButtonPickerTextWarmColor =>
             (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFileTextWarm) ? "Active" : "NotActive");
 
@@ -77,6 +80,9 @@ namespace UBot.Views.User
 
         public Color ButtonPickerFilePhonesContacts =>
             (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFilePhonesContacts) ? "Active" : "NotActive");
+
+        public Color ButtonPickerPathToDownloadsMemu =>
+            (Color)ResourceHelper.FindResource(MainPage.GetInstance(), Directory.Exists(Globals.Setup.PathToDownloadsMemu) ? "Active" : "NotActive");
         #endregion
 
         #region variables text
@@ -224,6 +230,24 @@ namespace UBot.Views.User
         {
             get => Globals.Setup.BlackProxyDeleteBefore;
             set => SetProperty(ref Globals.Setup.BlackProxyDeleteBefore, value);
+        }
+
+        public int? CountMessageWarm
+        {
+            get => Globals.Setup.CountMessageWarm;
+            set => SetProperty(ref Globals.Setup.CountMessageWarm, value);
+        }
+
+        public int? CountMessageWarmNewsletter
+        {
+            get => Globals.Setup.CountMessageWarmNewsletter;
+            set => SetProperty(ref Globals.Setup.CountMessageWarmNewsletter, value);
+        }
+
+        public int? CountCritAliveAccountsToStopWarm
+        {
+            get => Globals.Setup.CountCritAliveAccountsToStopWarm;
+            set => SetProperty(ref Globals.Setup.CountCritAliveAccountsToStopWarm, value);
         }
 
         public float? DynamicDelaySendMessageMinus
@@ -480,6 +504,44 @@ namespace UBot.Views.User
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerFilePhonesContacts));
+
+                    break;
+
+                case 13:
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFolderAccountsAdditional))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFolder();
+
+                        if (string.IsNullOrEmpty(pick))
+                            return;
+
+                        Globals.Setup.PathToFolderAccountsAdditional = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFolderAccountsAdditional = string.Empty;
+
+                    await Globals.SaveSetup();
+
+                    OnPropertyChanged(nameof(ButtonPickerAccountsAdditionalColor));
+
+                    break;
+
+                case 14:
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToDownloadsMemu))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFolder();
+
+                        if (string.IsNullOrEmpty(pick))
+                            return;
+
+                        Globals.Setup.PathToDownloadsMemu = pick;
+                    }
+                    else
+                        Globals.Setup.PathToDownloadsMemu = string.Empty;
+
+                    await Globals.SaveSetup();
+
+                    OnPropertyChanged(nameof(ButtonPickerPathToDownloadsMemu));
 
                     break;
             }

@@ -4,6 +4,12 @@ using System;
 using System.Net;
 using System.Text;
 
+var str = string.Join("${NL}", (await File.ReadAllLinesAsync("test.txt")).Select(a => string.Join("", a.Replace("\"", "").Replace("\'", "").ToCharArray())));
+await File.WriteAllTextAsync("test.sh",
+    $"NL=$'\\n' ; am start -a android.intent.action.SEND --es android.intent.extra.TEXT \"{str}\" -t text/plain -e jid '79772801086@s.whatsapp.net' --eu android.intent.extra.STREAM file:///storage/emulated/0/Download/1.jpg -p com.whatsapp.w4b");//mb fix
+
+return;
+
 var phones = new[] { "79772801086" };
 var keyId = await WebReq.HttpPost("https://api.sendpulse.com/oauth/access_token", new Dictionary<string, string>()
 {

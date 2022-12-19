@@ -144,11 +144,17 @@ public class AccPreparation
         catch (Exception ex)
         {
             await client.Web!.Free();
-            await Globals.TryMove(path, $@"{Globals.LogoutDirectory.FullName}\{phone}");
-            Log.Write($"[{phone}] - не смогли войти: {ex.Message}\n", _logFile.FullName);
+            if (ex.Message != "Cant load account")
+            {
+                await Globals.TryMove(path, $@"{Globals.LogoutDirectory.FullName}\{phone}");
+                Log.Write($"[{phone}] - не смогли войти: {ex.Message}\n", _logFile.FullName);
 
-            ++DashboardView.GetInstance().DeniedTasks;
-            ++DashboardView.GetInstance().DeniedTasksStart;
+                ++DashboardView.GetInstance().DeniedTasks;
+                ++DashboardView.GetInstance().DeniedTasksStart;
+            }
+            else
+                _usedPhones.Remove(threadId + phone);
+
             goto getAccount;
         }
         

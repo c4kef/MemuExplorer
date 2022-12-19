@@ -35,6 +35,7 @@ public struct ActionProfileWork
     public bool Warm { get; set; }
     public bool Scaning { get; set; }
     public bool WarmMethodIlya { get; set; }
+    public bool WarmMethodLong { get; set; }
 }
 
 [Serializable]

@@ -83,6 +83,9 @@ namespace UBot.Views.User
 
         public Color ButtonPickerPathToDownloadsMemu =>
             (Color)ResourceHelper.FindResource(MainPage.GetInstance(), Directory.Exists(Globals.Setup.PathToDownloadsMemu) ? "Active" : "NotActive");
+
+        public Color ButtonPickerPathToFileTextWelcome =>
+            (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFileTextWelcome) ? "Active" : "NotActive");
         #endregion
 
         #region variables text
@@ -244,11 +247,29 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.CountMessageWarmNewsletter, value);
         }
 
-        public int? CountCritAliveAccountsToStopWarm
+        public int? TakeCountRandomAccountDelay
+        {
+            get => Globals.Setup.TakeCountRandomAccountDelay;
+            set => SetProperty(ref Globals.Setup.TakeCountRandomAccountDelay, value);
+        }
+
+        public int? DelayBetweenLastMessageFrom
+        {
+            get => Globals.Setup.DelayBetweenLastMessageFrom;
+            set => SetProperty(ref Globals.Setup.DelayBetweenLastMessageFrom, value);
+        }
+
+        public int? DelayBetweenLastMessageTo
+        {
+            get => Globals.Setup.DelayBetweenLastMessageTo;
+            set => SetProperty(ref Globals.Setup.DelayBetweenLastMessageTo, value);
+        }
+
+        /*public int? CountCritAliveAccountsToStopWarm
         {
             get => Globals.Setup.CountCritAliveAccountsToStopWarm;
             set => SetProperty(ref Globals.Setup.CountCritAliveAccountsToStopWarm, value);
-        }
+        }*/
 
         public float? DynamicDelaySendMessageMinus
         {
@@ -542,6 +563,25 @@ namespace UBot.Views.User
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerPathToDownloadsMemu));
+
+                    break;
+
+                case 15:
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFileTextWelcome))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFile(".txt");
+
+                        if (string.IsNullOrEmpty(pick))
+                            return;
+
+                        Globals.Setup.PathToFileTextWelcome = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFileTextWelcome = string.Empty;
+
+                    await Globals.SaveSetup();
+
+                    OnPropertyChanged(nameof(ButtonPickerPathToFileTextWelcome));
 
                     break;
             }

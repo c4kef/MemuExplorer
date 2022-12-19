@@ -341,7 +341,7 @@ namespace UBot.Whatsapp
 
                     ++DashboardView.GetInstance().DeniedTasks;
                     ++DashboardView.GetInstance().DeniedTasksWork;
-                    await Globals.TryMove(path, $@"{Globals.BanDirectory.FullName}\{phone}");
+                    await Globals.TryMove(path, $@"{Globals.BanWorkDirectory.FullName}\{phone}");
 
                     var count = 0;
                     var messages = SendedMessagesCountFromAccount.TakeLast(10);

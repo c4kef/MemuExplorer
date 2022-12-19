@@ -243,6 +243,8 @@ namespace UBot
         public float? DynamicDelaySendMessageMinus;
         public int? PinCodeAccount;
 
+        public int? TakeCountRandomAccountDelay;
+
         public int? DelayTouchAccount;
         public int? CountPhonesFromStack;
         public int? CountCheckedPhonesFromAccount;
@@ -250,6 +252,7 @@ namespace UBot
         public string PathToCheckNumbers;
         public string PathToFilePhonesContacts;
         public string PathToDownloadsMemu;
+        public string PathToFileTextWelcome;
 
         public int? BlackProxyDeleteBefore;
         public int? CountBansToSleep;
@@ -265,6 +268,9 @@ namespace UBot
         public float? DelaySendMessageFrom;
         public float? DelaySendMessageTo;
 
+        public int? DelayBetweenLastMessageFrom;
+        public int? DelayBetweenLastMessageTo;
+
         public int? JoinToGroupsFrom;
         public int? JoinToGroupsTo;
 
@@ -276,6 +282,6 @@ namespace UBot
 
         public int? CountMessageWarm;
         public int? CountMessageWarmNewsletter;
-        public int? CountCritAliveAccountsToStopWarm;
+        //public int? CountCritAliveAccountsToStopWarm;
     }
 }

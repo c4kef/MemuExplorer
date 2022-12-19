@@ -3,6 +3,7 @@ using Microsoft.Maui.ApplicationModel.Communication;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ using WPP4DotNet;
 
 namespace UBot.Whatsapp.Web;
 
-public class Newsletter
+public class NewsletterLong
 {
     public struct InfoTemplateNewsletter
     {
@@ -25,11 +26,11 @@ public class Newsletter
         public FileInfo ReportFile { get; set; }
     }
 
-    public Newsletter()
+    public NewsletterLong()
     {
         SendedMessagesCountFromAccount = new Dictionary<string, int>();
         TemplateMessagesInfo = new Dictionary<string, InfoTemplateNewsletter>();
-        _usedPhones = new List<string>();
+        _usedPhones = new Dictionary<string, DateTime?>();
         _usedPhonesUsers = new List<string>();
 
         _lock = new();
@@ -37,7 +38,7 @@ public class Newsletter
 
     public readonly Dictionary<string, int> SendedMessagesCountFromAccount;
     public readonly Dictionary<string, InfoTemplateNewsletter> TemplateMessagesInfo;
-    private readonly List<string> _usedPhones;
+    private readonly Dictionary<string, DateTime?> _usedPhones;
     private readonly List<string> _usedPhonesUsers;
     private readonly object _lock;
 
@@ -47,12 +48,13 @@ public class Newsletter
     private FileInfo _badProxyFile;
     private ActionProfileWork _currentProfile;
 
-
+    public bool IsStopHandlerAccounts;
     public bool IsStop;
 
     public async Task Run(ActionProfileWork actionProfileWork)
     {
         IsStop = false;
+        IsStopHandlerAccounts = false;
         _currentProfile = actionProfileWork;
 
         SendedMessagesCountFromAccount.Clear();
@@ -103,6 +105,18 @@ public class Newsletter
             DashboardView.GetInstance().AllTasks = _contacts.Count(contact => !string.IsNullOrEmpty(contact) && contact.Length > 5);
         }
 
+        _ = Task.Run(async () =>
+        {
+            while (!IsStopHandlerAccounts)
+            {
+                foreach (var account in _usedPhones.ToArray())
+                    if ((account.Value != null && account.Value <= DateTime.Now) || (!Directory.Exists($@"{Globals.Setup.PathToFolderAccounts}\{account.Key}")))
+                        _usedPhones.Remove(account.Key);
+
+                await Task.Delay(1_000);
+            }
+        });
+
         for (var repeatId = 0; repeatId < Globals.Setup.RepeatCounts; repeatId++)
         {
             for (var i = 0; i < Globals.Setup.CountThreads; i++)
@@ -117,6 +131,8 @@ public class Newsletter
 
             _usedPhones.Clear();
         }
+
+        IsStopHandlerAccounts = true;
 
         if (TemplateMessagesInfo.Count == 0)
             File.WriteAllLines(Globals.Setup.PathToFilePhones, _contacts.Where(cont => !_usedPhonesUsers.Contains(cont)));
@@ -144,32 +160,76 @@ public class Newsletter
 
         while (!IsStop)
         {
-            var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
+            var (phone, path) = ("", "");
+            lock (_lock)
+            {
+                var result = Globals.GetAccounts(_usedPhones.Keys.ToArray(), true, _lock);
+                if (result.Length == 0)
+                {
+                    if (_usedPhones.Count == 0)
+                    {
+                        Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
+                        return;
+                    }
+                    else
+                    {
+                        Log.Write($"[I] - аккаунт не был найден, ждем освободившейся аккаунт\n", _logFile.FullName);
+                        Thread.Sleep(2_000);//await Task.Delay(2_000);
+                        continue;
+                    }
+                }
+
+                (phone, path) = result[0];
+
+                if (_usedPhones.ContainsKey(phone))
+                {
+                    Log.Write($"[I] - дубликат аккаунта\n", _logFile.FullName);
+                    continue;
+                }
+
+                _usedPhones[phone] = null;
+
+            }
+
+            var countSendedMessages = 0;
+            var client = new Client(phone, path);
+
+            /*var result = Globals.GetAccounts(_usedPhones.Keys.ToArray(), true, _lock);
 
             if (result.Length == 0)
             {
-                Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
-                return;
+                if (_usedPhones.Count == 0)
+                {
+                    Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
+                    return;
+                }
+                else
+                {
+                    Log.Write($"[I] - аккаунт не был найден, ждем освободившейся аккаунт\n", _logFile.FullName);
+                    await Task.Delay(2_000);
+                    continue;
+                }
             }
 
             var (phone, path) = result[0];
 
-            if (_usedPhones.Contains(phone))
+            if (_usedPhones.ContainsKey(phone))
             {
                 Log.Write($"[I] - дубликат аккаунта\n", _logFile.FullName);
                 continue;
             }
 
-            _usedPhones.Add(phone);
+            _usedPhones[phone] = null;
 
             var countSendedMessages = 0;
 
-            var client = new Client(phone, path);
+            var client = new Client(phone, path);*/
             var proxy = GetProxy();
 
             if (proxy == "0")
             {
                 Log.Write($"[I] - прокси не было найдено\n", _logFile.FullName);
+                _usedPhones.Remove(phone);
                 return;
             }
 
@@ -185,7 +245,14 @@ public class Newsletter
                 if (ex.Message != "Cant load account")
                 {
                     await Globals.TryMove(path, $@"{Globals.LogoutDirectory.FullName}\{phone}");
-                    ++DashboardView.GetInstance().DeniedTasksStart;
+                    if (client.AccountData.CountMessages > 0)
+                    {
+                        ++DashboardView.GetInstance().DeniedTasksWork;
+                        ++DashboardView.GetInstance().DeniedTasks;
+                    }
+                    else
+                        ++DashboardView.GetInstance().DeniedTasksStart;
+
                     Log.Write($"[{phone}] - не смогли войти: {ex.Message}\n", _logFile.FullName);
                 }
                 else
@@ -218,7 +285,10 @@ public class Newsletter
                 while (!IsStop)
                 {
                     if (countSendedMessages >= Globals.Setup.CountMessages * ((_currentProfile.TemplateMessages.Count == 0) ? 1 : _currentProfile.TemplateMessages.Count))
+                    {
+                        _usedPhones[phone] = DateTime.Now.AddSeconds(new Random().Next(Globals.Setup.DelayBetweenLastMessageFrom ?? 0, Globals.Setup.DelayBetweenLastMessageTo ?? 0));
                         break;
+                    }
 
                     if (TemplateMessagesInfo.Count != 0)
                     {
@@ -314,6 +384,9 @@ public class Newsletter
                         }
                     }
 
+                    client.AccountData.CountMessages = countSendedMessages;
+                    await client.UpdateData(false);
+                    
                     var minus = (int)((Globals.Setup.DynamicDelaySendMessageMinus ?? 0) * 1000f);
 
                     await Task.Delay(minus <= 0 ? new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)) : currentMinus -= minus);
@@ -336,10 +409,16 @@ public class Newsletter
                 else
                     TemplateMessagesInfo[_currentProfile.TemplateMessages[index].Tag].UsedPhonesUsers.Remove(peopleReal);
 
+                client.AccountData.BannedDate = DateTime.Now;
+                client.AccountData.CountMessages = countSendedMessages;
+                await client.UpdateData(false);
+                
                 await client.Web!.Free();
                 ++DashboardView.GetInstance().DeniedTasks;
                 ++DashboardView.GetInstance().DeniedTasksWork;
                 await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
+
+                _usedPhones.Remove(phone);
 
                 var count = 0;
                 var messages = SendedMessagesCountFromAccount.TakeLast(10);

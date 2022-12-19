@@ -27,6 +27,7 @@ namespace UBot.Views.User
 
             _webPrep = new Whatsapp.Web.AccPreparation();
             _webNewsletter = new Whatsapp.Web.Newsletter();
+            _webNewsletterLong = new Whatsapp.Web.NewsletterLong();
             _newsletter = new Whatsapp.Newsletter();
             _emPrep = new Whatsapp.AccPreparation();
 
@@ -97,6 +98,7 @@ namespace UBot.Views.User
         private readonly Whatsapp.Web.AccPreparation _webPrep;
         private readonly Whatsapp.AccPreparation _emPrep;
         private readonly Whatsapp.Web.Newsletter _webNewsletter;
+        private readonly Whatsapp.Web.NewsletterLong _webNewsletterLong;
         private readonly Whatsapp.Newsletter _newsletter;
 
         #endregion
@@ -116,7 +118,100 @@ namespace UBot.Views.User
 
         private async void ExecuteShowTemplateMessagesPanel()
         {
+            /*object _lock = new();
+            var _usedPhones = new List<string>();
+            var _usedPhonesUsers = new List<string>();
+            while (true)
+            {
+                var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
 
+                if (result.Length == 0)
+                {
+                    if (_usedPhones.Count != 0)
+                    {
+                        _usedPhones.Clear();
+                        continue;
+                    }
+                    else
+                    {
+                        await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "аккаунт не был найден", false));
+                        return;
+                    }
+                }
+
+                var (phone, path) = result[0];
+
+                if (_usedPhones.Contains(phone))
+                {
+                    await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Дубликат аккаунта", false));
+                    continue;
+                }
+
+                _usedPhones.Add(phone);
+
+                var countSendedMessages = 0;
+
+                var client = new Client(phone, path);
+
+                try
+                {
+                    await client.Web!.Init(false, $@"{path}\{new DirectoryInfo(path).Name}", "");
+                }
+                catch (Exception ex)
+                {
+                    await client.Web!.Free();
+                    await Globals.TryMove(path, $@"{Globals.LogoutDirectory.FullName}\{phone}");
+                    ++DashboardView.GetInstance().DeniedTasksStart;
+                    continue;
+                }
+
+                await Task.Delay(10_000);
+
+                try
+                {
+                    foreach (var peopleReal in await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhones))
+                    {
+                        if (string.IsNullOrEmpty(peopleReal) || _usedPhonesUsers.Contains(peopleReal))
+                            continue;
+
+                        if (!await client.Web!.IsConnected())
+                            throw new Exception("Client has disconected");
+
+                        _usedPhonesUsers.Add(peopleReal);
+
+                        if (await client.Web!.SendText(peopleReal, SelectWord(string.Join('\n', DashboardView.GetInstance().Text.Split('\r').ToList()))))
+                        {
+                            ++DashboardView.GetInstance().CompletedTasks;
+                            break;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await client.Web!.Free();
+                    ++DashboardView.GetInstance().DeniedTasks;
+                    ++DashboardView.GetInstance().DeniedTasksWork;
+                    await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
+                    continue;
+                }
+
+                await Task.Delay(3_000);
+                await client.Web!.Free();
+                await Task.Delay((int)Globals.Setup.DelaySendMessageTo * 1000);
+            }
+
+
+            string SelectWord(string value)
+            {
+                var backValue = value;
+                foreach (var match in new Regex(@"\{random=(.*?)\}", RegexOptions.Multiline).Matches(backValue))
+                {
+                    var arrText = match.ToString()!.Split("||").Select(val => val.Replace("{", "").Replace("}", "").Replace(Globals.TagRandom, "")).ToArray();
+                    backValue = backValue.Replace(match.ToString()!, arrText[new Random().Next(0, arrText.Length)]);
+                }
+                return new Regex(@"\{([^)]*)\}").Replace(backValue, "").Replace("\"", "").Replace("\'", "");
+            }
+            return;*/
             var builder = new StringBuilder();
             if (_webNewsletter.TemplateMessagesInfo.Count > 0)
             {
@@ -140,6 +235,12 @@ namespace UBot.Views.User
             builder.AppendLine($"На старте: {DeniedTasksStart}");
             builder.AppendLine($"При работе: {DeniedTasksWork}");
 
+            if (_emPrep.TemplateWarm.sendedBan > 0 || _emPrep.TemplateWarm.sendedBanPeople > 0)
+            {
+                builder.AppendLine($"Людям: {_emPrep.TemplateWarm.sendedBanPeople}");
+                builder.AppendLine($"Ботам: {_emPrep.TemplateWarm.sendedBan}");
+            }
+
             PopupExtensions.ShowPopup(MainPage.GetInstance(), new Message("Бананы🍌 ", builder.ToString(), false));
         }
 
@@ -154,6 +255,7 @@ namespace UBot.Views.User
                 _newsletter.IsStop = true;
                 _webPrep.IsStop = true;
                 _webNewsletter.IsStop = true;
+                _webNewsletterLong.IsStop = true;
                 return;
             }
 
@@ -191,7 +293,7 @@ namespace UBot.Views.User
                 _isFree = true;
             }
 
-            if (result.Value.IsNewsLetter && result.Value.IsWeb)
+            if (result.Value.IsNewsLetter && !result.Value.WarmMethodLong && result.Value.IsWeb)
             {
                 if (!File.Exists(Globals.Setup.PathToFilePhones) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || Globals.Setup.CountThreads < 1 || Globals.Setup.CountMessages < 1 || string.IsNullOrEmpty(Text) || Text.Length < 5)
                 {
@@ -217,6 +319,39 @@ namespace UBot.Views.User
                 var _activeTask = Task.Run(async () =>
                 {
                     await _webNewsletter.Run(result.Value);
+                });
+
+                await _activeTask;
+                await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Информация", "Рассылка была завершена", false));
+                _isFree = true;
+            }
+
+            if (result.Value.IsNewsLetter && result.Value.WarmMethodLong && result.Value.IsWeb)
+            {
+                if (!File.Exists(Globals.Setup.PathToFilePhones) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || Globals.Setup.CountThreads < 1 || Globals.Setup.CountMessages < 1 || string.IsNullOrEmpty(Text) || Text.Length < 5)
+                {
+                    await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед рассылкой", false));
+                    return;
+                }
+
+                foreach (Match template in new Regex(@"\{tag=(.*?)\rtext=(.*?)\rphones=(.*?)\}").Matches(Text))
+                    result.Value.TemplateMessages.Add(new TemplateMessage()
+                    {
+                        Tag = template.Groups[1].Value,
+                        Text = template.Groups[2].Value,
+                        PathPhones = new FileInfo(template.Groups[3].Value)
+                    });
+
+                if (result.Value.TemplateMessages.Count >= 1)
+                {
+                    if ((MessageCloseStatus)(await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Информация", $"Проверьте шаблоны, верны?\n{string.Join("\n", result.Value.TemplateMessages.Select(template => template.Tag))}", true))) != MessageCloseStatus.Ok)
+                        return;
+                }
+
+                _isFree = false;
+                var _activeTask = Task.Run(async () =>
+                {
+                    await _webNewsletterLong.Run(result.Value);
                 });
 
                 await _activeTask;

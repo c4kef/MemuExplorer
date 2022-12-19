@@ -210,8 +210,35 @@
                                     </Entry>
                                 </Border>
                             </VerticalStackLayout>
-
+                            
                             <VerticalStackLayout>
+                                <Label Text="Задержка смены"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Задержка"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding TakeCountRandomAccountDelay}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}">
+                                        <Entry.Behaviors>
+                                            <controls:NumericValidationBehavior />
+                                        </Entry.Behaviors>
+                                    </Entry>
+                                </Border>
+                            </VerticalStackLayout>
+                            <!--<VerticalStackLayout>
                                 <Label Text="Крит. живых"
                                        FontFamily="SegoeUI"
                                        TextColor="{StaticResource White}"
@@ -237,7 +264,7 @@
                                         </Entry.Behaviors>
                                     </Entry>
                                 </Border>
-                            </VerticalStackLayout>
+                            </VerticalStackLayout>-->
 
                             <VerticalStackLayout>
                                 <Label Text="Банов во сне"
@@ -532,6 +559,17 @@
                                     Command="{Binding Path=ButtonClick}"
                                     CornerRadius="11" />
 
+                            <Button Text="Текст авто"
+                                    HeightRequest="56"
+                                    WidthRequest="140"
+                                    FontFamily="SegoeUI"
+                                    FontSize="20"
+                                    TextColor="{StaticResource White}"
+                                    BackgroundColor="{Binding Path=ButtonPickerPathToFileTextWelcome}"
+                                    CommandParameter="15"
+                                    Command="{Binding Path=ButtonClick}"
+                                    CornerRadius="11" />
+
                             <Button Text="Номера чек"
                                     HeightRequest="56"
                                     WidthRequest="140"
@@ -812,6 +850,71 @@
                                                    Placeholder="До"
                                                    Margin="0,5,5,0"
                                                    Text="{Binding DelaySendMessageTo}"
+                                                   TextChanged="TextSave"
+                                                   BackgroundColor="{StaticResource Black}">
+                                                <Entry.Behaviors>
+                                                    <controls:NumericValidationBehavior />
+                                                </Entry.Behaviors>
+                                            </Entry>
+                                        </Border>
+                                    </VerticalStackLayout>
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout>
+                                <Label Text="Задержка смены"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="0,0,10,5"
+                                       HorizontalOptions="Start" />
+                                <HorizontalStackLayout Spacing="2">
+                                    <VerticalStackLayout>
+                                        <Label Text="От"
+                                               FontFamily="SegoeUI"
+                                               TextColor="{StaticResource White}"
+                                               FontSize="18"
+                                               HorizontalOptions="Center" />
+                                        <Border Stroke="{StaticResource Active}"
+                                                StrokeThickness="2">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="11,11,11,11" />
+                                            </Border.StrokeShape>
+                                            <Entry FontFamily="SegoeUI"
+                                                   FontSize="18"
+                                                   Keyboard="Numeric"
+                                                   MaximumWidthRequest="30"
+                                                   Placeholder="От"
+                                                   Margin="0,5,5,0"
+                                                   Text="{Binding DelayBetweenLastMessageFrom}"
+                                                   TextChanged="TextSave"
+                                                   BackgroundColor="{StaticResource Black}">
+                                                <Entry.Behaviors>
+                                                    <controls:NumericValidationBehavior />
+                                                </Entry.Behaviors>
+                                            </Entry>
+                                        </Border>
+                                    </VerticalStackLayout>
+
+                                    <VerticalStackLayout>
+                                        <Label Text="До"
+                                               FontFamily="SegoeUI"
+                                               TextColor="{StaticResource White}"
+                                               FontSize="18"
+                                               HorizontalOptions="Center" />
+                                        <Border Stroke="{StaticResource Active}"
+                                                StrokeThickness="2">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="11,11,11,11" />
+                                            </Border.StrokeShape>
+                                            <Entry FontFamily="SegoeUI"
+                                                   HorizontalOptions="Center"
+                                                   FontSize="18"
+                                                   Keyboard="Numeric"
+                                                   MaximumWidthRequest="30"
+                                                   Placeholder="До"
+                                                   Margin="0,5,5,0"
+                                                   Text="{Binding DelayBetweenLastMessageTo}"
                                                    TextChanged="TextSave"
                                                    BackgroundColor="{StaticResource Black}">
                                                 <Entry.Behaviors>

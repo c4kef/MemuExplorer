@@ -153,6 +153,18 @@
                         BackgroundColor="{StaticResource NotActive}"
                         IsVisible="{Binding IsNoVisible}"
                         CornerRadius="11" />
+                <Button Text="Валера пидор"
+                        ClassId="35"
+                        HeightRequest="56"
+                        WidthRequest="177"
+                        FontFamily="SegoeUI"
+                        FontSize="20"
+                        VerticalOptions="Center"
+                        Clicked="PressCheckBox"
+                        TextColor="{StaticResource White}"
+                        BackgroundColor="{StaticResource NotActive}"
+                        IsVisible="{Binding IsNoVisible}"
+                        CornerRadius="11" />
             </HorizontalStackLayout>
             <HorizontalStackLayout HorizontalOptions="Center"
                                    Spacing="10"

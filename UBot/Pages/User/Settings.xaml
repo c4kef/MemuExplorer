@@ -210,7 +210,18 @@
                                     </Entry>
                                 </Border>
                             </VerticalStackLayout>
-                            
+
+                            <HorizontalStackLayout>
+                                <Label Text="Убой жарка: "
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,5,0,0"
+                                       HorizontalOptions="Start" />
+                                <CheckBox CheckedChanged="CheckboxChanged"
+                                          IsChecked="{Binding LongWarmSlaughter}" />
+                            </HorizontalStackLayout>
+
                             <VerticalStackLayout>
                                 <Label Text="Задержка смены"
                                        FontFamily="SegoeUI"

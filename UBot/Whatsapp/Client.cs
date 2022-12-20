@@ -276,6 +276,7 @@ public class Client
         "content-desc=\"Неверный номер?\"",
         "text=\"ЗАПРОСИТЬ РАССМОТРЕНИЕ\"",
         "text=\"WA Business\"",
+        "resource-id=\"com.whatsapp.w4b:id/btn_play_store\"",
         "text=\"WhatsApp\"",
         "resource-id=\"android:id/progress\"",
         "text=\"ПОДТВЕРДИТЬ\""}, dump, false);

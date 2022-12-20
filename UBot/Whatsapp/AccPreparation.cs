@@ -30,7 +30,7 @@ public class AccPreparation
     public AccPreparation()
     {
         _usedPhonesUsers = new List<string>();
-        _usedPhones = new List<string>();
+        _usedPhones = new Dictionary<string, bool>();
         _activePhones = new List<string>();
         _warmPhones = new List<Client>();
         _names = new[] { "" };
@@ -38,10 +38,10 @@ public class AccPreparation
     }
 
     private readonly List<string> _usedPhonesUsers;
-    private readonly List<string> _usedPhones;
     private readonly List<string> _activePhones;
     private readonly List<Client> _warmPhones;
     private readonly object _lock;
+    private object _lock1;
 
     private bool _accountsNotFound;
     private FileInfo _logFile;
@@ -50,6 +50,7 @@ public class AccPreparation
     private string[] _messagesWelcome;
     private string[] _contacts;
     private string[] _names;
+    private Dictionary<string, bool> _usedPhones;
     private ActionProfileWork _currentProfile;
 
     public bool IsStop;
@@ -103,9 +104,10 @@ public class AccPreparation
                                     busyDevices[device] = id;
                             }
 
+                            var countedDevice = 0;
                             foreach (var device in devices)
                             {
-                                tasks.Add(Handler(string.IsNullOrEmpty(message) ? Array.Empty<string>() : message.Split('\n'), id, new Client(deviceId: device.Index)));
+                                tasks.Add(Handler(string.IsNullOrEmpty(message) ? Array.Empty<string>() : message.Split('\n'), id, new Client(deviceId: device.Index), countedDevice++ % 3 == 0));
                                 await Task.Delay(1_500);
                             }
 
@@ -165,7 +167,7 @@ public class AccPreparation
                 DataEmulator[] devices = null;
                 _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhones);
 
-                devices = ManagerView.GetInstance().Emulators.Where(device => !busyDevices.Select(device => device.Key.Index).Contains(device.Index) && device.IsEnabled).Take(1).ToArray();
+                devices = ManagerView.GetInstance().Emulators.Where(device => !busyDevices.Select(device => device.Key.Index).Contains(device.Index) && device.IsEnabled).ToArray();
 
                 if (devices.Length == 0)
                 {
@@ -189,10 +191,12 @@ public class AccPreparation
                 {
                     var client = new Client(deviceId: device.Index);
                     await client.ImportContacts($@"{Globals.TempDirectory.FullName}\contacts.vcf");
+                    _warmPhones.Add(client);
 
-                    tasks.Add(WarmMethodIlya(string.IsNullOrEmpty(message) ? Array.Empty<string>() : message.Split('\n'), id, client, true));
+                    tasks.Add(Task.Run(async () => await WarmMethodIlya(string.IsNullOrEmpty(message) ? Array.Empty<string>() : message.Split('\n'), id, client, true)));
                     await Task.Delay(1_500);
                 }
+                _lock1 = new();
 
                 File.Delete($@"{Globals.TempDirectory.FullName}\contacts.vcf");
 
@@ -202,6 +206,7 @@ public class AccPreparation
                 DashboardView.GetInstance().DeniedTasksStart = 0;
                 DashboardView.GetInstance().DeniedTasksWork = 0;
 
+                _usedPhones.Clear();
                 tasks.Clear();
 
                 if (_accountsNotFound)
@@ -209,67 +214,72 @@ public class AccPreparation
 
                 for(var i = 0; i < Globals.Setup.CountThreads; i++)
                 {
-                    tasks.Add(WarmMethodIlya(string.IsNullOrEmpty(message) ? Array.Empty<string>() : message.Split('\n'), id, null, false));
+                    tasks.Add(Task.Run(async () => await WarmMethodIlya(string.IsNullOrEmpty(message) ? Array.Empty<string>() : message.Split('\n'), id, null, false)));
                     await Task.Delay(1_500);
                 }
 
-                tasks.Add(Task.Run(async() =>
+                var _usedPhonesWelcome = new Dictionary<string, bool>();
+                Log.Write($"[I] - Количество подготовленных устройств {_warmPhones.Count}\n", _logFile.FullName);
+                foreach (var _chatbot in _warmPhones.ToArray())
                 {
-                    var _usedPhonesWelcome = new List<string>();
-                    while(!IsStop && !_accountsNotFound)
+                    tasks.Add(Task.Run(async() =>
                     {
-                        foreach (var chatbot in _warmPhones.ToArray())
+                        var chatbot = _chatbot;
+                        var (phone, path) = ("", "");
+                        while(!IsStop && !_accountsNotFound)
                         {
-                            //await Globals.TryMove(chatbot.Account, $@"{Globals.BanWorkDirectory.FullName}\{chatbot.Phone.Remove(0, 1)}");
-                            getAccount:
-                             if (IsStop || _accountsNotFound)
-                                break;
-
-                            var result = Globals.GetAccounts(_usedPhonesWelcome.Select(phone => phone.Remove(0, 1)).ToArray(), true, _lock, _activePhones.Where(phone => phone[0].ToString() == id.ToString()).Select(phone => phone.Remove(0, 1)).ToArray(), Globals.Setup.PathToFolderAccountsAdditional);
-
-                            DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccountsAdditional).Where(dir => File.Exists($@"{dir}\Data.json") && !_usedPhonesWelcome.Contains(dir)).ToArray().Length;
-
-                            if (result.Length < 1)
+                            try
                             {
-                                if (_usedPhonesWelcome.Count > 0)
+                                    var result = Globals.GetAccounts(_usedPhonesWelcome.Keys.ToArray(), true, _lock1, pathToFolderAccounts: Globals.Setup.PathToFolderAccountsAdditional);
+                                    if (result.Length < 1)
+                                    {
+                                        if (_usedPhonesWelcome.Count == 0)
+                                        {
+                                            Log.Write($"[I] [{chatbot.GetInstance().Index}] - аккаунт не был найден для хандлера\n", _logFile.FullName);
+                                            _accountsNotFound = true;
+                                            return;
+                                        }
+
+                                        _usedPhonesWelcome = _usedPhonesWelcome.ToArray().Where(phone => phone.Value).ToDictionary(phone => phone.Key, phone => phone.Value);//P-s хз, может сча будет работать в многопоток
+                                        continue;
+                                    }
+                                    (phone, path) = result[0];
+                                    Log.Write($"[I] [{chatbot.GetInstance().Index}] - взяли аккаунт {phone} {path}\n", _logFile.FullName);
+
+                                    if (_usedPhonesWelcome.Keys.ToArray().Contains(phone))
+                                    {
+                                        Log.Write($"[I] [{chatbot.GetInstance().Index}] - дубликат аккаунта\n", _logFile.FullName);
+                                        continue;
+                                    }
+
+                                    _usedPhonesWelcome[phone] = true;
+
+                                if (!await TryLogin(chatbot, phone, path))
                                 {
-                                    _usedPhonesWelcome.Clear();
-                                    break;
+                                    Log.Write($"[{phone}] [{chatbot.GetInstance().Index}] - не смогли войти\n", _logFile.FullName);
+                                    _usedPhonesWelcome[phone] = false;
+                                    continue;
                                 }
+                                else
+                                    Log.Write($"[{phone}] [{chatbot.GetInstance().Index}] - смогли войти\n", _logFile.FullName);
 
-                                Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
-                                _accountsNotFound = true;
-                                break;
+                                await Task.Delay((Globals.Setup.TakeCountRandomAccountDelay ?? 1) * 1000);
+                                if (!await chatbot.IsValid())
+                                {
+                                 Log.Write($"[IsValid WELCOME] [{chatbot.GetInstance().Index}] - Считаю аккаунт не валидным и кидаю в чс\n", _logFile.FullName);
+                                    await DeleteAccount(chatbot, false);
+                                }
+                                _usedPhonesWelcome[phone] = false;
                             }
-
-                            var (phone, path) = result[0];
-
-                            /*if (_usedPhonesWelcome.Contains(phone))
+                            catch (Exception ex)
                             {
-                                Log.Write($"[I] - дубликат аккаунта\n", _logFile.FullName);
-                                goto getAccount;
-                            }*/
-                            _usedPhonesWelcome.Add(phone);
-
-                            if (!await TryLogin(chatbot, phone, path))
-                            {
-                                ++DashboardView.GetInstance().DeniedTasks;
-                                ++DashboardView.GetInstance().DeniedTasksWork;
-                                Log.Write($"[{phone}] - не смогли войти\n", _logFile.FullName);
-                                goto getAccount;
+                                Log.Write($"[CRITICAL - HANDLER WELCOME] [{chatbot.GetInstance().Index}] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
+                                _usedPhonesWelcome[phone] = false;
                             }
-                            else
-                                Log.Write($"[{phone}] - смогли войти\n", _logFile.FullName);
-
-                            await Task.Delay(Globals.Setup.TakeCountRandomAccountDelay ?? 1 * 1000);
-                            var status = await chatbot.IsValid();
-                            if (!status)
-                                await DeleteAccount(chatbot, true);
-                            else
-                                await chatbot.UpdateData(true);
                         }
-                    }
-                }));
+                    }));
+                    await Task.Delay(1_500);
+                }
 
                 Task.WaitAll(tasks.ToArray(), -1);//Ждем окочания переписок...
                 DashboardView.GetInstance().CompletedTasks = 0;
@@ -296,6 +306,7 @@ public class AccPreparation
 
     private async Task WarmMethodIlya(string[] messages, int threadId, Client client, bool isFeel)
     {
+        var (phone, path) = ("", "");
         try
         {
             Log.Write($"Поток {threadId} запущен\n", _logFile.FullName);
@@ -306,41 +317,46 @@ public class AccPreparation
                 await client.GetInstance().ShellCmd("settings put global animator_duration_scale 0");
             }
 
-            //await client.GetInstance().ClearContacts();
+        //await client.GetInstance().ClearContacts();
         getAccount:
             if (IsStop || _accountsNotFound)
                 return;
 
-            var result = Globals.GetAccounts(_usedPhones.Select(phone => phone.Remove(0, 1)).ToArray(), true, _lock, _activePhones.Where(phone => phone[0].ToString() == threadId.ToString()).Select(phone => phone.Remove(0, 1)).ToArray(), isFeel ? Globals.Setup.PathToFolderAccountsAdditional : Globals.Setup.PathToFolderAccounts);
+            (phone, path) = ("", "");
 
-            DashboardView.GetInstance().AllTasks = Directory.GetDirectories(isFeel ? Globals.Setup.PathToFolderAccountsAdditional : Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json") && !_usedPhones.Contains(dir)).ToArray().Length;
-
-            if (result.Length < 1)
+            lock (_lock)
             {
-                if (_usedPhones.Count == 0)
+                var result = Globals.GetAccounts(_usedPhones.Select(phone => phone.Key.Remove(0, 1)).ToArray(), true, _lock, pathToFolderAccounts: isFeel ? Globals.Setup.PathToFolderAccountsAdditional : Globals.Setup.PathToFolderAccounts);
+
+                DashboardView.GetInstance().AllTasks = Directory.GetDirectories(isFeel ? Globals.Setup.PathToFolderAccountsAdditional : Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json") && !_usedPhones.ContainsKey(dir)).ToArray().Length;
+
+                if (result.Length < 1)
                 {
-                    Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
-                    _accountsNotFound = true;
-                    return;
+                    if (_usedPhones.Count == 0)
+                    {
+                        Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
+                        _accountsNotFound = true;
+                        return;
+                    }
+
+                    if (isFeel)
+                        return;
+
+                    _usedPhones = _usedPhones.Where(phone => phone.Value).ToDictionary(phone => phone.Key, phone => phone.Value);//P-s хз, может сча будет работать в многопоток
+                    goto getAccount;
                 }
 
-                if (isFeel)
-                    return;
+                (phone, path) = result[0];
+                Log.Write($"[I] - взяли аккаунт {phone} {path}\n", _logFile.FullName);
 
-                _usedPhones.Clear();//Это не может работать во много потоков :(
-                goto getAccount;
+                if (_usedPhones.Select(phone => phone.Key.Remove(0, 1)).Contains(phone))
+                {
+                    Log.Write($"[I] - дубликат аккаунта\n", _logFile.FullName);
+                    goto getAccount;
+                }
+
+                _usedPhones[threadId + phone] = true;
             }
-
-            
-            var (phone, path) = result[0];
-
-            if (_usedPhones.Select(phone => phone.Remove(0, 1)).Contains(phone))
-            {
-                Log.Write($"[I] - дубликат аккаунта\n", _logFile.FullName);
-                goto getAccount;
-            }
-
-            _usedPhones.Add(threadId + phone);
 
             if (isFeel)
             {
@@ -361,11 +377,15 @@ public class AccPreparation
                     await client.Web!.Free();
                     if (ex.Message != "Cant load account")
                     {
+                        _usedPhones[threadId + phone] = false;
                         await Globals.TryMove(path, $@"{Globals.LogoutDirectory.FullName}\{phone}");
                         Log.Write($"[{phone}] - не смогли войти: {ex.Message}\n", _logFile.FullName);
 
                         ++DashboardView.GetInstance().DeniedTasks;
-                        ++DashboardView.GetInstance().DeniedTasksStart;
+                        if (client.AccountData.CountMessages > 0)
+                            ++DashboardView.GetInstance().DeniedTasksWork;
+                        else
+                            ++DashboardView.GetInstance().DeniedTasksStart;
                     }
                     else
                         _usedPhones.Remove(threadId + phone);
@@ -389,83 +409,109 @@ public class AccPreparation
 
                         stepBlock = 1;
 
-                        foreach (var chatbot in arr)
-                            await client.Web!.SendText(chatbot, messages[new Random().Next(0, messages.Length - 1)]);
+                        if (arr.Length != (Globals.Setup.CountMessageWarm ?? 1))
+                        {
+                            _accountsNotFound = true;
+                            Log.Write($"[{phone}] - аккаунтов ботов меньше заявленного (требуется >= {Globals.Setup.CountMessageWarm ?? 0}, имеется {arr.Length})\n", _logFile.FullName);
+                            break;
+                        }
 
-                        /*if (arr.Length != Globals.Setup.CountMessageWarm)
-                            break;*/
+                        foreach (var chatbot in arr)
+                        {
+                            while (!await client.Web!.SendText(chatbot, messages[new Random().Next(0, messages.Length - 1)]))
+                                await Task.Delay(1_000);
+
+                            await Task.Delay(new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)));
+                        }
 
                         stepBlock = 2;
 
                         for (var i = 0; i < Globals.Setup.CountMessageWarmNewsletter; i++)
                         {
+                        tryGetFreePhone:
                             if (!await client.Web!.IsConnected())
                                 break;
 
                             var freePhone = GetFreeNumberUser();
+
                             if (string.IsNullOrEmpty(freePhone))
                                 break;
 
-                            var text = string.Join('\n', DashboardView.GetInstance().Text.Split('\r').ToList());
-                            FileInfo? image = null;
-
-                            string? buttonText = null;
-                            string title = string.Empty;
-                            string footer = string.Empty;
-
-                            foreach (var match in new Regex(@"\{(.*?)\}").Matches(text).Select(match => match.Value.Replace("{", "").Replace("}", "")))
+                            if (await client.Web!.CheckValidPhone(freePhone))
                             {
-                                if (match.Contains(Globals.TagPicture))
+                                var text = string.Join('\n', DashboardView.GetInstance().Text.Split('\r').ToList());
+                                FileInfo? image = null;
+
+                                string? buttonText = null;
+                                string title = string.Empty;
+                                string footer = string.Empty;
+
+                                foreach (var match in new Regex(@"\{(.*?)\}").Matches(text).Select(match => match.Value.Replace("{", "").Replace("}", "")))
                                 {
-                                    var tmpImage = new FileInfo(match.Remove(0, Globals.TagPicture.Length));
-                                    if (tmpImage.Exists)
+                                    if (match.Contains(Globals.TagPicture))
                                     {
-                                        image = tmpImage;
-                                        break;
+                                        var tmpImage = new FileInfo(match.Remove(0, Globals.TagPicture.Length));
+                                        if (tmpImage.Exists)
+                                        {
+                                            image = tmpImage;
+                                            break;
+                                        }
+                                    }
+                                    else if (match.Contains(Globals.TagTitle))
+                                    {
+                                        title = match.Remove(0, Globals.TagTitle.Length);
+                                    }
+                                    else if (match.Contains(Globals.TagFooter))
+                                    {
+                                        footer = match.Remove(0, Globals.TagFooter.Length);
+                                    }
+                                    else if (match.Contains(Globals.TagButton))
+                                    {
+                                        buttonText = match.Remove(0, Globals.TagButton.Length);
                                     }
                                 }
-                                else if (match.Contains(Globals.TagTitle))
-                                {
-                                    title = match.Remove(0, Globals.TagTitle.Length);
-                                }
-                                else if (match.Contains(Globals.TagFooter))
-                                {
-                                    footer = match.Remove(0, Globals.TagFooter.Length);
-                                }
-                                else if (match.Contains(Globals.TagButton))
-                                {
-                                    buttonText = match.Remove(0, Globals.TagButton.Length);
-                                }
-                            }
 
-                            if (await client.Web!.SendText(freePhone, SelectWord(text), image, buttonText, title, footer))
-                            {
-                                Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{freePhone}", _reportFile.FullName);
-                                ++TemplateWarm.sendedCount;
+                                if (await client.Web!.SendText(freePhone, SelectWord(text), image, buttonText, title, footer))
+                                {
+                                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{freePhone}", _reportFile.FullName);
+                                    ++TemplateWarm.sendedCount;
+                                }
+                                else
+                                    _usedPhonesUsers.Remove(freePhone);
                             }
                             else
-                                _usedPhonesUsers.Remove(freePhone);
+                                goto tryGetFreePhone;
+
+                            await Task.Delay(new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)));
                         }
 
                         break;
                     }
 
+                    client.AccountData.CountMessages += Globals.Setup.CountMessageWarmNewsletter ?? 0;
+                    await Task.Delay(2_000);
+
                     if (!await client.Web!.IsConnected())
                     {
-                        await Task.Delay(1_000);
                         await client.Web!.Free();
+                        await client.UpdateData(false);
                         await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
                         ++DashboardView.GetInstance().DeniedTasks;
                         ++DashboardView.GetInstance().DeniedTasksWork;
                     }
                     else
                     {
-                        await Task.Delay(1_000);
                         await client.Web!.Free();
-                        //Убери коменты если надо чтобы по окончанию прогрева оно их перемещало
-                        await Globals.TryMove(path, $@"{_directoryAccounts.FullName}\{phone}");
-                        ++TemplateWarm.warmedAccount;
+                        client.AccountData.BannedDate = DateTime.Now;
+                        await client.UpdateData(false);
+                        if (!Globals.Setup.LongWarmSlaughter)
+                        {
+                            await Globals.TryMove(path, $@"{_directoryAccounts.FullName}\{phone}");
+                            ++TemplateWarm.warmedAccount;
+                        }
                     }
+
+                    _usedPhones[threadId + phone] = false;
                     goto getAccount;
                 }
                 catch (Exception ex)
@@ -490,6 +536,7 @@ public class AccPreparation
                     await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
                 }
 
+                _usedPhones[threadId + phone] = false;
                 goto getAccount;
             }
 
@@ -528,7 +575,7 @@ public class AccPreparation
                             if (contact.Length < 5 || string.IsNullOrEmpty(contact))
                                 continue;
 
-                                _usedPhonesUsers.Add(contact);
+                            _usedPhonesUsers.Add(contact);
 
                             var newContacts = _contacts.Except(_usedPhonesUsers).ToArray();
 
@@ -545,12 +592,13 @@ public class AccPreparation
         }
         catch (Exception ex)
         {
+            _usedPhones[threadId + phone] = false;
             Log.Write($"[CRITICAL] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
         }
     }
 
     public async Task<bool> HandlerWelcomeAccount(Client client, string phone, string path, string[] messages, int threadId)
-    {        
+    {
         var rnd = new Random();
 
         if (!await TryLogin(client, phone, path))
@@ -602,7 +650,6 @@ public class AccPreparation
             {
                 await client.UpdateData(true);
                 ++DashboardView.GetInstance().CompletedTasks;
-                _warmPhones.Add(client);
             }
         }
         catch (Exception ex)
@@ -692,6 +739,7 @@ public class AccPreparation
             if (!await client.Login(name: _names[new Random().Next(0, _names.Length)]))
             {
                 await DeleteAccount(client, true);
+                Log.Write($"[TryLogin] - Не удалось авторизоваться\n", _logFile.FullName);
                 return false;
             }
 
@@ -699,6 +747,7 @@ public class AccPreparation
             if (!status)
             {
                 await DeleteAccount(client, true);
+                Log.Write($"[TryLogin] - Считаю аккаунт не валидным и кидаю в чс\n", _logFile.FullName);
                 return false;
             }
 
@@ -729,14 +778,14 @@ public class AccPreparation
             }
             catch (Exception ex)
             {
-                Log.Write($"[DeleteAccount] - Произошла ошибка, попытка {countTry}: {ex.Message}\n", _logFile.FullName);
+                Log.Write($"[DeleteAccount] [{client.GetInstance().Index}] - Произошла ошибка, попытка {countTry}: {ex.Message}\n", _logFile.FullName);
             }
 
             await Task.Delay(1_000);
         }
     }
 
-    private async Task Handler(string[] messages, int threadId, Client client)
+    private async Task Handler(string[] messages, int threadId, Client client, bool withoutContacts)
     {
         try
         {
@@ -752,25 +801,28 @@ public class AccPreparation
 
             Log.Write($"Поток {threadId} запущен с устройством {client.GetInstance().Index}\n", _logFile.FullName);
 
-            //Delete it
+            if (!withoutContacts)
+            {
+                //Delete it
                 var _contacts = await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhones);
-            var contactPhones = new List<CObj>();
-            foreach (var phoneForContact in _contacts)
-                contactPhones.Add(new(_names[new Random().Next(0, _names.Length)], "+" + phoneForContact));
-            var id = new Random().Next(0, 100);
-            await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{id}_contacts.vcf", ContactManager.Export(contactPhones));
+                var contactPhones = new List<CObj>();
+                foreach (var phoneForContact in _contacts)
+                    contactPhones.Add(new(_names[new Random().Next(0, _names.Length)], "+" + phoneForContact));
+                var id = new Random().Next(0, 100);
+                await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{id}_contacts.vcf", ContactManager.Export(contactPhones));
 
-            await client.ImportContacts($@"{Globals.TempDirectory.FullName}\{id}_contacts.vcf");
+                await client.ImportContacts($@"{Globals.TempDirectory.FullName}\{id}_contacts.vcf");
 
-            File.Delete($@"{Globals.TempDirectory.FullName}\{id}_contacts.vcf");
-        //
+                File.Delete($@"{Globals.TempDirectory.FullName}\{id}_contacts.vcf");
+                //
+            }
         getAccount:
             if (IsStop)
                 return;
 
-            var result = Globals.GetAccounts(_usedPhones.Select(phone => phone.Remove(0, 1)).ToArray(), true, _lock, _currentProfile.Warm ? _activePhones.Where(phone => phone[0].ToString() == threadId.ToString()).Select(phone => phone.Remove(0, 1)).ToArray() : null);
+            var result = Globals.GetAccounts(_usedPhones.Select(phone => phone.Key.Remove(0, 1)).ToArray(), true, _lock, _currentProfile.Warm ? _activePhones.Where(phone => phone[0].ToString() == threadId.ToString()).Select(phone => phone.Remove(0, 1)).ToArray() : null);
 
-            DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json") && !_usedPhones.Contains(dir)).ToArray().Length;
+            DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json") && !_usedPhones.Keys.Contains(dir)).ToArray().Length;
 
             if (result.Length < 1)
             {
@@ -781,13 +833,13 @@ public class AccPreparation
 
             var (phone, path) = result[0];
 
-            if (_usedPhones.Select(phone => phone.Remove(0, 1)).Contains(phone))
+            if (_usedPhones.Select(phone => phone.Key.Remove(0, 1)).Contains(phone))
             {
                 Log.Write($"[I] - дубликат аккаунта\n", _logFile.FullName);
                 goto getAccount;
             }
 
-            _usedPhones.Add(threadId + phone);
+            _usedPhones[threadId + phone] = true;
 
             //Нужно удалить комментарий
             //await client.GetInstance().ClearContacts();
@@ -924,12 +976,16 @@ public class AccPreparation
                     if (!string.IsNullOrEmpty(Globals.Setup.LinkToChangeIP))
                         Log.Write(await ResourceHelper.GetAsync(Globals.Setup.LinkToChangeIP), _logFile.FullName);
 
+                    _usedPhones[threadId + phone] = false;
+
                     if (!_currentProfile.Warm)
                         goto getAccount;
                 }
 
                 if (_currentProfile.Warm)
                     _activePhones.Remove(threadId + phone);
+
+                _usedPhones[threadId + phone] = false;
             }
             catch (Exception ex)
             {

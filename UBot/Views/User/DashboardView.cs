@@ -169,21 +169,16 @@ namespace UBot.Views.User
 
                 try
                 {
-                    foreach (var peopleReal in await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhones))
+                    var peopleReal = (await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhones))[0];
+                    while (true)
                     {
-                        if (string.IsNullOrEmpty(peopleReal) || _usedPhonesUsers.Contains(peopleReal))
-                            continue;
-
                         if (!await client.Web!.IsConnected())
                             throw new Exception("Client has disconected");
 
-                        _usedPhonesUsers.Add(peopleReal);
-
                         if (await client.Web!.SendText(peopleReal, SelectWord(string.Join('\n', DashboardView.GetInstance().Text.Split('\r').ToList()))))
-                        {
                             ++DashboardView.GetInstance().CompletedTasks;
-                            break;
-                        }
+
+                        await Task.Delay(2_000);
                     }
                 }
                 catch (Exception ex)

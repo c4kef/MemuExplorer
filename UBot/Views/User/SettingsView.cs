@@ -109,6 +109,12 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.CountCheckedPhonesFromAccount, value);
         }
 
+        public bool LongWarmSlaughter
+        {
+            get => Globals.Setup.LongWarmSlaughter;
+            set => SetProperty(ref Globals.Setup.LongWarmSlaughter, value);
+        }
+
         public int? CountPhonesFromStack
         {
             get => Globals.Setup.CountPhonesFromStack;

@@ -240,6 +240,7 @@ namespace UBot
         public string TextMessage;
         public bool RemoveAvatar;
         public bool AdditionalWarm;
+        public bool LongWarmSlaughter;
         public float? DynamicDelaySendMessageMinus;
         public int? PinCodeAccount;
 

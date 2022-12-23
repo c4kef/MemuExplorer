@@ -189,12 +189,17 @@ public class AccPreparation
 
                 for (var i = 0; i < Globals.Setup.CountMessages; i++)//Первый этап - переписки между собой
                 {
-                    if (!await client.Web!.IsConnected())
+                    if (!await client.Web!.IsConnected() || IsStop)
                     {
                         await client.Web!.Free();
-                        await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
-                        ++DashboardView.GetInstance().DeniedTasks;
-                        ++DashboardView.GetInstance().DeniedTasksWork;
+                        
+                        if (!IsStop)
+                        {
+                            await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
+                            ++DashboardView.GetInstance().DeniedTasks;
+                            ++DashboardView.GetInstance().DeniedTasksWork;
+                        }
+
                         return;
                     }
 
@@ -204,6 +209,7 @@ public class AccPreparation
                             continue;
 
                         await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
+
                     }
                 }
 

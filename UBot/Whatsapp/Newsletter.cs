@@ -318,6 +318,8 @@ namespace UBot.Whatsapp
                                 }
                             }
 
+                            //await client.SendMessage("380674279706", SelectWord(text), image);
+                            //await client.SendMessage("79772801086", SelectWord(text), image);
                             if (!await client.SendMessage(peopleReal, SelectWord(text), image))
                                 Log.Write(peopleReal, (_currentProfile.TemplateMessages.Count == 0) ? _notSendedFile.FullName : TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag].NotSendedFile.FullName);
                         }

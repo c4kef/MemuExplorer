@@ -1,17 +1,14 @@
-﻿using System.Threading.Tasks;
-var locker = new object();
-var tasks = new List<Task>();
-foreach (var _chatbot in new[] { 1, 2, 3, 4, 5, 6 })
-{
-    var chatbot = _chatbot;
-    tasks.Add(Task.Run(async () =>
-    {
-        lock (locker)
-        {
-            Console.WriteLine("Hi " + chatbot);
-        }
-        Console.WriteLine(chatbot);
-    }));
-}
-Task.WaitAll(tasks.ToArray(), -1);
+﻿using MemuLib;
+using MemuLib.Core.Contacts;
 
+var contacts = new List<CObj>();
+
+foreach (var contact in await File.ReadAllLinesAsync("real.txt"))
+    contacts.Add(new CObj(Globals.RandomString(new Random().Next(10, 20)), $"+{contact}"));
+
+foreach (var contact in (await File.ReadAllLinesAsync("fake.txt")).OrderBy(x => new Random().Next()).Take(new Random().Next(50, 100)))
+    contacts.Add(new CObj(Globals.RandomString(new Random().Next(10, 20)), $"+{contact}"));
+
+
+await File.WriteAllTextAsync("contacts.vcf", ContactManager.Export(contacts));
+Console.WriteLine("OK");

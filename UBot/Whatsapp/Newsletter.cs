@@ -206,7 +206,7 @@ namespace UBot.Whatsapp
                 await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{phone}_contacts.vcf", ContactManager.Export(contactPhones));
 
                 await client.ImportContacts($@"{Globals.TempDirectory.FullName}\{phone}_contacts.vcf");
-                
+
                 await client.GetInstance().Shell($"pm clear {client.PackageName}");
 
                 if (!await TryLogin(client, phone, path))
@@ -247,6 +247,7 @@ namespace UBot.Whatsapp
                 try
                 {
                     var currentMinus = (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f);
+                    await Task.Delay((Globals.Setup.DelayFirstMessageAccount ?? 0) * 1000);
 
                     while (!IsStop)
                     {

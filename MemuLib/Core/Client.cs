@@ -243,7 +243,7 @@ public class Client
         }
 
         var (x, y) = await FindElement(uiElement, dump ?? await DumpScreen());
-        
+
         if (x == -1 && y == -1)
             throw new Exception($"[{Index}] Can't found element by name \"{uiElement}\"");
 
@@ -281,7 +281,7 @@ public class Client
 
         Log.Write($"[{Index}] -> input text uiElement");
     }
-    
+
     /// <summary>
     /// Симуляция ввода текста
     /// </summary>
@@ -293,9 +293,9 @@ public class Client
             Log.Write($"[{Index}] -> VM not found");
             return;
         }
-        
+
         await Task.Delay(Settings.WaitingSecs);
-        
+
         await Memu.SendText(Index, text);
 
         Log.Write($"[{Index}] -> input text uiElement");
@@ -419,8 +419,8 @@ public class Client
         if (_deviceInfo is null || genNewHardware)
             _deviceInfo = new DeviceInfoGenerated()
             {
-                Latitude = random.Next(0,100).ToString(),
-                Longitude = random.Next(0,100).ToString(),
+                Latitude = random.Next(0, 100).ToString(),
+                Longitude = random.Next(0, 100).ToString(),
                 Mac = Globals.GetRandomMacAddress(),
                 Ssid = Globals.GetRandomMacAddress(),
                 Imei = Globals.GeneratorImei(microvirt.Tac),
@@ -433,7 +433,7 @@ public class Client
                 TimeZone = await Globals.GetTimeZone(),
                 AndroidRelease = await Globals.GetAndroidRelease(),
                 SerialNo = random.Next(10_000_000, 100_000_000).ToString(),
-                BoardPlatform = Globals.RandomString(random.Next(5,10)),
+                BoardPlatform = Globals.RandomString(random.Next(5, 10)),
                 GoogleFrameworkId = Globals.RandomHexString(16),
                 Language = await Globals.GetLanguage(),
                 AndroidId = Globals.RandomHexString(16),

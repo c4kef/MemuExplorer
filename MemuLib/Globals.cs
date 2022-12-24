@@ -30,6 +30,112 @@ public static class Globals
     }
 
     /// <summary>
+    /// Перенос папки, работает даже с разными дисками
+    /// </summary>
+    /// <param name="source">Откуда перенести</param>
+    /// <param name="target">Куда перенести (так же указать имя)</param>
+    /// <param name="rewrite">Перезаписать папку которая уже может находиться в месте назначения?</param>
+    /// <exception cref="System.IO.DirectoryNotFoundException">Директория не найдена</exception>
+    /// <exception cref="System.IO.IOException">Такая дериктория уже есть в месте назначения</exception>
+    public static void DirectoryMove(string source, string target, bool rewrite = false)
+    {
+        if (!Directory.Exists(source))
+        {
+            throw new System.IO.DirectoryNotFoundException("Source directory couldn't be found.");
+        }
+
+        if (Directory.Exists(target) && !rewrite)
+        {
+            throw new System.IO.IOException("Target directory already exists.");
+        }
+
+        DirectoryInfo sourceInfo = Directory.CreateDirectory(source);
+        DirectoryInfo targetInfo = Directory.CreateDirectory(target);
+
+        if (sourceInfo.FullName == targetInfo.FullName && !rewrite)
+        {
+            throw new System.IO.IOException("Source and target directories are the same.");
+        }
+
+        Stack<DirectoryInfo> sourceDirectories = new Stack<DirectoryInfo>();
+        sourceDirectories.Push(sourceInfo);
+
+        Stack<DirectoryInfo> targetDirectories = new Stack<DirectoryInfo>();
+        targetDirectories.Push(targetInfo);
+
+        while (sourceDirectories.Count > 0)
+        {
+            DirectoryInfo sourceDirectory = sourceDirectories.Pop();
+            DirectoryInfo targetDirectory = targetDirectories.Pop();
+
+            foreach (FileInfo file in sourceDirectory.GetFiles())
+            {
+                file.CopyTo(Path.Combine(targetDirectory.FullName, file.Name), overwrite: true);
+            }
+
+            foreach (DirectoryInfo subDirectory in sourceDirectory.GetDirectories())
+            {
+                sourceDirectories.Push(subDirectory);
+                targetDirectories.Push(targetDirectory.CreateSubdirectory(subDirectory.Name));
+            }
+        }
+
+        sourceInfo.Delete(true);
+    }
+
+    /// <summary>
+    /// Копирование папки, работает даже с разными дисками
+    /// </summary>
+    /// <param name="source">Откуда копировать</param>
+    /// <param name="target">Куда копировать (так же указать имя)</param>
+    /// <param name="rewrite">Перезаписать папку которая уже может находиться в месте назначения?</param>
+    /// <exception cref="System.IO.DirectoryNotFoundException">Директория не найдена</exception>
+    /// <exception cref="System.IO.IOException">Такая дериктория уже есть в месте назначения</exception>
+    public static void DirectoryCopy(string source, string target, bool rewrite = false)
+    {
+        if (!Directory.Exists(source))
+        {
+            throw new System.IO.DirectoryNotFoundException("Source directory couldn't be found.");
+        }
+
+        if (Directory.Exists(target) && !rewrite)
+        {
+            throw new System.IO.IOException("Target directory already exists.");
+        }
+
+        DirectoryInfo sourceInfo = Directory.CreateDirectory(source);
+        DirectoryInfo targetInfo = Directory.CreateDirectory(target);
+
+        if (sourceInfo.FullName == targetInfo.FullName && !rewrite)
+        {
+            throw new System.IO.IOException("Source and target directories are the same.");
+        }
+
+        Stack<DirectoryInfo> sourceDirectories = new Stack<DirectoryInfo>();
+        sourceDirectories.Push(sourceInfo);
+
+        Stack<DirectoryInfo> targetDirectories = new Stack<DirectoryInfo>();
+        targetDirectories.Push(targetInfo);
+
+        while (sourceDirectories.Count > 0)
+        {
+            DirectoryInfo sourceDirectory = sourceDirectories.Pop();
+            DirectoryInfo targetDirectory = targetDirectories.Pop();
+
+            foreach (FileInfo file in sourceDirectory.GetFiles())
+            {
+                file.CopyTo(Path.Combine(targetDirectory.FullName, file.Name), overwrite: true);
+            }
+
+            foreach (DirectoryInfo subDirectory in sourceDirectory.GetDirectories())
+            {
+                sourceDirectories.Push(subDirectory);
+                targetDirectories.Push(targetDirectory.CreateSubdirectory(subDirectory.Name));
+            }
+        }
+    }
+
+    /// <summary>
     /// Сгенирировать случайную HEX строку
     /// </summary>
     /// <param name="length">длина строки</param>

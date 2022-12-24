@@ -186,6 +186,7 @@ public class AccPreparation
                 }
 
                 var phones = _activePhones.Where(phone => phone[0].ToString() == threadId.ToString()).Select(phone => phone.Remove(0, 1)).ToArray();
+                await Task.Delay((Globals.Setup.DelayFirstMessageAccount ?? 0) * 1000);
 
                 for (var i = 0; i < Globals.Setup.CountMessages; i++)//Первый этап - переписки между собой
                 {

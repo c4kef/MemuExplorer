@@ -214,7 +214,7 @@ public class Newsletter
                     await client.Web!.RemoveAvatar();
 
                 var currentMinus = (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f);
-
+                await Task.Delay((Globals.Setup.DelayFirstMessageAccount ?? 0) * 1000);
                 while (!IsStop)
                 {
                     if (countSendedMessages >= Globals.Setup.CountMessages * ((_currentProfile.TemplateMessages.Count == 0) ? 1 : _currentProfile.TemplateMessages.Count))

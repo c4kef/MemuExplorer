@@ -119,7 +119,7 @@ namespace UBot
             {
                 await File.WriteAllTextAsync(SetupFile.FullName, JsonConvert.SerializeObject(Setup, Formatting.Indented));
             }
-            catch 
+            catch
             {
                 await Task.Delay(100);
                 await SaveSetup();
@@ -181,7 +181,7 @@ namespace UBot
 
                     return true;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Log.Write($"Cant move directory: {ex.Message}");
                     await Task.Delay(1_000);
@@ -283,6 +283,9 @@ namespace UBot
 
         public int? CountMessageWarm;
         public int? CountMessageWarmNewsletter;
+
+        public int? DelayStartAccount;
+        public int? DelayFirstMessageAccount;
 
         //public int? CountCritAliveAccountsToStopWarm;
     }

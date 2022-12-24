@@ -86,7 +86,7 @@ namespace UBot.Views.User
         #region variables
 
         private static DashboardView _instance;
-        
+
         public Dashboard Dashboard { get; private set; }
         public Command OpenControlPanel { get; }
         public Command ShowLastAccountsPanel { get; }
@@ -124,7 +124,6 @@ namespace UBot.Views.User
             while (true)
             {
                 var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
-
                 if (result.Length == 0)
                 {
                     if (_usedPhones.Count != 0)
@@ -138,21 +137,15 @@ namespace UBot.Views.User
                         return;
                     }
                 }
-
                 var (phone, path) = result[0];
-
                 if (_usedPhones.Contains(phone))
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Дубликат аккаунта", false));
                     continue;
                 }
-
                 _usedPhones.Add(phone);
-
                 var countSendedMessages = 0;
-
                 var client = new Client(phone, path);
-
                 try
                 {
                     await client.Web!.Init(false, $@"{path}\{new DirectoryInfo(path).Name}", "");
@@ -164,9 +157,7 @@ namespace UBot.Views.User
                     ++DashboardView.GetInstance().DeniedTasksStart;
                     continue;
                 }
-
                 await Task.Delay(10_000);
-
                 try
                 {
                     var peopleReal = (await File.ReadAllLinesAsync(Globals.Setup.PathToFilePhones))[0];
@@ -174,10 +165,8 @@ namespace UBot.Views.User
                     {
                         if (!await client.Web!.IsConnected())
                             throw new Exception("Client has disconected");
-
                         if (await client.Web!.SendText(peopleReal, SelectWord(string.Join('\n', DashboardView.GetInstance().Text.Split('\r').ToList()))))
                             ++DashboardView.GetInstance().CompletedTasks;
-
                         await Task.Delay(2_000);
                     }
                 }
@@ -189,13 +178,10 @@ namespace UBot.Views.User
                     await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
                     continue;
                 }
-
                 await Task.Delay(3_000);
                 await client.Web!.Free();
                 await Task.Delay((int)Globals.Setup.DelaySendMessageTo * 1000);
             }
-
-
             string SelectWord(string value)
             {
                 var backValue = value;
@@ -389,7 +375,7 @@ namespace UBot.Views.User
 
             if ((result.Value.Warm || result.Value.CheckBan || result.Value.Scaning || result.Value.WarmMethodIlya || result.Value.WarmMethodValera) && !result.Value.IsWeb)
             {
-                if (!File.Exists(Globals.Setup.PathToFileNames) || (!File.Exists(Globals.Setup.PathToFileTextWarm) && (result.Value.Warm || result.Value.WarmMethodIlya)) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || !Directory.Exists(Globals.Setup.PathToDownloadsMemu) || (ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) < Globals.Setup.CountGroups * Globals.Setup.CountThreads && (!result.Value.CheckBan && !result.Value.WarmMethodIlya)) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 10 || (Globals.Setup.CountMessages < 1 && (!result.Value.CheckBan && !result.Value.CheckNumberValid && !result.Value.WarmMethodIlya)) || Globals.Setup.RepeatCounts < 1 
+                if (!File.Exists(Globals.Setup.PathToFileNames) || (!File.Exists(Globals.Setup.PathToFileTextWarm) && (result.Value.Warm || result.Value.WarmMethodIlya)) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || !Directory.Exists(Globals.Setup.PathToDownloadsMemu) || (ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) < Globals.Setup.CountGroups * Globals.Setup.CountThreads && (!result.Value.CheckBan && !result.Value.WarmMethodIlya)) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 10 || (Globals.Setup.CountMessages < 1 && (!result.Value.CheckBan && !result.Value.CheckNumberValid && !result.Value.WarmMethodIlya)) || Globals.Setup.RepeatCounts < 1
                     || ((result.Value.WarmMethodIlya) && (!Directory.Exists(Globals.Setup.PathToFolderAccountsAdditional) || !File.Exists(Globals.Setup.PathToFilePeoples) || !File.Exists(Globals.Setup.PathToFilePhonesContacts) || !File.Exists(Globals.Setup.PathToFilePhones) || Globals.Setup.CountMessageWarm < 1 || Globals.Setup.CountMessageWarmNewsletter < 1)))// || Globals.Setup.CountCritAliveAccountsToStopWarm < 1)))
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));

@@ -718,26 +718,26 @@ public class AccPreparation
 
                 //lock (_lock)
                 //{
-                    var usedPhones = _usedPhones.Select(phone => phone.Key).ToList();
-                    /*if (c1Auth && _currentProfile.Warm)
-                        usedPhones.AddRange(c1.AccountData.MessageHistory.Keys);*/
+                var usedPhones = _usedPhones.Select(phone => phone.Key).ToList();
+                /*if (c1Auth && _currentProfile.Warm)
+                    usedPhones.AddRange(c1.AccountData.MessageHistory.Keys);*/
 
-                    var result = Globals.GetAccounts(usedPhones.ToArray(), true, _lock);
+                var result = Globals.GetAccounts(usedPhones.ToArray(), true, _lock);
 
-                    DashboardView.GetInstance().AllTasks = result.Length;
+                DashboardView.GetInstance().AllTasks = result.Length;
 
-                    if (result.Length < 1)
-                    {
-                        Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
-                        break;
-                    }
+                if (result.Length < 1)
+                {
+                    Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
+                    break;
+                }
 
-                    (phone, path) = result[0];
+                (phone, path) = result[0];
 
-                    if (_usedPhones.ContainsKey(phone))
-                        continue;
+                if (_usedPhones.ContainsKey(phone))
+                    continue;
 
-                    _usedPhones[phone] = true;
+                _usedPhones[phone] = true;
                 //}
 
                 if (!c1Auth)
@@ -782,6 +782,7 @@ public class AccPreparation
                 File.Delete($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf");
 
                 var rnd = new Random();
+                await Task.Delay((Globals.Setup.DelayFirstMessageAccount ?? 0) * 1000);
 
                 for (var i = 0; i < Globals.Setup.CountMessages; i++)
                 {
@@ -1008,6 +1009,7 @@ public class AccPreparation
                     File.Delete($@"{Globals.TempDirectory.FullName}\{phone}_contacts.vcf");
 
                     var rnd = new Random();
+                    await Task.Delay((Globals.Setup.DelayFirstMessageAccount ?? 0) * 1000);
 
                     for (var i = 0; i < Globals.Setup.CountMessages; i++)//Первый этап - переписки между собой
                     {
@@ -1184,6 +1186,7 @@ public class AccPreparation
                 Log.Write($"[TryLogin] - Не удалось авторизоваться\n", _logFile.FullName);
                 return false;
             }
+            //await Task.Delay((Globals.Setup.DelayStartAccount ?? 0) * 1000);
 
             var status = await client.IsValid();
             if (!status)

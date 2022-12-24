@@ -126,7 +126,7 @@ public class WClient
         }
 
         var timerLoading = 0;
-        while (timerLoading++ < 45)
+        while (timerLoading++ < (Globals.Setup.DelayStartAccount is null or < 1 ? 22 : Globals.Setup.DelayStartAccount) * 2)
         {
             if (await IsConnected())
                 break;

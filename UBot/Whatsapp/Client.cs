@@ -11,7 +11,7 @@ public class Client
 {
     public string Phone { private set; get; }
     public string Account { private set; get; }
-    public bool IsW4B{private set; get; }
+    public bool IsW4B { private set; get; }
     private MemuLib.Core.Client Mem { get; set; }
     public AccountData AccountData { get; set; }
     public WClient Web { private set; get; }
@@ -35,7 +35,7 @@ public class Client
             AccountData = JsonConvert.DeserializeObject<AccountData>(File.ReadAllText($@"{account}\Data.json"))!;
             AccountData.MessageHistory ??= new Dictionary<string, DateTime>();
         }
-        
+
         if (!string.IsNullOrEmpty(phone))
             Web = new WClient(phone[0] == '+' ? phone.Remove(0, 1) : phone);
 
@@ -51,10 +51,10 @@ public class Client
     public async Task UpdateData(bool PullAccount)
     {
         if (!File.Exists($@"{Account}\Data.json"))
-            return; 
+            return;
 
         await File.WriteAllTextAsync($@"{Account}\Data.json", JsonConvert.SerializeObject(AccountData, Formatting.Indented));
-        
+
         if (!PullAccount)
             return;
 
@@ -184,14 +184,11 @@ public class Client
         //await Mem.Shell($@"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
         var command = new FileInfo($@"{Globals.Setup.PathToDownloadsMemu}\{to}.sh");
         var isSended = false;
-
         await File.WriteAllTextAsync(command.FullName,
             $"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)} {PackageName}");//mb fix
-
         Log.Write(await Mem.Shell($@"sh /storage/emulated/0/Download/{command.Name}"));
         //await Mem.Push(command.FullName, "/data/local/tmp");
         //await Mem.Shell($@"sh /data/local/tmp/{to}.sh");
-
         for (var i = 0; i < 3; i++)
         {
             var dump = await Mem.DumpScreen();
@@ -199,23 +196,18 @@ public class Client
             {
                 if (await Mem.ExistsElement("text=\"ОК\"", dump, false))
                     await Mem.Click("text=\"ОК\"", dump);
-
                 if (await Mem.ExistsElement("text=\"OK\"", dump, false))
                     await Mem.Click("text=\"OK\"", dump);
-
                 await Task.Delay(1_500);
                 continue;
             }
-
             await Mem.Click("content-desc=\"Отправить\"", dump);
             isSended = true;
             //AccountData.MessageHistory[to] = DateTime.Now;
             break;
         }
-
         //await Mem.Shell($"rm /data/local/tmp/{to}.sh");
         File.Delete(command.FullName);
-
         return isSended;
     }*/
 
@@ -319,8 +311,9 @@ public class Client
         }
 
         return !await Mem.ExistsElements(new string[] {
-        "text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"",
         "text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"",//Думаешь ничем не отличается? А вот хуй тебе " "
+        "text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"",
+        "text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"",//Думаешь ничем не отличается? А вот хуй тебе " "
         "text=\"Принять и продолжить\"",
         "text=\"AGREE AND CONTINUE\"",
         "text=\"ДАЛЕЕ\"",

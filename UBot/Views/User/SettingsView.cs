@@ -205,6 +205,18 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.WritePeoplesWarmTo, value);
         }
 
+        public int? DelayStartAccount
+        {
+            get => Globals.Setup.DelayStartAccount;
+            set => SetProperty(ref Globals.Setup.DelayStartAccount, value);
+        }
+
+        public int? DelayFirstMessageAccount
+        {
+            get => Globals.Setup.DelayFirstMessageAccount;
+            set => SetProperty(ref Globals.Setup.DelayFirstMessageAccount, value);
+        }
+
         public float? Longitude
         {
             get => Globals.Setup.Longitude;

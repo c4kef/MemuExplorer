@@ -107,6 +107,62 @@
                                     CommandParameter="14"
                                     Command="{Binding Path=ButtonClick}"
                                     CornerRadius="11" />
+
+                            <VerticalStackLayout>
+                                <Label Text="Старт акк."
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Задержка"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding DelayStartAccount}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}">
+                                        <Entry.Behaviors>
+                                            <controls:NumericValidationBehavior />
+                                        </Entry.Behaviors>
+                                    </Entry>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout>
+                                <Label Text="Перв. сооб."
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Задержка"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding DelayFirstMessageAccount}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}">
+                                        <Entry.Behaviors>
+                                            <controls:NumericValidationBehavior />
+                                        </Entry.Behaviors>
+                                    </Entry>
+                                </Border>
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
                     </VerticalStackLayout>
                 </ScrollView>

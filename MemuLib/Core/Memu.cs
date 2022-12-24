@@ -36,9 +36,9 @@ public static class Memu
         if (!answer.Contains("SUCCESS"))
             throw new Exception($"Error: {answer}");
 
-        return int.Parse(answer.Split('\n')[1].Split(':')[1]); 
+        return int.Parse(answer.Split('\n')[1].Split(':')[1]);
     }
-    
+
     /// <summary>
     /// Импорт машины
     /// </summary>
@@ -62,7 +62,7 @@ public static class Memu
         if (!answer.Contains("SUCCESS"))
             throw new Exception($"Error: {answer}");
     }
-    
+
     /// <summary>
     /// Удаление всех машин
     /// </summary>
@@ -76,7 +76,7 @@ public static class Memu
                 break;
         }
     }
-    
+
     /// <summary>
     /// Перезагрузка машины
     /// </summary>
@@ -122,13 +122,13 @@ public static class Memu
     public static async Task InstallApk(int index, string path)
     {
         var newPath = $@"{new FileInfo(path).Directory?.FullName}\{new Random().Next(1_000_000, 5_000_000)}.apk";
-        File.Copy(path,newPath);//Решает проблему загруженности
-        
+        File.Copy(path, newPath);//Решает проблему загруженности
+
         var answer = await MemuCmd.ExecMemuc($"installapp -i {index} \"{newPath}\"");
-        
+
         if (!answer.Contains("SUCCESS"))
             throw new Exception($"Error: {answer}");
-        
+
         File.Delete(newPath);//Удалем копию, ибо нехер засирать
     }
 
@@ -144,7 +144,7 @@ public static class Memu
         if (!answer.Contains("SUCCESS"))
             throw new Exception($"Error: {answer}");
     }
-    
+
     /// <summary>
     /// Запуск apk на машине
     /// </summary>
@@ -221,7 +221,7 @@ public static class Memu
         await MemuCmd.ExecMemuc($"setconfigex -i {index} vbox_dpi {deviceInfoGenerated.Resolution.Dpi}");
         await MemuCmd.ExecMemuc($"setconfigex -i {index} linenum null");
         //await MemuCmd.ExecMemuc($"setconfigex -i {index} fps 20");
-        
+
         //setprop
         await MemuCmd.ExecMemuc($"-i {index} execcmd \"setprop persist.sys.timezone {deviceInfoGenerated.TimeZone}\"");
         await MemuCmd.ExecMemuc($"-i {index} execcmd \"setprop ro.build.version.incremental {deviceInfoGenerated.MicrovirtInfo.MicrovirtVmBrand}-{deviceInfoGenerated.MicrovirtInfo.MicrovirtVmManufacturer}{deviceInfoGenerated.AndroidRelease.Version}release-keys\"");
@@ -232,7 +232,7 @@ public static class Memu
         await MemuCmd.ExecMemuc($"-i {index} execcmd \"setprop ro.board.platform {deviceInfoGenerated.BoardPlatform}\"");
         await MemuCmd.ExecMemuc($"-i {index} execcmd \"setprop ro.build.id {deviceInfoGenerated.AndroidRelease.BuildId}\"");
         await MemuCmd.ExecMemuc($"-i {index} execcmd \"setprop ro.google.service.framework.id {deviceInfoGenerated.GoogleFrameworkId}\"");
-        
+
         //additional
         await MemuCmd.ExecMemuc($"-i {index} execcmd pm grant net.sanapeli.adbchangelanguage android.permission.CHANGE_CONFIGURATION");
         await MemuCmd.ExecMemuc($"-i {index} execcmd \"am start -n net.sanapeli.adbchangelanguage/.AdbChangeLanguage -e language {deviceInfoGenerated.Language}\"");

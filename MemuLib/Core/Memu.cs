@@ -177,7 +177,7 @@ public static class Memu
     /// <param name="index">индекс машины</param>
     /// <param name="local">путь на локальной машине</param>
     /// <param name="remote">путь на удаленной машине</param>
-    public static async Task Push(int index, string local, string remote) =>
+    public static async Task<string> Push(int index, string local, string remote) =>
         await MemuCmd.ExecMemuc($"-i {index} adb push \"{local}\" \"{remote}\"");
 
     /// <summary>

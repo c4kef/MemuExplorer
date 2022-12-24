@@ -283,6 +283,7 @@ namespace UBot
 
         public int? CountMessageWarm;
         public int? CountMessageWarmNewsletter;
+
         //public int? CountCritAliveAccountsToStopWarm;
     }
 }

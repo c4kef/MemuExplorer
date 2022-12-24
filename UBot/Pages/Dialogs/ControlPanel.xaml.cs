@@ -53,7 +53,7 @@ public partial class ControlPanel : Popup
                     _actionProfileWork.WarmMethodIlya = checkedBtn.Value;
                     break;
                 case "Валера пидор":
-                    _actionProfileWork.WarmMethodLong = checkedBtn.Value;
+                    _actionProfileWork.WarmMethodValera = checkedBtn.Value;
                     break;
             }
 
@@ -82,12 +82,12 @@ public partial class ControlPanel : Popup
     {
         var btn = sender as Button;
 
-        if (_selectedCheckBox.Any(checkbox => (checkbox.Key.ClassId == "33" || checkbox.Key.ClassId == "34" || checkbox.Key.ClassId == "35") && checkbox.Value) && btn.ClassId != "33" && btn.ClassId != "34" && btn.ClassId != "35")
+        if (_selectedCheckBox.Any(checkbox => (checkbox.Key.ClassId == "33" || checkbox.Key.ClassId == "34") && checkbox.Value) && btn.ClassId != "33" && btn.ClassId != "34")
             return;
 
         _selectedCheckBox[btn] = (_selectedCheckBox.ContainsKey(btn) ? !_selectedCheckBox[btn] : true);
 
-        if (btn.ClassId == "33" || btn.ClassId == "34" || btn.ClassId == "35")
+        if (btn.ClassId == "33" || btn.ClassId == "34")
             foreach (var _btn in _selectedCheckBox.ToList())
                 if (_btn.Key != btn)
                 {

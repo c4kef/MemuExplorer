@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System;
+using System.Xml;
 
 namespace MemuLib.Core;
 
@@ -76,29 +77,6 @@ public class Client
     }
 
     /// <summary>
-    /// Импорт контактов
-    /// </summary>
-    /// <param name="path">путь до контакта</param>
-    public async Task ImportContacts(string path)
-    {
-        if (!await Memu.Exists(Index))
-        {
-            Log.Write($"[{Index}] -> VM not found");
-            return;
-        }
-
-        if (!File.Exists(path))
-        {
-            Log.Write($"[{Index}] -> contact file not found");
-            return;
-        }
-
-        await ContactManager.Import(Index, path);
-
-        Log.Write($"[{Index}] -> contacts imported");
-    }
-
-    /// <summary>
     /// Очистка контактов
     /// </summary>
     public async Task ClearContacts()
@@ -163,7 +141,7 @@ public class Client
             return;
         }
 
-        await MemuCmd.ExecMemuc($"-i {Index} adb shell input tap {x} {y}");
+        await MemuCmd.ExecMemuc($"-i {Index} execcmd input tap {x} {y}");
 
         Log.Write($"[{Index}] -> input tap {x} {y}");
     }
@@ -328,17 +306,28 @@ public class Client
     /// </summary>
     /// <param name="local">путь на локальной машине</param>
     /// <param name="remote">путь на удаленной машине</param>
-    public async Task Push(string local, string remote)
+    public async Task<string> Push(string local, string remote)
     {
         if (!await Memu.Exists(Index))
         {
             Log.Write($"[{Index}] -> VM not found");
-            return;
+            return "";
         }
 
-        await Memu.Push(Index, local, remote);
-
         Log.Write($"[{Index}] -> files pushed");
+        return await Memu.Push(Index, local, remote);
+    }
+
+    public async Task<string> Copy(string remoteSrc, string remoteDest)
+    {
+        if (!await Memu.Exists(Index))
+        {
+            Log.Write($"[{Index}] -> VM not found");
+            return "";
+        }
+
+        Log.Write($"[{Index}] -> files copy");
+        return await MemuCmd.ExecMemuc($"-i {Index} execcmd cp \"{remoteSrc}\" \"{remoteDest}\"");
     }
 
     /// <summary>
@@ -370,7 +359,7 @@ public class Client
             return string.Empty;
         }
 
-        var result = await MemuCmd.ExecMemuc($"-i {Index} adb shell {cmd}");
+        var result = await MemuCmd.ExecMemuc($"-i {Index} execcmd {cmd}");
 
         Log.Write($"[{Index}] -> shell be called");
 

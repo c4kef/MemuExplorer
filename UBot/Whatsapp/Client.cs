@@ -178,7 +178,7 @@ public class Client
         return true;
     }
 
-    /*public async Task<bool> SendMessage(string toPhone, string text)
+    public async Task<bool> SendPreMessage(string toPhone, string text)
     {
         var to = (toPhone[0] == '+') ? toPhone : $"+{toPhone}";
         //await Mem.Shell($@"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
@@ -209,7 +209,7 @@ public class Client
         //await Mem.Shell($"rm /data/local/tmp/{to}.sh");
         File.Delete(command.FullName);
         return isSended;
-    }*/
+    }
 
     /*
      * Нужно сделать хотфикс на обновление контактов

@@ -8,7 +8,7 @@ public static class Memu
     /// <param name="index">индекс машины</param>
     /// <returns>true если есть, и false если нема</returns>
     public static async Task<bool> Exists(int index) =>
-        true;//!string.IsNullOrEmpty(await MemuCmd.ExecMemuc($"listvms -i {index}"));
+        !(await MemuCmd.ExecMemuc($"isvmrunning -i {index}")).Contains("Not Running");
 
     /// <summary>
     /// Создание машины

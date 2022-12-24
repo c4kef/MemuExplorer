@@ -789,7 +789,7 @@ public class AccPreparation
                     if (!c1Auth || !c2Auth || IsStop)
                         break;
 
-                    if (!await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]))
+                    if (i == 0 ? !await c1.SendPreMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]) : !await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]))
                     {
                         if (!await c1.IsValid())
                         {
@@ -802,7 +802,7 @@ public class AccPreparation
                         continue;
                     }
 
-                    if (!await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]))
+                    if (i == 0 ? !await c2.SendPreMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]) : !await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]))
                     {
                         if (!await c2.IsValid())
                         {

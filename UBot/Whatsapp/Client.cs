@@ -75,7 +75,7 @@ public class Client
             //await Task.Delay(2_000);
             //memuc -i 0 adb push "D:\Data\Ru\79361879319\com.whatsapp.w4b" "/data/data/com.whatsapp.w4b/"
             await Mem.Push($@"{(Account == string.Empty ? path : Account)}\{PackageName}", @$"/data/data/");//{PackageName}/");
-            //await Mem.Shell($"rm /data/data/{PackageName}/databases/*msgstore*");
+            await Mem.Shell($"rm /data/data/{PackageName}/databases/wa.db*");
             await Mem.StopApk(PackageName);
             await Mem.RunApk(PackageName);
             await Mem.StopApk(PackageName);
@@ -178,7 +178,7 @@ public class Client
         return true;
     }
 
-    public async Task<bool> SendPreMessage(string toPhone, string text)
+    public async Task<bool> SendPreMessage(string toPhone, string text, bool waitDelivered = false)
     {
         var to = (toPhone[0] == '+') ? toPhone : $"+{toPhone}";
         //await Mem.Shell($@"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
@@ -186,27 +186,51 @@ public class Client
         var isSended = false;
         await File.WriteAllTextAsync(command.FullName,
             $"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)} {PackageName}");//mb fix
-        Log.Write(await Mem.Shell($@"sh /storage/emulated/0/Download/{command.Name}"));
-        //await Mem.Push(command.FullName, "/data/local/tmp");
-        //await Mem.Shell($@"sh /data/local/tmp/{to}.sh");
-        for (var i = 0; i < 3; i++)
+        for (var countTry = 0; countTry < 3; countTry++)
         {
-            var dump = await Mem.DumpScreen();
-            if (!await Mem.ExistsElement("content-desc=\"Отправить\"", dump, false))
+            Log.Write(await Mem.Shell($@"sh /storage/emulated/0/Download/{command.Name}"));
+            //await Mem.Push(command.FullName, "/data/local/tmp");
+            //await Mem.Shell($@"sh /data/local/tmp/{to}.sh");
+            var cantSend = false;
+            for (var i = 0; i < 3; i++)
             {
-                if (await Mem.ExistsElement("text=\"ОК\"", dump, false))
-                    await Mem.Click("text=\"ОК\"", dump);
-                if (await Mem.ExistsElement("text=\"OK\"", dump, false))
-                    await Mem.Click("text=\"OK\"", dump);
-                await Task.Delay(1_500);
-                continue;
+                var dump = await Mem.DumpScreen();
+                if (!await Mem.ExistsElement("content-desc=\"Отправить\"", dump, false))
+                {
+                    if (await Mem.ExistsElement("text=\"ОК\"", dump, false))
+                        await Mem.Click("text=\"ОК\"", dump);
+                    if (await Mem.ExistsElement("text=\"OK\"", dump, false))
+                        await Mem.Click("text=\"OK\"", dump);
+
+                    cantSend = true;
+                    await Task.Delay(1_000);
+                    continue;
+                }
+
+                cantSend = false;
+                await Mem.Click("content-desc=\"Отправить\"", dump);
+                if (!waitDelivered)
+                    isSended = true;
+                //AccountData.MessageHistory[to] = DateTime.Now;
+                break;
             }
-            await Mem.Click("content-desc=\"Отправить\"", dump);
-            isSended = true;
-            //AccountData.MessageHistory[to] = DateTime.Now;
-            break;
+            //await Mem.Shell($"rm /data/local/tmp/{to}.sh");
+            if (waitDelivered && !cantSend)
+                for (var i = 0; i < 3; i++)
+                {
+                    var dump = await Mem.DumpScreen();
+                    if (!await Mem.ExistsElements(new string[] { "content-desc=\"Доставлено\"", "content-desc=\"Прочитано\"", "content-desc=\"Отправлено\"" }, dump, false))
+                        await Task.Delay(1_000);
+                    else
+                    {
+                        isSended = true;
+                        break;
+                    }
+                }
+
+            if (isSended || cantSend)
+                break;
         }
-        //await Mem.Shell($"rm /data/local/tmp/{to}.sh");
         File.Delete(command.FullName);
         return isSended;
     }
@@ -215,7 +239,7 @@ public class Client
      * Нужно сделать хотфикс на обновление контактов
      * Чтобы работал метод
      */
-    public async Task<bool> SendMessage(string contact, string text, FileInfo image = null)
+    public async Task<bool> SendMessage(string contact, string text, FileInfo image = null, bool waitDelivered = false)
     {
         var to = contact.Replace("+", "");
         //await Mem.Shell($@"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
@@ -236,29 +260,51 @@ public class Client
         //NL=$'\\n' ; am start -a android.intent.action.SEND --es android.intent.extra.TEXT \"{text.Replace("\r", "${NL}").Replace("\n", "${NL}")}\" -t text/plain -e jid '{to}@s.whatsapp.net'{commandImage} com.whatsapp.w4b/com.whatsapp.Conversation 
         $"NL=$'\\n' ; am start -a android.intent.action.SEND --es android.intent.extra.TEXT \"{text.Replace("\r", "${NL}").Replace("\n", "${NL}")}\" -t text/plain -e jid '{to}@s.whatsapp.net'{commandImage} com.whatsapp.w4b");
 
-        Log.Write(await Mem.Shell($@"sh /storage/emulated/0/Download/{command.Name}"));
-
-        for (var i = 0; i < 3; i++)
+        for (var countTry = 0; countTry < 3; countTry++)
         {
-            var dump = await Mem.DumpScreen();
-            if (!await Mem.ExistsElement("content-desc=\"Отправить\"", dump, false))
+            Log.Write(await Mem.Shell($@"sh /storage/emulated/0/Download/{command.Name}"));
+
+            var cantSend = false;
+            for (var i = 0; i < 3; i++)
             {
-                if (await Mem.ExistsElement("text=\"ОК\"", dump, false))
-                    await Mem.Click("text=\"ОК\"", dump);
+                var dump = await Mem.DumpScreen();
+                if (!await Mem.ExistsElement("content-desc=\"Отправить\"", dump, false))
+                {
+                    if (await Mem.ExistsElement("text=\"ОК\"", dump, false))
+                        await Mem.Click("text=\"ОК\"", dump);
 
-                if (await Mem.ExistsElement("text=\"OK\"", dump, false))
-                    await Mem.Click("text=\"OK\"", dump);
+                    if (await Mem.ExistsElement("text=\"OK\"", dump, false))
+                        await Mem.Click("text=\"OK\"", dump);
 
-                await Task.Delay(1_000);
-                continue;
+                    cantSend = true;
+                    await Task.Delay(1_000);
+                    continue;
+                }
+
+                cantSend = false;
+                await Mem.Click("content-desc=\"Отправить\"", dump);
+                if (!waitDelivered)
+                    isSended = true;
+                //AccountData.MessageHistory[to] = DateTime.Now;
+                break;
             }
 
-            await Mem.Click("content-desc=\"Отправить\"", dump);
-            isSended = true;
-            //AccountData.MessageHistory[to] = DateTime.Now;
-            break;
-        }
+            if (waitDelivered && !cantSend)
+                for (var i = 0; i < 3; i++)
+                {
+                    var dump = await Mem.DumpScreen();
+                    if (await Mem.ExistsElements(new string[] { "content-desc=\"Доставлено\"", "content-desc=\"Прочитано\"", "content-desc=\"Отправлено\"" }, dump, false))
+                    {
+                        isSended = true;
+                        break;
+                    }
+                 
+                    await Task.Delay(1_000);
+                }
 
+            if (isSended || cantSend)
+                break;
+        }
         //Log.Write(await Mem.Shell($"rm /data/local/tmp/{to}.sh"));
         File.Delete(command.FullName);
 

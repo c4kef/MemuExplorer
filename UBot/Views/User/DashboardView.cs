@@ -108,6 +108,8 @@ namespace UBot.Views.User
         private async void ExecuteShowLastAccountsPanel()
         {
             var arr = _webNewsletter.SendedMessagesCountFromAccount.TakeLast(10).Reverse();
+            if (arr.Count() == 0)
+                arr = _newsletter.SendedMessagesCountFromAccount.TakeLast(10).Reverse();
 
             var builder = new StringBuilder();
             for (var i = 0; i < arr.Count(); i++)

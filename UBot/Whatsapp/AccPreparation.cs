@@ -789,7 +789,7 @@ public class AccPreparation
                     if (!c1Auth || !c2Auth || IsStop)
                         break;
 
-                    if (i == 0 ? !await c1.SendPreMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]) : !await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]))
+                    if (i == 0 ? await c1.SendPreMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]) != Client.StatusDelivered.Delivered : await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]) != Client.StatusDelivered.Delivered)
                     {
                         if (!await c1.IsValid())
                         {
@@ -802,7 +802,7 @@ public class AccPreparation
                         continue;
                     }
 
-                    if (i == 0 ? !await c2.SendPreMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]) : !await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]))
+                    if (i == 0 ? await c2.SendPreMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]) != Client.StatusDelivered.Delivered : await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]) != Client.StatusDelivered.Delivered)
                     {
                         if (!await c2.IsValid())
                         {
@@ -1026,7 +1026,7 @@ public class AccPreparation
 
                         foreach (var warmPhone in phones.Where(_phone => _phone != phone))
                         {
-                            if (!await client.SendMessage(warmPhone, messages[rnd.Next(0, messages.Length - 1)]))
+                            if (await client.SendMessage(warmPhone, messages[rnd.Next(0, messages.Length - 1)]) != Client.StatusDelivered.Delivered)
                                 break;
                         }
                     }

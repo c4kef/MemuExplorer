@@ -9,6 +9,13 @@ namespace UBot.Whatsapp;
 
 public class Client
 {
+    public enum StatusDelivered
+    {
+        NotDelivered,
+        Delivered,
+        ContactNotFound
+    }
+
     public string Phone { private set; get; }
     public string Account { private set; get; }
     public bool IsW4B { private set; get; }
@@ -178,7 +185,7 @@ public class Client
         return true;
     }
 
-    public async Task<bool> SendPreMessage(string toPhone, string text, bool waitDelivered = false)
+    public async Task<StatusDelivered> SendPreMessage(string toPhone, string text, bool waitDelivered = false)
     {
         var to = (toPhone[0] == '+') ? toPhone : $"+{toPhone}";
         //await Mem.Shell($@"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
@@ -195,6 +202,9 @@ public class Client
             for (var i = 0; i < 3; i++)
             {
                 var dump = await Mem.DumpScreen();
+                if (dump.Contains("не зарегистрирован в WhatsApp"))
+                    return StatusDelivered.ContactNotFound;
+
                 if (!await Mem.ExistsElement("content-desc=\"Отправить\"", dump, false))
                 {
                     if (await Mem.ExistsElement("text=\"ОК\"", dump, false))
@@ -232,14 +242,14 @@ public class Client
                 break;
         }
         File.Delete(command.FullName);
-        return isSended;
+        return isSended ? StatusDelivered.Delivered : StatusDelivered.NotDelivered;
     }
 
     /*
      * Нужно сделать хотфикс на обновление контактов
      * Чтобы работал метод
      */
-    public async Task<bool> SendMessage(string contact, string text, FileInfo image = null, bool waitDelivered = false)
+    public async Task<StatusDelivered> SendMessage(string contact, string text, FileInfo image = null, bool waitDelivered = false)
     {
         var to = contact.Replace("+", "");
         //await Mem.Shell($@"am start -a android.intent.action.VIEW -d https://wa.me/{to}/?text={Uri.EscapeDataString(text)}");
@@ -268,6 +278,9 @@ public class Client
             for (var i = 0; i < 3; i++)
             {
                 var dump = await Mem.DumpScreen();
+                if (dump.Contains("не зарегистрирован в WhatsApp"))
+                    return StatusDelivered.ContactNotFound;
+
                 if (!await Mem.ExistsElement("content-desc=\"Отправить\"", dump, false))
                 {
                     if (await Mem.ExistsElement("text=\"ОК\"", dump, false))
@@ -308,7 +321,7 @@ public class Client
         //Log.Write(await Mem.Shell($"rm /data/local/tmp/{to}.sh"));
         File.Delete(command.FullName);
 
-        return isSended;
+        return isSended ? StatusDelivered.Delivered : StatusDelivered.NotDelivered;
     }
 
     public async Task<bool> IsValid()

@@ -172,7 +172,7 @@ namespace WPP4DotNet
                 if (auth != null)
                     await (await Driver.PagesAsync())[0].AuthenticateAsync(auth);
 
-                await (await Driver.PagesAsync())[0].SetUserAgentAsync("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36");
+                await (await Driver.PagesAsync())[0].SetUserAgentAsync("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
 
                 await (await Driver.PagesAsync())[0].EvaluateExpressionOnNewDocumentAsync("navigator.serviceWorker.getRegistrations().then((registrations)=>{for(let registration of registrations){registration.unregister()}}).catch((err)=>null);navigator.serviceWorker.register=new Promise(()=>{});");
                 await (await Driver.PagesAsync())[0].EvaluateFunctionOnNewDocumentAsync("()=>{navigator.serviceWorker.getRegistrations().then((registrations)=>{for(let registration of registrations){registration.unregister()}}).catch((err)=>null);navigator.serviceWorker.register=new Promise(()=>{})}");
@@ -186,6 +186,7 @@ namespace WPP4DotNet
                         await req.AbortAsync();
                         return;
                     }
+
                     if (req.Url != "https://web.whatsapp.com/")
                     {
                         await req.ContinueAsync();
@@ -543,6 +544,21 @@ namespace WPP4DotNet
         #endregion
 
         #region WPPJS CHAT - Message Functions
+        /// <summary>
+        /// </summary>
+        /// <returns>Return True or False</returns>
+        public async Task<int> CountOfChat()
+        {
+            try
+            {
+                return await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<int>("() => (window.WPP?.chat.list()).length");
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+        }
+
         /// <summary>
         /// This method send a text message.
         /// </summary>

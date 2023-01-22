@@ -151,6 +151,12 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.LinkToChangeIP, value);
         }
 
+        public int? CountOfChatCrit
+        {
+            get => Globals.Setup.CountOfChatCrit;
+            set => SetProperty(ref Globals.Setup.CountOfChatCrit, value);
+        }
+
         public int? CountMessages
         {
             get => Globals.Setup.CountMessages;
@@ -283,11 +289,11 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.DelayBetweenLastMessageTo, value);
         }
 
-        /*public int? CountCritAliveAccountsToStopWarm
+        public int? CountCritAliveAccountsToStopWarm
         {
             get => Globals.Setup.CountCritAliveAccountsToStopWarm;
             set => SetProperty(ref Globals.Setup.CountCritAliveAccountsToStopWarm, value);
-        }*/
+        }
 
         public float? DynamicDelaySendMessageMinus
         {

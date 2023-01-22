@@ -237,6 +237,7 @@ namespace UBot
         public string PathToFilePhones;
         public string PathToFileProxy;
         public string LinkToChangeIP;
+        public int? CountOfChatCrit;
         public string TextMessage;
         public bool RemoveAvatar;
         public bool AdditionalWarm;
@@ -287,6 +288,6 @@ namespace UBot
         public int? DelayStartAccount;
         public int? DelayFirstMessageAccount;
 
-        //public int? CountCritAliveAccountsToStopWarm;
+        public int? CountCritAliveAccountsToStopWarm;
     }
 }

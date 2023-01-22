@@ -11,6 +11,7 @@ using WPP4DotNet;
 using WPP4DotNet.Models;
 using ZXing;
 using PuppeteerSharp;
+using System.Reflection.Metadata;
 
 namespace UBot.Whatsapp.Web;
 
@@ -133,7 +134,7 @@ public class WClient
 
             if (!waitQr)
             {
-                if ((await (await _wpp.WebDriver.PagesAsync())[0].QuerySelectorAsync("#app > div > div > div.landing-window > div.landing-main > div > a")) is not null)
+                if ((await (await _wpp.WebDriver.PagesAsync())[0].QuerySelectorAsync("#app > div > div > div.landing-window")) != null)
                     throw new Exception("Qr code is generating...");
             }
             else
@@ -146,7 +147,7 @@ public class WClient
 
                     while (!await IsConnected())
                     {
-                        if (timerLoadingQr++ > 50)
+                        if (timerLoadingQr++ > (Globals.Setup.DelayStartAccount is null or < 1 ? 22 : Globals.Setup.DelayStartAccount) * 2)
                             throw new Exception("We cant scan Qr, retry again");
 
                         await Task.Delay(500);
@@ -159,7 +160,7 @@ public class WClient
             await Task.Delay(500);
         }
 
-        if (timerLoading >= 45)
+        if (timerLoading >= (Globals.Setup.DelayStartAccount is null or < 1 ? 22 : Globals.Setup.DelayStartAccount) * 2)
             throw new Exception("Cant load account");
 
         if ((Globals.Setup.Latitude ?? 0) > 0 && (Globals.Setup.Longitude ?? 0) > 0)
@@ -276,6 +277,14 @@ public class WClient
     {
         if (!await IsConnected())
             throw new Exception($"RemoveAvatar: client has disconected");
+    }
+
+    public async Task<int> CountOfChats()
+    {
+        if (!await IsConnected())
+            throw new Exception($"CountOfChats: client has disconected");
+
+        return await _wpp.CountOfChat();
     }
 
     /// <summary>

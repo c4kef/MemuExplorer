@@ -82,7 +82,7 @@ public class Client
             //await Task.Delay(2_000);
             //memuc -i 0 adb push "D:\Data\Ru\79361879319\com.whatsapp.w4b" "/data/data/com.whatsapp.w4b/"
             await Mem.Push($@"{(Account == string.Empty ? path : Account)}\{PackageName}", @$"/data/data/");//{PackageName}/");
-            await Mem.Shell($"rm /data/data/{PackageName}/databases/wa.db*");
+            //await Mem.Shell($"rm /data/data/{PackageName}/databases/wa.db*");
             await Mem.StopApk(PackageName);
             await Mem.RunApk(PackageName);
             await Mem.StopApk(PackageName);

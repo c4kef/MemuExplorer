@@ -305,7 +305,7 @@
                                     </Entry>
                                 </Border>
                             </VerticalStackLayout>
-                            <!--<VerticalStackLayout>
+                            <VerticalStackLayout>
                                 <Label Text="Крит. живых"
                                        FontFamily="SegoeUI"
                                        TextColor="{StaticResource White}"
@@ -331,7 +331,7 @@
                                         </Entry.Behaviors>
                                     </Entry>
                                 </Border>
-                            </VerticalStackLayout>-->
+                            </VerticalStackLayout>
 
                             <VerticalStackLayout>
                                 <Label Text="Банов во сне"
@@ -719,6 +719,34 @@
                                            Placeholder="Сообщений"
                                            Margin="0,5,5,0"
                                            Text="{Binding CountMessages}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}">
+                                        <Entry.Behaviors>
+                                            <controls:NumericValidationBehavior />
+                                        </Entry.Behaviors>
+                                    </Entry>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout>
+                                <Label Text="Крит. чатов"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Кол-во"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding CountOfChatCrit}"
                                            TextChanged="TextSave"
                                            BackgroundColor="{StaticResource Black}">
                                         <Entry.Behaviors>

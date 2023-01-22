@@ -74,6 +74,9 @@ namespace WPP4DotNet.WebDriver
             args.Add("--no-first-run");
             args.Add("--safebrowsing-disable-auto-update");
             args.Add("--no-zygote");
+            args.Add("--js-flags=\"--max-old-space-size=4096\"");
+            args.Add("--js-flags=--max-old-space-size=4096");
+            args.Add("--js-flags= --max-old-space-size=4096");
             args.Add("--window-size=800,600");
 
             if (!string.IsNullOrEmpty(proxy))

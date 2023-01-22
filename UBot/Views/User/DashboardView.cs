@@ -257,7 +257,7 @@ namespace UBot.Views.User
 
             Globals.KillChromeDriverProcesses();
 
-            if ((result.Value.Warm || result.Value.CheckBan || result.Value.CheckNumberValid) && result.Value.IsWeb)
+            if ((result.Value.Warm || result.Value.CheckBan || result.Value.CheckNumberValid || result.Value.WarmMethodValera) && result.Value.IsWeb)
             {
                 if (!File.Exists(Globals.Setup.PathToFileTextWarm) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || (Globals.Setup.CountThreads <= 1 && (!result.Value.CheckBan && !result.Value.CheckNumberValid && !result.Value.WarmMethodIlya)) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 9 || Globals.Setup.RepeatCounts < 1 || (result.Value.CheckNumberValid && !File.Exists(Globals.Setup.PathToCheckNumbers)))
                 {
@@ -378,7 +378,7 @@ namespace UBot.Views.User
             if ((result.Value.Warm || result.Value.CheckBan || result.Value.Scaning || result.Value.WarmMethodIlya || result.Value.WarmMethodValera) && !result.Value.IsWeb)
             {
                 if (!File.Exists(Globals.Setup.PathToFileNames) || (!File.Exists(Globals.Setup.PathToFileTextWarm) && (result.Value.Warm || result.Value.WarmMethodIlya)) || !Directory.Exists(Globals.Setup.PathToFolderAccounts) || !Directory.Exists(Globals.Setup.PathToDownloadsMemu) || (ManagerView.GetInstance().Emulators.Count(emulator => emulator.IsEnabled) < Globals.Setup.CountGroups * Globals.Setup.CountThreads && (!result.Value.CheckBan && !result.Value.WarmMethodIlya)) || Globals.Setup.CountGroups < 1 || Globals.Setup.CountGroups > 10 || (Globals.Setup.CountMessages < 1 && (!result.Value.CheckBan && !result.Value.CheckNumberValid && !result.Value.WarmMethodIlya)) || Globals.Setup.RepeatCounts < 1
-                    || ((result.Value.WarmMethodIlya) && (!Directory.Exists(Globals.Setup.PathToFolderAccountsAdditional) || !File.Exists(Globals.Setup.PathToFilePeoples) || !File.Exists(Globals.Setup.PathToFilePhonesContacts) || !File.Exists(Globals.Setup.PathToFilePhones) || Globals.Setup.CountMessageWarm < 1 || Globals.Setup.CountMessageWarmNewsletter < 1)))// || Globals.Setup.CountCritAliveAccountsToStopWarm < 1)))
+                    || ((result.Value.WarmMethodIlya) && (!Directory.Exists(Globals.Setup.PathToFolderAccountsAdditional) || !File.Exists(Globals.Setup.PathToFilePhonesContacts) || !File.Exists(Globals.Setup.PathToFilePhones))))// || Globals.Setup.CountCritAliveAccountsToStopWarm < 1)))
                 {
                     await PopupExtensions.ShowPopupAsync(MainPage.GetInstance(), new Message("Ошибка", "Похоже вы не настроили мою девочку перед прогревом", false));
                     return;

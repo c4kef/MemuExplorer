@@ -145,6 +145,7 @@ public class Newsletter
         while (!IsStop)
         {
             var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
+            Log.Write($"[I] - кол-во аккаунтов {result.Length}\n", _logFile.FullName);
 
             if (result.Length == 0)
             {
@@ -182,7 +183,7 @@ public class Newsletter
             catch (Exception ex)
             {
                 await client.Web!.Free();
-                if (ex.Message != "Cant load account")
+                if (ex.Message != "Cant load account" || result.Length <= 1)
                 {
                     await Globals.TryMove(path, $@"{Globals.LogoutDirectory.FullName}\{phone}");
                     ++DashboardView.GetInstance().DeniedTasksStart;
@@ -214,109 +215,112 @@ public class Newsletter
                     await client.Web!.RemoveAvatar();
 
                 var currentMinus = (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f);
-                await Task.Delay((Globals.Setup.DelayFirstMessageAccount ?? 0) * 1000);
-                while (!IsStop)
+                if (await client.Web!.CountOfChats() >= (Globals.Setup.CountOfChatCrit ?? 0))
                 {
-                    if (countSendedMessages >= Globals.Setup.CountMessages * ((_currentProfile.TemplateMessages.Count == 0) ? 1 : _currentProfile.TemplateMessages.Count))
-                        break;
-
-                    if (TemplateMessagesInfo.Count != 0)
+                    await Task.Delay((Globals.Setup.DelayFirstMessageAccount ?? 0) * 1000);
+                    while (!IsStop)
                     {
-                        var foundNumber = false;
-                        foreach (var template in TemplateMessagesInfo)
-                            if (template.Value.Contacts.Except(template.Value.UsedPhonesUsers).ToArray().Length > 0)
-                            {
-                                foundNumber = true;
-                                break;
-                            }
-
-                        if (!foundNumber)
+                        if (countSendedMessages >= Globals.Setup.CountMessages * ((_currentProfile.TemplateMessages.Count == 0) ? 1 : _currentProfile.TemplateMessages.Count))
                             break;
-                    }
-                    else
-                    {
-                        if (_contacts.Except(_usedPhonesUsers).ToArray().Length == 0)
-                            break;
-                    }
 
-                    for (var i = 0; i < (TemplateMessagesInfo.Count == 0 ? 1 : TemplateMessagesInfo.Count); i++)
-                    {
-                        index = i;
-                        (string contactPhone, string contactMessage) = GetFreeNumberUser(i);
-                        peopleReal = contactPhone;
-
-                        if (string.IsNullOrEmpty(peopleReal))
-                            continue;
-
-                        if (!await client.Web!.IsConnected())
-                            throw new Exception("Client has disconected");
-
-                        if (await client.Web!.CheckValidPhone(peopleReal))
+                        if (TemplateMessagesInfo.Count != 0)
                         {
-                            var text = string.Join('\n', (!string.IsNullOrEmpty(contactMessage) ? contactMessage.Split('\r').ToList() : (TemplateMessagesInfo.Count == 0) ? DashboardView.GetInstance().Text.Split('\r').ToList() : _currentProfile.TemplateMessages[i].Text.Split('\r').ToList()));
-                            FileInfo? image = null;
-
-                            string? buttonText = null;
-                            string title = string.Empty;
-                            string footer = string.Empty;
-                            //\{path(.*?)=(.*?)\}
-
-                            foreach (var match in new Regex(@"\{(.*?)\}").Matches(text).Select(match => match.Value.Replace("{", "").Replace("}", "")))
-                            {
-                                if (match.Contains(Globals.TagPicture))
+                            var foundNumber = false;
+                            foreach (var template in TemplateMessagesInfo)
+                                if (template.Value.Contacts.Except(template.Value.UsedPhonesUsers).ToArray().Length > 0)
                                 {
-                                    var tmpImage = new FileInfo(match.Remove(0, Globals.TagPicture.Length));
-                                    if (tmpImage.Exists)
+                                    foundNumber = true;
+                                    break;
+                                }
+
+                            if (!foundNumber)
+                                break;
+                        }
+                        else
+                        {
+                            if (_contacts.Except(_usedPhonesUsers).ToArray().Length == 0)
+                                break;
+                        }
+
+                        for (var i = 0; i < (TemplateMessagesInfo.Count == 0 ? 1 : TemplateMessagesInfo.Count); i++)
+                        {
+                            index = i;
+                            (string contactPhone, string contactMessage) = GetFreeNumberUser(i);
+                            peopleReal = contactPhone;
+
+                            if (string.IsNullOrEmpty(peopleReal))
+                                continue;
+
+                            if (!await client.Web!.IsConnected())
+                                throw new Exception("Client has disconected");
+
+                            if (await client.Web!.CheckValidPhone(peopleReal))
+                            {
+                                var text = string.Join('\n', (!string.IsNullOrEmpty(contactMessage) ? contactMessage.Split('\r').ToList() : (TemplateMessagesInfo.Count == 0) ? DashboardView.GetInstance().Text.Split('\r').ToList() : _currentProfile.TemplateMessages[i].Text.Split('\r').ToList()));
+                                FileInfo? image = null;
+
+                                string? buttonText = null;
+                                string title = string.Empty;
+                                string footer = string.Empty;
+                                //\{path(.*?)=(.*?)\}
+
+                                foreach (var match in new Regex(@"\{(.*?)\}").Matches(text).Select(match => match.Value.Replace("{", "").Replace("}", "")))
+                                {
+                                    if (match.Contains(Globals.TagPicture))
                                     {
-                                        image = tmpImage;
-                                        break;
+                                        var tmpImage = new FileInfo(match.Remove(0, Globals.TagPicture.Length));
+                                        if (tmpImage.Exists)
+                                        {
+                                            image = tmpImage;
+                                            break;
+                                        }
+                                    }
+                                    else if (match.Contains(Globals.TagTitle))
+                                    {
+                                        title = match.Remove(0, Globals.TagTitle.Length);
+                                    }
+                                    else if (match.Contains(Globals.TagFooter))
+                                    {
+                                        footer = match.Remove(0, Globals.TagFooter.Length);
+                                    }
+                                    else if (match.Contains(Globals.TagButton))
+                                    {
+                                        buttonText = match.Remove(0, Globals.TagButton.Length);
                                     }
                                 }
-                                else if (match.Contains(Globals.TagTitle))
-                                {
-                                    title = match.Remove(0, Globals.TagTitle.Length);
-                                }
-                                else if (match.Contains(Globals.TagFooter))
-                                {
-                                    footer = match.Remove(0, Globals.TagFooter.Length);
-                                }
-                                else if (match.Contains(Globals.TagButton))
-                                {
-                                    buttonText = match.Remove(0, Globals.TagButton.Length);
-                                }
-                            }
 
-                            if (await client.Web!.SendText(peopleReal, SelectWord(text), image, buttonText, title, footer))
-                            {
-                                if (_currentProfile.TemplateMessages.Count == 0)
+                                if (await client.Web!.SendText(peopleReal, SelectWord(text), image, buttonText, title, footer))
                                 {
-                                    ++DashboardView.GetInstance().CompletedTasks;
-                                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{peopleReal}", _reportFile.FullName);
+                                    if (_currentProfile.TemplateMessages.Count == 0)
+                                    {
+                                        ++DashboardView.GetInstance().CompletedTasks;
+                                        Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{peopleReal}", _reportFile.FullName);
+                                    }
+                                    else
+                                    {
+                                        InfoTemplateNewsletter profile = TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag];
+                                        ++profile.CurrentPhones;
+                                        TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag] = profile;
+                                        Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{peopleReal}", profile.ReportFile.FullName);
+                                    }
+
+                                    if (++countSendedMessages >= Globals.Setup.CountMessages * ((_currentProfile.TemplateMessages.Count == 0) ? 1 : _currentProfile.TemplateMessages.Count))
+                                        break;
                                 }
                                 else
                                 {
-                                    InfoTemplateNewsletter profile = TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag];
-                                    ++profile.CurrentPhones;
-                                    TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag] = profile;
-                                    Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{peopleReal}", profile.ReportFile.FullName);
+                                    if (_currentProfile.TemplateMessages.Count == 0)
+                                        _usedPhonesUsers.Remove(peopleReal);
+                                    else
+                                        TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag].UsedPhonesUsers.Remove(peopleReal);
                                 }
-
-                                if (++countSendedMessages >= Globals.Setup.CountMessages * ((_currentProfile.TemplateMessages.Count == 0) ? 1 : _currentProfile.TemplateMessages.Count))
-                                    break;
-                            }
-                            else
-                            {
-                                if (_currentProfile.TemplateMessages.Count == 0)
-                                    _usedPhonesUsers.Remove(peopleReal);
-                                else
-                                    TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag].UsedPhonesUsers.Remove(peopleReal);
                             }
                         }
+
+                        var minus = (int)((Globals.Setup.DynamicDelaySendMessageMinus ?? 0) * 1000f);
+
+                        await Task.Delay(minus <= 0 ? new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)) : currentMinus -= minus);
                     }
-
-                    var minus = (int)((Globals.Setup.DynamicDelaySendMessageMinus ?? 0) * 1000f);
-
-                    await Task.Delay(minus <= 0 ? new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)) : currentMinus -= minus);
                 }
             }
             catch (Exception ex)

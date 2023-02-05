@@ -120,7 +120,10 @@ public class NewsletterLong
         for (var repeatId = 0; repeatId < Globals.Setup.RepeatCounts; repeatId++)
         {
             for (var i = 0; i < Globals.Setup.CountThreads; i++)
+            {
                 tasks.Add(Task.Run(async () => await Handler()));
+                await Task.Delay(1_000);
+            }
 
             Task.WaitAll(tasks.ToArray(), -1);
 

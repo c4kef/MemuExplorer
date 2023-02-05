@@ -8,7 +8,7 @@
                FontFamily="SegoeUI"
                FontAttributes="Bold"
                TextColor="{StaticResource White}"
-               FontSize="24"
+               FontSize="24" 
                Margin="20,10,0,100"
                HorizontalOptions="Start" />
         <Grid>

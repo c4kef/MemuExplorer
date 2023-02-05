@@ -212,6 +212,34 @@
                             </VerticalStackLayout>
 
                             <VerticalStackLayout>
+                                <Label Text="Крит. прогрев"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Кол-во банов"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding CritWarmWeb}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}">
+                                        <Entry.Behaviors>
+                                            <controls:NumericValidationBehavior />
+                                        </Entry.Behaviors>
+                                    </Entry>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout>
                                 <Label Text="Сообщ. ботам"
                                        FontFamily="SegoeUI"
                                        TextColor="{StaticResource White}"
@@ -719,6 +747,34 @@
                                            Placeholder="Сообщений"
                                            Margin="0,5,5,0"
                                            Text="{Binding CountMessages}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}">
+                                        <Entry.Behaviors>
+                                            <controls:NumericValidationBehavior />
+                                        </Entry.Behaviors>
+                                    </Entry>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout>
+                                <Label Text="Крит. ласт"
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           Keyboard="Numeric"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Ласт 10"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding CritNewsLetter}"
                                            TextChanged="TextSave"
                                            BackgroundColor="{StaticResource Black}">
                                         <Entry.Behaviors>

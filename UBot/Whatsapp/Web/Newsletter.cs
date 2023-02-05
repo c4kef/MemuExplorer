@@ -106,7 +106,10 @@ public class Newsletter
         for (var repeatId = 0; repeatId < Globals.Setup.RepeatCounts; repeatId++)
         {
             for (var i = 0; i < Globals.Setup.CountThreads; i++)
+            {
                 tasks.Add(Task.Run(async () => await Handler()));
+                await Task.Delay(1_000);
+            }
 
             Task.WaitAll(tasks.ToArray(), -1);
 
@@ -144,7 +147,7 @@ public class Newsletter
 
         while (!IsStop)
         {
-            var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
+            var result = Globals.GetAccounts(_usedPhones.ToArray(), false, _lock);
             Log.Write($"[I] - кол-во аккаунтов {result.Length}\n", _logFile.FullName);
 
             if (result.Length == 0)
@@ -352,6 +355,9 @@ public class Newsletter
                     count += msg.Value;
 
                 DashboardView.GetInstance().AverageMessages = (int)Math.Floor((decimal)count / messages.Count());
+
+                if (Globals.Setup.CritNewsLetter != null && DashboardView.GetInstance().AverageMessages < Globals.Setup.CritNewsLetter && !IsStop)
+                    IsStop = true;
 
                 count = 0;
                 foreach (var msg in SendedMessagesCountFromAccount)

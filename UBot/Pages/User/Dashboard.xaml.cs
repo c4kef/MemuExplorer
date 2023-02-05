@@ -7,7 +7,6 @@ public partial class Dashboard : ContentView
 	public Dashboard()
 	{
 		InitializeComponent();
-
 		this.BindingContext = new DashboardView(this);
 	}
 }

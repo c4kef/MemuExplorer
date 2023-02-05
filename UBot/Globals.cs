@@ -245,6 +245,8 @@ namespace UBot
         public float? DynamicDelaySendMessageMinus;
         public int? PinCodeAccount;
 
+        public int? CritNewsLetter;
+        public int? CritWarmWeb;
         public int? TakeCountRandomAccountDelay;
 
         public int? DelayTouchAccount;

@@ -3,6 +3,7 @@ using MemuLib.Core.Contacts;
 using System.Linq;
 using System.Threading;
 using UBot.Views.User;
+using Windows.Media.Protection.PlayReady;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace UBot.Whatsapp.Web;
@@ -69,7 +70,7 @@ public class AccPreparation
 
                             for (var i = 0; i < Globals.Setup.CountThreads; i++)
                             {
-                                await Task.Delay(100);
+                                await Task.Delay(1_000);
                                 tasks.Add(Task.Run(async () => await Handler(message.Split('\n'), id)));
                             }
 
@@ -127,8 +128,10 @@ public class AccPreparation
 
     private async Task HandlerValera(string[] messages, int threadId)
     {
-        var lastCountThreads = Globals.Setup.CountThreads;
     getAccount:
+        if (Globals.Setup.CritWarmWeb != null && DashboardView.GetInstance().DeniedTasksWork >= Globals.Setup.CritWarmWeb && !IsStop)
+            IsStop = true;
+
         if (IsStop)
             return;
 
@@ -136,7 +139,7 @@ public class AccPreparation
 
         lock (_lock)
         {
-            var result = Globals.GetAccounts(_usedPhones.Select(phone => phone.Remove(0, 1)).ToArray(), true, _lock);
+            var result = Globals.GetAccounts(_usedPhones.Select(phone => phone.Remove(0, 1)).ToArray(), true, _lock, _readyPhones[threadId].Select(_client => _client.Phone.Replace("+", "")).ToArray());
 
             if (result.Length == 0)
             {
@@ -236,7 +239,15 @@ public class AccPreparation
                     }
                 }
             }
+            
+            foreach (var client in _readyPhones[threadId])
+            {
+                foreach (var phoneClient in _readyPhones[threadId].Where(_client => _client.Phone.Replace("+", "") != client.Phone.Replace("+", "")).Select(_client => _client.Phone.Replace("+", "")).ToArray())
+                    client.AccountData.MessageHistory[phoneClient] = DateTime.Now;
 
+                await client.UpdateData(false);
+            }
+            
             foreach (var client in _readyPhones[threadId])
             {
                 if (!await client.Web!.IsConnected())
@@ -301,6 +312,9 @@ public class AccPreparation
     {
         var lastCountThreads = Globals.Setup.CountThreads;
     getAccount:
+        if (Globals.Setup.CritWarmWeb != null && DashboardView.GetInstance().DeniedTasksWork >= Globals.Setup.CritWarmWeb && !IsStop)
+            IsStop = true;
+
         if (IsStop)
             return;
 

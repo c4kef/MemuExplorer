@@ -157,6 +157,18 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.CountOfChatCrit, value);
         }
 
+        public int? CritNewsLetter
+        {
+            get => Globals.Setup.CritNewsLetter;
+            set => SetProperty(ref Globals.Setup.CritNewsLetter, value);
+        }
+
+        public int? CritWarmWeb
+        {
+            get => Globals.Setup.CritWarmWeb;
+            set => SetProperty(ref Globals.Setup.CritWarmWeb, value);
+        }
+
         public int? CountMessages
         {
             get => Globals.Setup.CountMessages;

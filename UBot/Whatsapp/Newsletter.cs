@@ -369,6 +369,9 @@ namespace UBot.Whatsapp
 
                         DashboardView.GetInstance().AverageMessages = (int)Math.Floor((decimal)count / lastMessages.Count());
 
+                        if (Globals.Setup.CritNewsLetter != null && DashboardView.GetInstance().AverageMessages < Globals.Setup.CritNewsLetter && !IsStop)
+                            IsStop = true;
+
                         count = 0;
                         foreach (var msg in SendedMessagesCountFromAccount)
                             count += msg.Value;

@@ -1,15 +1,8 @@
-﻿using CommunityToolkit.Maui.Views;
-using MemuLib.Core;
-using System;
-using System.Collections.Generic;
+﻿using MemuLib.Core;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UBot.Controls;
 using UBot.Pages;
-using UBot.Pages.Dialogs;
 
 namespace UBot.Views.User
 {
@@ -21,10 +14,10 @@ namespace UBot.Views.User
 
         public static bool operator == (DataEmulator obj1, DataEmulator obj2)
         {
-            return obj1.Index == obj2.Index && obj1.IsEnabled == obj2.IsEnabled && obj1.CurrentColor == obj2.CurrentColor;
+            return obj1.Index == obj2.Index && obj1.IsEnabled == obj2.IsEnabled && obj1.CurrentColor.Equals(obj2.CurrentColor);
         }
 
-        public static bool operator != (DataEmulator obj1, DataEmulator obj2) => obj1.Index != obj2.Index || obj1.IsEnabled != obj2.IsEnabled || obj1.CurrentColor != obj2.CurrentColor;
+        public static bool operator != (DataEmulator obj1, DataEmulator obj2) => obj1.Index != obj2.Index || obj1.IsEnabled != obj2.IsEnabled || !Equals(obj1.CurrentColor, obj2.CurrentColor);
     }
 
     public class ManagerView : BaseView, INotifyPropertyChanged
@@ -114,9 +107,9 @@ namespace UBot.Views.User
                             if (_emulatorIndex == -1)
                             {
                                 Emulators.Add(emulator);
-                                Emulators.Sort((a, b) => { return a.Index.CompareTo(b.Index); });
+                                Emulators.Sort((a, b) => a.Index.CompareTo(b.Index));
                             }
-                            else if (Emulators[_emulatorIndex] != emulator)
+                            else if (Emulators != null && Emulators[_emulatorIndex] != emulator)
                                 Emulators[_emulatorIndex] = emulator;
                         }
 
@@ -161,10 +154,15 @@ namespace UBot.Views.User
 
             OnPropertyChanged(nameof(Emulators));
 
-            if (action == 0)
-                await Memu.Start(Emulators[emulator].Index);
-            else if (action == 1)
-                await Memu.Stop(Emulators[emulator].Index);
+            switch (action)
+            {
+                case 0:
+                    await Memu.Start(Emulators[emulator].Index);
+                    break;
+                case 1:
+                    await Memu.Stop(Emulators[emulator].Index);
+                    break;
+            }
             
             IsBusy = false;
         }
@@ -176,7 +174,7 @@ namespace UBot.Views.User
 
             IsBusy = true;
             button.BackgroundColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "Busy");
-            /*Emulators ??= new ObservableCollection<DataEmulator>();
+            Emulators ??= new ObservableCollection<DataEmulator>();
 
             Emulators.Add(new DataEmulator()
             {
@@ -185,7 +183,7 @@ namespace UBot.Views.User
                 IsEnabled = false
             });
 
-            OnPropertyChanged(nameof(Emulators));*/
+            OnPropertyChanged(nameof(Emulators));
             await Memu.Import(Globals.Setup.PathToFileImage);
             button.BackgroundColor = (Color)ResourceHelper.FindResource(MainPage.GetInstance(), "NotActive");
             IsBusy = false;

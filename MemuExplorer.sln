@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemuLib", "MemuLib\MemuLib.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemuTest", "MemuTest\MemuTest.csproj", "{4F265F2E-2CF3-48FD-966C-B5359B0D42E0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WABot", "WABot\WABot.csproj", "{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VirtualOutput", "OBSCamera\VirtualOutput\VirtualOutput.vcxproj", "{D25AB49C-5E45-4511-8A86-B5B20CDF2416}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeOBS", "OBSCamera\NativeOBS\NativeOBS.vcxproj", "{48D33263-F5A7-4529-A0FB-A5FCA72B7767}"
@@ -20,8 +18,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UBot", "UBot\UBot.csproj", "{2D06981D-9BFC-44B1-9CD8-D45AE59B80CD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerAPI", "ServerAPI\ServerAPI.csproj", "{B1EC4553-9E9F-4DD6-A79A-32B095DF718F}"
-EndProject
-Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "JServer", "JServer\JServer.njsproj", "{1C4EB407-515E-4249-BA4B-DE609AB15A5A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,10 +33,6 @@ Global
 		{4F265F2E-2CF3-48FD-966C-B5359B0D42E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4F265F2E-2CF3-48FD-966C-B5359B0D42E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4F265F2E-2CF3-48FD-966C-B5359B0D42E0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EE31E8B4-A47C-4B30-A03D-4A397D48C90E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D25AB49C-5E45-4511-8A86-B5B20CDF2416}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{D25AB49C-5E45-4511-8A86-B5B20CDF2416}.Debug|Any CPU.Build.0 = Debug|x64
 		{D25AB49C-5E45-4511-8A86-B5B20CDF2416}.Release|Any CPU.ActiveCfg = Release|Win32
@@ -61,10 +53,6 @@ Global
 		{B1EC4553-9E9F-4DD6-A79A-32B095DF718F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1EC4553-9E9F-4DD6-A79A-32B095DF718F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B1EC4553-9E9F-4DD6-A79A-32B095DF718F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1C4EB407-515E-4249-BA4B-DE609AB15A5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1C4EB407-515E-4249-BA4B-DE609AB15A5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1C4EB407-515E-4249-BA4B-DE609AB15A5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1C4EB407-515E-4249-BA4B-DE609AB15A5A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

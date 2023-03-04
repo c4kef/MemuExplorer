@@ -26,14 +26,14 @@ namespace UBot.Whatsapp
             SendedMessagesCountFromAccount = new Dictionary<string, int>();
             _usedPhones = new List<string>();
             _usedPhonesUsers = new List<string>();
-            _tetheredDevices = new Dictionary<int, Client[]>();
+            //_tetheredDevices = new Dictionary<int, Client[]>();
 
             _lock = new();
         }
 
         public readonly Dictionary<string, int> SendedMessagesCountFromAccount;
 
-        private readonly Dictionary<int, Client[]> _tetheredDevices;
+        //private readonly Dictionary<int, Client[]> _tetheredDevices;
         private readonly List<string> _usedPhonesUsers;
         private readonly object _lock;
 
@@ -53,7 +53,7 @@ namespace UBot.Whatsapp
             IsStop = false;
             
             SendedMessagesCountFromAccount.Clear();
-            _tetheredDevices.Clear();
+            //_tetheredDevices.Clear();
 
             _logFile = new FileInfo($@"{Globals.TempDirectory.FullName}\{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_prep.txt");
             _logFile.Create().Close();
@@ -74,16 +74,16 @@ namespace UBot.Whatsapp
             while (true)
             {
                 var devices = ManagerView.GetInstance().Emulators.Where(device => !busyDevices.Select(device => device.Key.Index).Contains(device.Index) && device.IsEnabled)
-                    .Take(2).ToArray();
+                    .Take(1).ToArray();
 
-                if (devices.Length != 2)
+                if (devices.Length != 1)
                     break;
 
                 var id = new Random().Next(0, 10_000);
 
-                _tetheredDevices[id] = new[] { new Client(deviceId: devices[0].Index), new Client(deviceId: devices[1].Index) };
+                //_tetheredDevices[id] = new[] { new Client(deviceId: devices[0].Index), new Client(deviceId: devices[1].Index) };
 
-                var task = Handler(id);
+                var task = Handler(id, new Client(deviceId: devices[0].Index));
 
                 await Task.Delay(1_000);
 
@@ -105,10 +105,10 @@ namespace UBot.Whatsapp
 
             _usedPhonesUsers.Clear();
             _usedPhones.Clear();
-            _tetheredDevices.Clear();
+            //_tetheredDevices.Clear();
         }
 
-        private async Task Handler(int threadId)
+        /*private async Task Handler(int threadId)
         {
             try
             {
@@ -360,6 +360,196 @@ namespace UBot.Whatsapp
                             await Globals.TryMove(c1.Account, $@"{Globals.BanWorkDirectory.FullName}\{phone}");
                             await Globals.TryMove(c2.Account, $@"{Globals.BanWorkDirectory.FullName}\{phone}");
                         }
+
+                        var count = 0;
+                        var lastMessages = SendedMessagesCountFromAccount.Where(val => val.Value > 0).TakeLast(10);
+
+                        foreach (var msg in lastMessages)
+                            count += msg.Value;
+
+                        DashboardView.GetInstance().AverageMessages = (int)Math.Floor((decimal)count / lastMessages.Count());
+
+                        if (Globals.Setup.CritNewsLetter != null && DashboardView.GetInstance().AverageMessages < Globals.Setup.CritNewsLetter && !IsStop)
+                            IsStop = true;
+
+                        count = 0;
+                        foreach (var msg in SendedMessagesCountFromAccount)
+                            count += msg.Value;
+
+                        DashboardView.GetInstance().AverageAllMessages = (int)Math.Floor((decimal)count / SendedMessagesCountFromAccount.Where(val => val.Value > 0).Count());
+
+                        if (isBan)
+                            Log.Write($"[MessageSender] - Ошибка, возможно клиенты забанены: {messageEx}\n", _logFile.FullName);
+                    }
+
+                    if (!_contacts.Any(cont => !_usedPhonesUsers.Contains(cont)))
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Write($"[CRITICAL] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
+            }
+        }
+        */
+        private async Task Handler(int threadId, Client client)
+        {
+            try
+            {
+                await client.GetInstance().RunApk("net.sourceforge.opencamera");
+                await client.GetInstance().StopApk("net.sourceforge.opencamera");
+
+                Log.Write($"Поток {threadId} запущен\n", _logFile.FullName);
+
+                while (!IsStop)
+                {
+                    var (phone, path) = ("", "");
+
+                    var result = Globals.GetAccounts(_usedPhones.ToArray(), true, _lock);
+
+                    if (result.Length < 1)
+                    {
+                        Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
+                        break;
+                    }
+
+                    (phone, path) = result[0];
+
+                    if (_usedPhones.Contains(phone))
+                        continue;
+
+                    _usedPhones.Add(phone);
+
+                    var resultAuth = await TryLogin(client, phone, path);
+                    Log.Write($"[{phone}] - {(resultAuth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
+
+                    if (!resultAuth)
+                    {
+                        ++DashboardView.GetInstance().DeniedTasksStart;
+                        ++DashboardView.GetInstance().DeniedTasks;
+                        continue;
+                    }
+
+                    var importContactsObject = new List<CObj>();
+                    var currentContacts = _contacts.ToArray().OrderBy(x => new Random().Next()).Take(500).ToList();
+                    
+                    if (Globals.Setup.AddContactUsersWarm)
+                    {
+                        foreach (var phoneForContact in currentContacts)
+                            importContactsObject.Add(new(_names[new Random().Next(0, _names.Length)], "+" + phoneForContact));
+
+                        await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf", MemuLib.Core.Contacts.ContactManager.Export(importContactsObject));
+
+                        await client.ImportContacts($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf");
+
+                        File.Delete($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf");
+                    }
+
+                    var clientCountSendedMessages = 0;
+                    var peopleReal = string.Empty;
+
+                    await Task.Delay((Globals.Setup.DelayFirstMessageAccount ?? 0) * 1000);
+                    try
+                    {
+                        while (!IsStop)
+                        {
+                            if (clientCountSendedMessages >= Globals.Setup.CountMessages)
+                                break;
+
+                            if (_contacts.Except(_usedPhonesUsers).ToArray().Length == 0)
+                                break;
+
+                            if (!await client.IsValid())
+                            {
+                                if (clientCountSendedMessages > 0)
+                                {
+                                    ++DashboardView.GetInstance().DeniedTasks;
+                                    ++DashboardView.GetInstance().DeniedTasksWork;
+                                }
+
+                                _usedPhones.Remove(client.Phone.Remove(0, 1));
+                                throw new Exception("Clients banned");
+                            }
+
+                            if (!string.IsNullOrEmpty(peopleReal))
+                            {
+                                ++DashboardView.GetInstance().CompletedTasks;
+                                Log.Write($"{DateTime.Now:yyyy/MM/dd HH:mm:ss};{phone.Remove(5, phone.Length - 5)};{peopleReal}", _reportFile.FullName);
+
+                                if (++clientCountSendedMessages >= Globals.Setup.CountMessages)
+                                    continue;
+                            }
+
+                            peopleReal = GetFreeNumberUser(currentContacts.ToArray());
+
+                            if (string.IsNullOrEmpty(peopleReal))
+                            {
+                                _usedPhones.Remove(client.Phone.Remove(0, 1));
+                                break;
+                            }
+
+                            var text = string.Join('\n', DashboardView.GetInstance().Text.Split('\r').ToList());
+                            FileInfo image = null;
+
+                            foreach (var match in new Regex(@"\{(.*?)\}").Matches(text).Select(match => match.Value.Replace("{", "").Replace("}", "")))
+                            {
+                                if (match.Contains(Globals.TagPicture))
+                                {
+                                    var tmpImage = new FileInfo(match.Remove(0, Globals.TagPicture.Length));
+                                    if (tmpImage.Exists)
+                                    {
+                                        image = tmpImage;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            await Task.Delay(new Random().Next(3_000, 5_000));
+
+                            if (image != null)
+                            {
+                                var status_init = await client.SendPreMessage(peopleReal, "Hi!", waitDelivered: true);
+
+                                if (status_init != Client.StatusDelivered.Delivered)
+                                {
+                                    if (status_init == Client.StatusDelivered.ContactNotFound)
+                                        _usedPhonesUsers.Remove(peopleReal);
+                                    currentContacts.Remove(peopleReal);
+                                    continue;
+                                }
+                            }
+
+                            var status_send = (image != null) ? await client.SendMessage(peopleReal, SelectWord(text), image, true) : await client.SendPreMessage(peopleReal, SelectWord(text), true);
+
+                            if (status_send != Client.StatusDelivered.Delivered)
+                            {
+                                if (status_send == Client.StatusDelivered.ContactNotFound)
+                                    _usedPhonesUsers.Remove(peopleReal);
+                                currentContacts.Remove(peopleReal);
+                                continue;
+                            }
+                        
+                            await Task.Delay(new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)));
+                        }
+
+                        await HandlerAccountsEnd(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        await HandlerAccountsEnd(true, ex.Message);
+                    }
+
+                    async Task HandlerAccountsEnd(bool isBan, string messageEx = "")
+                    {
+                        SendedMessagesCountFromAccount[client.Phone.Remove(0, 1)] = clientCountSendedMessages;
+
+                        if (!string.IsNullOrEmpty(Globals.Setup.LinkToChangeIP))
+                            Log.Write(await ResourceHelper.GetAsync(Globals.Setup.LinkToChangeIP), _logFile.FullName);
+
+                        _usedPhonesUsers.Remove(peopleReal);
+
+                        if (isBan)
+                            await Globals.TryMove(client.Account, $@"{Globals.BanWorkDirectory.FullName}\{phone}");
 
                         var count = 0;
                         var lastMessages = SendedMessagesCountFromAccount.Where(val => val.Value > 0).TakeLast(10);

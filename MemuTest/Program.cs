@@ -1,36 +1,20 @@
-﻿using Newtonsoft.Json;
-using System.Runtime.CompilerServices;
+﻿using System.Drawing;
 
-Console.Write("-> Input Trust Level: ");
-var trustLevel = int.Parse(Console.ReadLine());
-Console.Write("-> Input Path To Accounts: ");
-var dir = Console.ReadLine();
-DirectoryInfo directory1 = Directory.CreateDirectory("UpperTrustLevel");
-foreach (string directory2 in Directory.GetDirectories(dir))
+var base64 =
+    @"data:image\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAVkAAAFZCAAAAAAXmQMHAAAGcUlEQVR42u3bS3IbORAFQN3\/0vbeIULvFUCi5UisRibZ7E4wAvWbrz\/We9YXArJkLbJkyVpkyZK1yJIla5ElS9YiS5asRfZpsl8\/r3\/e989nv7vKd9+x\/kT6vd\/9GVwvuI3qrsiSJUuW7ENkXx9631C+vN9Ue\/2J9Re9vF66rS8\/22uQJUuWLNmHyA7ZArHqLcmD1CFA\/zMJNMiSJUuW7K+QXd\/W+sQNdiXdgTQSWXNUaS9ZsmTJkv0PZNNSalWpHdaKg4fpS65kyZIlS\/Y3yqa3mioOEaoKce+e7vznKt9kyZIlS3ZDdmfA5P\/7rxvTR2TJkiVLtpZNVzCcsr1JVSk17TUGpePtRZYsWbJkL8img5F9ffblvw1P5qqInDYX0006VDcgS5YsWbKHZasRyaDCmZZrgz+Hu5LeS7orW3UDsmTJkiX7Dtmd3HLdtwvO\/GEO2scL6ceGCTBZsmTJkr0gmw5ppudxFX\/0AzUpb+B5ZoaHLFmyZMk+RLY686udStPKoWcw\/zP8JSUPTZYsWbJkPy978LivyqbbW9O3BYdZ9daUJ1myZMmSfZts1aOr\/lw\/V5XTBpl2X3INNj2t1JIlS5Ys2fuywxeqEzztcQZnfnov1RZWGTRZsmTJkn2mbDojE\/BWgOkkab+Z6XxNlZaTJUuWLNkLsn0w0B\/ywav9WM77\/gx+IWTJkiVL9iGyw\/JlcL6vt7C6l2pupsqC128hS5YsWbLPlK36ikFq2J\/lVS8v1al6iMGtTTuMZMmSJUv2bbLrc3vYFtweZ0nrqVVjsqr3prtMlixZsmSvylbHfXWmponj9FBeQg8Hb9KsmixZsmTJXpXtv2k4upKmmkGBt0dN53BOdhjJkiVLlux7Zav0Ls08qyih7wOe6T+mg6VJz5QsWbJkyV6SDXqN\/U2nwcVOjbXa6p07+GFEiCxZsmTJ3pStbrDPjPuhmHT6pg8VtvujZMmSJUv2vmz67dX9ViXXoJS6fur0xxE8dJDSkyVLlizZJ8kmCVwzbVk9V3+W9znt+tvSuKfLbsmSJUuW7Htlq\/GToFsX2PXzK9XG9b+G9HtP1g3IkiVLluyubNVN7Kue23nkdocxhU5vkixZsmTJPk42GHuppmD62mmfefabXmW8h2IDsmTJkiX7Xtk0NkjLl+lV+tig4qgKy8cr32TJkiVL9gOyO\/XZPtXsC6jVRYMJn50KMVmyZMmSfaZsX1kd1j+rK1eRTRCxDPN6smTJkiX7YNmdcc1hbTc+hevP7gQ1JzuMZMmSJUv2sGyVBgafWGejVY9zmJL+gNCzBS1KsmTJkiV7UzZIWKvGZPBvw35m2oRM0+jg8Qf1WbJkyZIle0k2OBKruZR0G6pByyDFDaZlgi0kS5YsWbKPk92fcGxuITh2q8\/2b6k+m94aWbJkyZK9JVvVZ3dO8CD0CKZb+rsabld6AbJkyZIle0u26q4NRz37knDVxQxucuencyjqIkuWLFmyn5IdnvQ7RdX+UsGUZxpcrG\/yZGxAlixZsmTPyQ4P5epgPd1hTKOT\/qdTXYUsWbJkyd6STcWCQ7Tq9J1JgPuP9Rn+dEaGLFmyZMm+V7bq2\/W8Vbbcj2um1eWdK5MlS5Ys2cfJpud7EDRUuWr1PwP0mXGVbg+fkixZsmTJXpVd1yHTF9JHquZr0g2pgoG+J5kEIWTJkiVL9pJs2l3bGZFMz9l0W9eHfJ+mVg9NlixZsmTvywYnc9XB296LpBwaTumkP5Nh1k+WLFmyZO\/Lpmfv9sGfHuh9WDCc9dlJ38mSJUuW7H3ZvgXYJ5PpzGZVhg3+3I4DpvVZsmTJkiX7Xtn+PK7y3Cp5DjZpJ+roE++t2IAsWbJkyX5UdvjoVZ+yig2q5uJL4zMVXbJkyZIl+yTZdPXjkMET9iFFVZDto4S+30qWLFmyZG\/JpidzkPumsv2MZfrC+n3pXqSFZbJkyZIle182HZ5Ja7ZpJpue0emr1WhN2pNMWp5kyZIlS\/ambPrUQRzQted+PsarvUiT4jQ+Sn6AZMmSJUv2ubIVYJXJDide+vpsFRUFIQVZsmTJkv21stvv6zPZNJBIU9fK+HOxAVmyZMmSPVyfDY7d6iheA1bZ6DBiSeMUsmTJkiX7TNmdAmX1hP2BXkUsZyq\/6RAQWbJkyZK9KmsdWGTJkrXIkiVrkSVL1iJLlqxFlixZiyxZshbZm+svnkGWnwHV2tsAAAAASUVORK5CYII=";
+Bitmap Base64StringToBitmap(string base64String)
 {
-    if (File.Exists(directory2 + "\\Data.json"))
+    byte[] byteBuffer = Convert.FromBase64String(base64String);
+    MemoryStream memoryStream = new(byteBuffer)
     {
-        string name = new DirectoryInfo(directory2).Name;
-        if (JsonConvert.DeserializeObject<AccountData>(File.ReadAllText(directory2 + "\\Data.json")).TrustLevelAccount > trustLevel)
-        {
-            string sourceDirName = directory2;
-            DefaultInterpolatedStringHandler interpolatedStringHandler = new DefaultInterpolatedStringHandler(1, 2);
-            interpolatedStringHandler.AppendFormatted<DirectoryInfo>(directory1);
-            interpolatedStringHandler.AppendLiteral("\\");
-            interpolatedStringHandler.AppendFormatted(name);
-            string stringAndClear = interpolatedStringHandler.ToStringAndClear();
-            Directory.Move(sourceDirName, stringAndClear);
-        }
-    }
+        Position = 0
+    };
+
+    Bitmap bmpReturn = (Bitmap)System.Drawing.Image.FromStream(memoryStream);
+    memoryStream.Close();
+
+    return bmpReturn;
 }
 
-[Serializable]
-public class AccountData
-{
-    public int TrustLevelAccount = 0;
-    public int CountMessages = 0;
-    public DateTime CreatedDate = DateTime.Now;
-    public DateTime? BannedDate;
-    public Dictionary<string, DateTime> MessageHistory = new Dictionary<string, DateTime>();
-    public bool FirstMsg = false;
-}
+var bmp = new Bitmap(Base64StringToBitmap(base64.Replace(@"data:image\/png;base64,", "").Replace(@"\/", "/")), new Size(275, 275));
+bmp.Save("test.png");

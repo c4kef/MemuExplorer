@@ -203,16 +203,19 @@ public class AccPreparation
 
             await Task.Delay((Globals.Setup.DelayFirstMessageAccount ?? 0) * 1000);
 
-            for (var i = 0; i < 10; i++)
+            if (Globals.Setup.WriteToMe)
             {
-                foreach (var client in _readyPhones[threadId])
+                for (var i = 0; i < 10; i++)
                 {
-                again:
-                    if (!await client.Web!.SendText(client.Phone, messages[new Random().Next(0, messages.Length - 1)].Replace("\"", "").Replace("\'", "")))
-                        goto again;
-                }
+                    foreach (var client in _readyPhones[threadId])
+                    {
+                    again:
+                        if (!await client.Web!.SendText(client.Phone, messages[new Random().Next(0, messages.Length - 1)].Replace("\"", "").Replace("\'", ""), await GetRandomFile()))
+                            goto again;
+                    }
 
-                await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
+                    await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
+                }
             }
 
             for (var i = 0; i < Globals.Setup.CountMessages; i++)
@@ -232,7 +235,7 @@ public class AccPreparation
 
                     foreach (var warmPhone in _readyPhones[threadId].Where(otherClient => otherClient.Phone != client.Phone))
                     {
-                        if (!await client.Web!.SendText(warmPhone.Phone, messages[new Random().Next(0, messages.Length - 1)].Replace("\"", "").Replace("\'", "")))
+                        if (!await client.Web!.SendText(warmPhone.Phone, messages[new Random().Next(0, messages.Length - 1)].Replace("\"", "").Replace("\'", ""), await GetRandomFile()))
                             continue;
 
                         await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
@@ -292,6 +295,16 @@ public class AccPreparation
 
             _readyPhones[threadId].Clear();
             _usedPhones.RemoveAll(_phone => _phone[0].ToString() == threadId.ToString());
+        }
+
+        async Task<FileInfo?> GetRandomFile()
+        {
+            if (!Directory.Exists(Globals.Setup.PathToFolderWarmFiles))
+                return null;
+
+            var randomFiles = Directory.GetFiles(Globals.Setup.PathToFolderWarmFiles).OrderBy(x => new Random().Next()).ToArray();
+
+            return randomFiles.Length == 0 ? null : new FileInfo(randomFiles[0]);
         }
 
         async Task<string> GetProxy()
@@ -427,7 +440,14 @@ public class AccPreparation
                         groups.Add(allGroups[0]);
 
                     foreach (var group in groups)
-                        await client.Web!.JoinGroup(group);
+                    {
+                        var id = await client.Web!.JoinGroup(group);
+                        if (string.IsNullOrEmpty(id))
+                            continue;
+
+                        for (var i = 0; i < Globals.Setup.CountMessageWarm; i++)
+                            await client.Web!.SendText(id, messages[new Random().Next(0, messages.Length - 1)]);
+                    }
                 }
 
                 if (File.Exists(Globals.Setup.PathToFileChatBots))//Третий этап - начинаем писать чат ботам

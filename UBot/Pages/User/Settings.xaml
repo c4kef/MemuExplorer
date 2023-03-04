@@ -77,6 +77,16 @@
                                     CommandParameter="13"
                                     Command="{Binding Path=ButtonClick}"
                                     CornerRadius="11" />
+                            <Button Text="Ранд. файлы"
+                                    HeightRequest="56"
+                                    WidthRequest="140"
+                                    FontFamily="SegoeUI"
+                                    FontSize="20"
+                                    TextColor="{StaticResource White}"
+                                    BackgroundColor="{Binding Path=ButtonPickerPathToFolderWarmFiles}"
+                                    CommandParameter="16"
+                                    Command="{Binding Path=ButtonClick}"
+                                    CornerRadius="11" />
                             <Button Text="Группы"
                                     HeightRequest="56"
                                     WidthRequest="140"
@@ -163,6 +173,17 @@
                                     </Entry>
                                 </Border>
                             </VerticalStackLayout>
+
+                            <HorizontalStackLayout>
+                                <Label Text="Ч. Д: "
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,5,0,0"
+                                       HorizontalOptions="Start" />
+                                <CheckBox CheckedChanged="CheckboxChanged"
+                                          IsChecked="{Binding IsBlackDay}" />
+                            </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </VerticalStackLayout>
                 </ScrollView>
@@ -304,6 +325,28 @@
                                        HorizontalOptions="Start" />
                                 <CheckBox CheckedChanged="CheckboxChanged"
                                           IsChecked="{Binding LongWarmSlaughter}" />
+                            </HorizontalStackLayout>
+
+                            <HorizontalStackLayout>
+                                <Label Text="Сам себе: "
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,5,0,0"
+                                       HorizontalOptions="Start" />
+                                <CheckBox CheckedChanged="CheckboxChanged"
+                                          IsChecked="{Binding WriteToMe}" />
+                            </HorizontalStackLayout>
+
+                            <HorizontalStackLayout>
+                                <Label Text="Взаимоконтакт: "
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,5,0,0"
+                                       HorizontalOptions="Start" />
+                                <CheckBox CheckedChanged="CheckboxChanged"
+                                          IsChecked="{Binding AddContactUsersWarm}" />
                             </HorizontalStackLayout>
 
                             <VerticalStackLayout>

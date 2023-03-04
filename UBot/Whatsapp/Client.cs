@@ -65,9 +65,10 @@ public class Client
         if (!PullAccount)
             return;
 
-        await Mem.Pull($@"{Account}\{PackageName}", @$"/data/data/{PackageName}/databases/");
-        await Mem.Pull($@"{Account}\{PackageName}", @$"/data/data/{PackageName}/files/");
-        await Mem.Pull($@"{Account}\{PackageName}", @$"/data/data/{PackageName}/shared_prefs/");
+        Log.Write("Start upload files");
+        Log.Write(await Mem.Pull($@"{Account}\{PackageName}", @$"/data/data/{PackageName}/databases"));
+        Log.Write(await Mem.Pull($@"{Account}\{PackageName}", @$"/data/data/{PackageName}/files"));
+        Log.Write(await Mem.Pull($@"{Account}\{PackageName}", @$"/data/data/{PackageName}/shared_prefs"));
 
     }
 
@@ -81,7 +82,7 @@ public class Client
             await Mem.RunApk(PackageName);
             //await Task.Delay(2_000);
             //memuc -i 0 adb push "D:\Data\Ru\79361879319\com.whatsapp.w4b" "/data/data/com.whatsapp.w4b/"
-            await Mem.Push($@"{(Account == string.Empty ? path : Account)}\{PackageName}", @$"/data/data/");//{PackageName}/");
+            await Mem.Push($@"{(Account == string.Empty ? path : Account)}\{PackageName}", @$"/data/data");//либо на конец ставить / либо {PackageName}/");
             //await Mem.Shell($"rm /data/data/{PackageName}/databases/wa.db*");
             await Mem.StopApk(PackageName);
             await Mem.RunApk(PackageName);
@@ -160,17 +161,17 @@ public class Client
         }
     }
 
-    public async Task<bool> ImportContacts(string path)
+    public async Task<bool> ImportContacts(string path, string fileName = "")
     {
         await Mem.ClearContacts();
 
         var rndName = $"{new Random().Next(1_000, 1_000_000)}_contacts.vcf";
 
         var file = new FileInfo(path);
-        file.CopyTo(@$"{Globals.Setup.PathToDownloadsMemu}\{rndName}");
+        file.CopyTo(@$"{Globals.Setup.PathToDownloadsMemu}\{(string.IsNullOrEmpty(fileName) ? rndName : fileName)}");
 
-        await MemuCmd.ExecMemuc(
-            $"-i {Mem.Index} execcmd am start -t \"text/x-vcard\" -d \"file:///storage/emulated/0/Download/{rndName}\" -a android.intent.action.VIEW cz.psencik.com.android.contacts");//com.android.contacts");
+       var r = await MemuCmd.ExecMemuc(
+            $"-i {Mem.Index} execcmd am start -t \"text/x-vcard\" -d \"file:///storage/emulated/0/Download/{(string.IsNullOrEmpty(fileName) ? rndName : fileName)}\" -a android.intent.action.VIEW cz.psencik.com.android.contacts");//com.android.contacts");
 
         var dump = await Mem.DumpScreen();
 
@@ -214,6 +215,7 @@ public class Client
 
                     cantSend = true;
                     await Task.Delay(1_000);
+                    Log.Write("\"Отправить\" not found, try again. the dump is: " + dump);
                     continue;
                 }
 
@@ -268,7 +270,7 @@ public class Client
         await File.WriteAllTextAsync(command.FullName,
         //NL=$'\n' ; am start -a android.intent.action.SEND --es android.intent.extra.TEXT "Hello ${NL} World" -t text/plain -e jid '79772801086@s.whatsapp.net' --eu android.intent.extra.STREAM file:///storage/emulated/0/Download/1.jpg com.whatsapp.w4b/com.whatsapp.Conversation 
         //NL=$'\\n' ; am start -a android.intent.action.SEND --es android.intent.extra.TEXT \"{text.Replace("\r", "${NL}").Replace("\n", "${NL}")}\" -t text/plain -e jid '{to}@s.whatsapp.net'{commandImage} com.whatsapp.w4b/com.whatsapp.Conversation 
-        $"NL=$'\\n' ; am start -a android.intent.action.SEND --es android.intent.extra.TEXT \"{text.Replace("\r", "${NL}").Replace("\n", "${NL}")}\" -t text/plain -e jid '{to}@s.whatsapp.net'{commandImage} com.whatsapp.w4b");
+        $"NL=$'\\n' ; am start -a android.intent.action.SEND --es android.intent.extra.TEXT \"{text.Replace("\r", "${NL}").Replace("\n", "${NL}")}\" -t text/plain -e jid '{to}@s.whatsapp.net'{commandImage} {PackageName}");
 
         for (var countTry = 0; countTry < 3; countTry++)
         {
@@ -381,8 +383,8 @@ public class Client
         "content-desc=\"Неверный номер?\"",
         "text=\"ЗАПРОСИТЬ РАССМОТРЕНИЕ\"",
         "text=\"WA Business\"",
-        "resource-id=\"com.whatsapp.w4b:id/btn_play_store\"",
-        "text=\"WhatsApp\"",
+        //"text=\"WhatsApp\"",
+        $"resource-id=\"{PackageName}:id/btn_play_store\"",
         "resource-id=\"android:id/progress\"",
         "text=\"ПОДТВЕРДИТЬ\""}, dump, false);
     }

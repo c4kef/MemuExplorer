@@ -86,6 +86,9 @@ namespace UBot.Views.User
 
         public Color ButtonPickerPathToFileTextWelcome =>
             (Color)ResourceHelper.FindResource(MainPage.GetInstance(), File.Exists(Globals.Setup.PathToFileTextWelcome) ? "Active" : "NotActive");
+
+        public Color ButtonPickerPathToFolderWarmFiles =>
+            (Color)ResourceHelper.FindResource(MainPage.GetInstance(), Directory.Exists(Globals.Setup.PathToFolderWarmFiles) ? "Active" : "NotActive");
         #endregion
 
         #region variables text
@@ -113,6 +116,18 @@ namespace UBot.Views.User
         {
             get => Globals.Setup.LongWarmSlaughter;
             set => SetProperty(ref Globals.Setup.LongWarmSlaughter, value);
+        }
+
+        public bool AddContactUsersWarm
+        {
+            get => Globals.Setup.AddContactUsersWarm;
+            set => SetProperty(ref Globals.Setup.AddContactUsersWarm, value);
+        }
+
+        public bool IsBlackDay
+        {
+            get => Globals.Setup.IsBlackDay;
+            set => SetProperty(ref Globals.Setup.IsBlackDay, value);
         }
 
         public int? CountPhonesFromStack
@@ -167,6 +182,12 @@ namespace UBot.Views.User
         {
             get => Globals.Setup.CritWarmWeb;
             set => SetProperty(ref Globals.Setup.CritWarmWeb, value);
+        }
+
+        public bool WriteToMe
+        {
+            get => Globals.Setup.WriteToMe;
+            set => SetProperty(ref Globals.Setup.WriteToMe, value);
         }
 
         public int? CountMessages
@@ -618,6 +639,25 @@ namespace UBot.Views.User
                     await Globals.SaveSetup();
 
                     OnPropertyChanged(nameof(ButtonPickerPathToFileTextWelcome));
+
+                    break;
+
+                case 16:
+                    if (string.IsNullOrEmpty(Globals.Setup.PathToFolderWarmFiles))
+                    {
+                        pick = await App.GetInstance().FolderPicker.PickFolder();
+
+                        if (string.IsNullOrEmpty(pick))
+                            return;
+
+                        Globals.Setup.PathToFolderWarmFiles = pick;
+                    }
+                    else
+                        Globals.Setup.PathToFolderWarmFiles = string.Empty;
+
+                    await Globals.SaveSetup();
+
+                    OnPropertyChanged(nameof(ButtonPickerPathToFolderWarmFiles));
 
                     break;
             }

@@ -52,7 +52,7 @@ public partial class ControlPanel : Popup
                 case "Прожарка":
                     _actionProfileWork.WarmMethodIlya = checkedBtn.Value;
                     break;
-                case "Валера пидор":
+                case "Валера лав":
                     _actionProfileWork.WarmMethodValera = checkedBtn.Value;
                     break;
             }

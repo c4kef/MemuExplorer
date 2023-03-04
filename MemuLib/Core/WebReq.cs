@@ -1,4 +1,6 @@
-﻿namespace MemuLib.Core;
+﻿using System.Net.Http.Headers;
+
+namespace MemuLib.Core;
 
 public static class WebReq
 {
@@ -12,15 +14,21 @@ public static class WebReq
     /// </summary>
     /// <param name="url">ссылка на запрос</param>
     /// <returns>ответ от сервера</returns>
-    public static async Task<string> HttpGet(string url)
+    public static async Task<string> HttpGet(string url, Dictionary<string, string>? headers = null)
     {
         var handler = new HttpClientHandler();
 
         var request = new HttpClient(handler);
             
         request.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
-        request.DefaultRequestHeaders.Add("Accept", $"application/json");
-        request.DefaultRequestHeaders.Add("Authorization", $"Bearer {Settings.SimApi}");
+        if (headers == null)
+        {
+            request.DefaultRequestHeaders.Add("Accept", $"application/json");
+            request.DefaultRequestHeaders.Add("Authorization", $"Bearer {Settings.SimApi}");
+        }
+        else
+            foreach (var header in headers)
+                request.DefaultRequestHeaders.Add(header.Key, header.Value);
 
         return await (await request.GetAsync(url)).Content.ReadAsStringAsync();
     }
@@ -31,15 +39,22 @@ public static class WebReq
     /// <param name="url">ссылка на запрос</param>
     /// <param name="values">параметры</param>
     /// <returns>ответ от сервера</returns>
-    public static async Task<string> HttpPost(string url, Dictionary<string, string> values)
+    public static async Task<string> HttpPost(string url, Dictionary<string, string> values, Dictionary<string, string>? headers = null)
     {
         var handler = new HttpClientHandler();
 
         var request = new HttpClient(handler);
 
         request.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
-        request.DefaultRequestHeaders.Add("Accept", "application/json");
-        request.DefaultRequestHeaders.Add("Authorization", $"Bearer {Settings.SimApi}");
+
+        if (headers == null)
+        {
+            request.DefaultRequestHeaders.Add("Accept", $"application/json");
+            request.DefaultRequestHeaders.Add("Authorization", $"Bearer {Settings.SimApi}");
+        }
+        else
+            foreach (var header in headers)
+                request.DefaultRequestHeaders.Add(header.Key, header.Value);
 
         var content = new FormUrlEncodedContent(values);
 

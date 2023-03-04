@@ -160,6 +160,14 @@ public static class Globals
         .Select(s => s[new Random().Next(s.Length)]).ToArray());
 
     /// <summary>
+    /// Сгенирировать случайный эмоджи
+    /// </summary>
+    /// <param name="length">кол-во эмоджи</param>
+    /// <returns>новая строка</returns>
+    public static string RandomEmoji(int length) => new string(Enumerable.Repeat("🔥😂😊😁🙏😎💪😋😇🎉🙌🤘👍🤑🤩🤪🤠🥳😌🤤😍😀😭😔😒😩😢🤦🤷😱👎🤨😑😬🙄🤮😵🤯🧐😕😟😤😡🤬", length)
+        .Select(s => s[new Random().Next(s.Length)]).ToArray());
+
+    /// <summary>
     /// Чтение и получение случайеного сотового оператора
     /// </summary>
     /// <param name="cc">код страны</param>

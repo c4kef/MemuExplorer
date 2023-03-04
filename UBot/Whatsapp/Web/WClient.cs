@@ -210,7 +210,7 @@ public class WClient
                 options.Add($"caption: '{text}'");
                 options.Add($"createChat: true");
 
-                Status = (await _wpp.SendFileMessage($"{number.Replace("+", string.Empty)}@c.us", base64, options));
+                Status = (await _wpp.SendFileMessage(number.Contains("g.us") ? number : $"{number.Replace("+", string.Empty)}@c.us", base64, options));
             }
             else
             {
@@ -225,7 +225,7 @@ public class WClient
                     options.Add($"footer: '{footer}'");
                 }
 
-                Status = await _wpp.SendMessage($"{number.Replace("+", string.Empty)}@c.us", text, options);
+                Status = await _wpp.SendMessage(number.Contains("g.us") ? number : $"{number.Replace("+", string.Empty)}@c.us", text, options);
             }
 
             if (!Status.Status)
@@ -250,10 +250,9 @@ public class WClient
         IsDisposed = true;
         try
         {
-            /*await _wpp.WebDriver.CloseAsync();
-            _wpp.WebDriver.Dispose();*/
-
-            _wpp.WebDriver.Process.Kill();
+            await _wpp.WebDriver.CloseAsync();
+            _wpp.WebDriver.Dispose();
+            //_wpp.WebDriver.Process.Kill();
         }
         catch(Exception ex)
         {
@@ -292,12 +291,12 @@ public class WClient
     /// </summary>
     /// <exception cref="InvalidOperationException">Неверное значение</exception>
     /// <exception cref="Exception">Ошибка сервера</exception>
-    public async Task<bool> JoinGroup(string group)
+    public async Task<string> JoinGroup(string group)
     {
         if (!await IsConnected())
             throw new Exception($"JoinGroup: client has disconected");
 
-        return !string.IsNullOrEmpty(await _wpp.GroupJoin(group));
+        return await _wpp.GroupJoin(group);
     }
 
     private string FileType(string fileName)

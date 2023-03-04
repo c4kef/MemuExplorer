@@ -22,6 +22,7 @@ namespace UBot
         public const string TagButton = "btn=";
         #endregion
         public static System.Drawing.Image QrCode { get; set; }
+        public static string IsBlackDayQrCode { get; set; }
         public static DirectoryInfo DataDirectory { get; private set; }
         public static DirectoryInfo TempDirectory { get; private set; }
         public static DirectoryInfo WarmedDirectory { get; private set; }
@@ -85,7 +86,7 @@ namespace UBot
                 while (true)
                 {
                     var converter = new ImageConverter();
-                    var imageBytes = (byte[])converter.ConvertTo(ConvertTo24Bpp(QrCode ?? Base64NeutralQr.Base64StringToBitmap()), typeof(byte[]))!;
+                    var imageBytes = (byte[])converter.ConvertTo(ConvertTo24Bpp(GetQRCode()), typeof(byte[]))!;
 
                     var count = 0;
 
@@ -95,6 +96,24 @@ namespace UBot
                         await Task.Delay(50);
                         count++;
                     }
+                }
+
+                System.Drawing.Image GetQRCode()
+                {
+                    if (Setup.IsBlackDay)
+                    {
+                        if (string.IsNullOrEmpty(IsBlackDayQrCode))
+                            return Base64NeutralQr.Base64StringToBitmap();
+                        else
+                        {
+                            var qrcode = IsBlackDayQrCode.Base64StringToBitmap();
+                            var resizedQrCode = new Bitmap(qrcode, new System.Drawing.Size(276, 276));
+
+                            return resizedQrCode;
+                        }
+                    }
+
+                    return QrCode ?? Base64NeutralQr.Base64StringToBitmap();
                 }
 
                 static Bitmap ConvertTo24Bpp(System.Drawing.Image img)
@@ -244,11 +263,14 @@ namespace UBot
         public bool LongWarmSlaughter;
         public float? DynamicDelaySendMessageMinus;
         public int? PinCodeAccount;
+        public bool AddContactUsersWarm;
+        public bool IsBlackDay;//Удачи тебе, держись!
 
         public int? CritNewsLetter;
         public int? CritWarmWeb;
         public int? TakeCountRandomAccountDelay;
 
+        public bool WriteToMe;
         public int? DelayTouchAccount;
         public int? CountPhonesFromStack;
         public int? CountCheckedPhonesFromAccount;
@@ -257,6 +279,7 @@ namespace UBot
         public string PathToFilePhonesContacts;
         public string PathToDownloadsMemu;
         public string PathToFileTextWelcome;
+        public string PathToFolderWarmFiles;
 
         public int? BlackProxyDeleteBefore;
         public int? CountBansToSleep;

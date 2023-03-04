@@ -38,9 +38,9 @@ public class Newsletter
     public readonly Dictionary<string, int> SendedMessagesCountFromAccount;
     public readonly Dictionary<string, InfoTemplateNewsletter> TemplateMessagesInfo;
     private readonly List<string> _usedPhones;
-    private readonly List<string> _usedPhonesUsers;
     private readonly object _lock;
 
+    private List<string> _usedPhonesUsers;
     private string[] _contacts;
     private FileInfo _logFile;
     private FileInfo _reportFile;
@@ -313,9 +313,13 @@ public class Newsletter
                                 else
                                 {
                                     if (_currentProfile.TemplateMessages.Count == 0)
-                                        _usedPhonesUsers.Remove(peopleReal);
+                                        _usedPhonesUsers = _usedPhonesUsers.Except(new string[] { peopleReal }).ToList();
                                     else
-                                        TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag].UsedPhonesUsers.Remove(peopleReal);
+                                    {
+                                        var template = TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag];
+                                        template.UsedPhonesUsers = template.UsedPhonesUsers.Except(new string[] { peopleReal }).ToList();
+                                        TemplateMessagesInfo[_currentProfile.TemplateMessages[i].Tag] = template;
+                                    }
                                 }
                             }
                         }
@@ -390,8 +394,9 @@ public class Newsletter
                 {
                     var tag = (TemplateMessagesInfo.Count == 0) ? "" : _currentProfile.TemplateMessages[index].Tag;
                     InfoTemplateNewsletter profile = (TemplateMessagesInfo.Count == 0) ? default : TemplateMessagesInfo[tag];
+                    var contacts = (TemplateMessagesInfo.Count == 0) ? _contacts.Except(_usedPhonesUsers).ToArray() : profile.Contacts.Except(profile.UsedPhonesUsers).ToArray();
 
-                    foreach (var contact in (TemplateMessagesInfo.Count == 0) ? _contacts : profile.Contacts)
+                    foreach (var contact in contacts)
                     {
                         if (!((TemplateMessagesInfo.Count == 0) ? _usedPhonesUsers.Contains(contact) : profile.UsedPhonesUsers.Contains(contact)))
                         {

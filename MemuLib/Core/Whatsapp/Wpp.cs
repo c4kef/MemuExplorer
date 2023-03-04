@@ -13,6 +13,7 @@ using RestSharp;
 using Image = System.Drawing.Image;
 using ZXing;
 using PuppeteerSharp;
+using MemuLib.Core;
 
 namespace WPP4DotNet
 {
@@ -28,9 +29,6 @@ namespace WPP4DotNet
     public abstract class IWpp
     {
         #region WPP4DotNet - Library Functions
-        /// <summary>
-        /// WppPath
-        /// </summary>
         public string WppPath = "";
 
         /// <summary>
@@ -544,17 +542,15 @@ namespace WPP4DotNet
         #endregion
 
         #region WPPJS CHAT - Message Functions
-        /// <summary>
-        /// </summary>
-        /// <returns>Return True or False</returns>
         public async Task<int> CountOfChat()
         {
             try
             {
-                return await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<int>("() => (window.WPP?.chat.list()).length");
+                return await (await Driver.PagesAsync())[0].EvaluateFunctionAsync<int>("async () => (await window.WPP?.chat.list()).length");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Log.Write($"Crit error when get count of chats: {ex.Message}");
                 return 0;
             }
         }
@@ -568,7 +564,6 @@ namespace WPP4DotNet
         /// <returns>Returns the Models.SendReturnModels object</returns>
         public async Task<Models.SendReturnModels> SendMessage(string chat, string message, List<string> options, bool simulateTyping=false)
         {
-            var resp = $"return await WPP.chat.sendTextMessage('{chat}', '{message}', {{\n  createChat: true\n}});";
             try
             {
                 Models.SendReturnModels ret = new Models.SendReturnModels();

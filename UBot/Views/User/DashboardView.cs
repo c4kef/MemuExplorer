@@ -255,7 +255,11 @@ namespace UBot.Views.User
             DeniedTasksStart = 0;
             DeniedTasksWork = 0;
 
-            Globals.KillChromeDriverProcesses();
+            if (Directory.Exists($"{Globals.Setup.PathToDownloadsMemu}"))
+                foreach (var file in Directory.GetFiles(Globals.Setup.PathToDownloadsMemu))
+                    File.Delete(file);
+
+            //Globals.KillChromeDriverProcesses();
 
             if ((result.Value.Warm || result.Value.CheckBan || result.Value.CheckNumberValid || result.Value.WarmMethodValera) && result.Value.IsWeb)
             {
@@ -395,7 +399,7 @@ namespace UBot.Views.User
                 _isFree = true;
             }
 
-            Globals.KillChromeDriverProcesses();
+            //Globals.KillChromeDriverProcesses();
         }
     }
 }

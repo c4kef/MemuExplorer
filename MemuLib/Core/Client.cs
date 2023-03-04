@@ -147,6 +147,27 @@ public class Client
     }
 
     /// <summary>
+    /// Симуляция свайпа по экрану
+    /// </summary>
+    /// <param name="x1">по горизонтали от</param>
+    /// <param name="y1">по вертикали от</param>
+    /// <param name="x2">по горизонтали до</param>
+    /// <param name="y2">по вертикали до</param>
+    /// <param name="delay">задержка (в мс)</param>
+    public async Task Swipe(int x1, int y1, int x2, int y2, int delay)
+    {
+        if (!await Memu.Exists(Index))
+        {
+            Log.Write($"[{Index}] -> VM not found");
+            return;
+        }
+
+        await MemuCmd.ExecMemuc($"-i {Index} execcmd input touchscreen swipe {x1} {y1} {x2} {y2} {delay}");
+
+        Log.Write($"[{Index}] -> input touchscreen swipe {x1} {y1} {x2} {y2}");
+    }
+
+    /// <summary>
     /// Проверка элемента на существование
     /// </summary>
     /// <param name="uiElement">название элемента в интерфейсе</param>
@@ -210,6 +231,14 @@ public class Client
     {
         var result = await ShellCmd("uiautomator dump");
         var document = await ShellCmd("cat /storage/emulated/0/window_dump.xml");
+        //var document = await AdbShellCmd("cat /storage/emulated/0/window_dump.xml");
+        /*var tmpFileName = $"screen_data_{new Random().Next(10_000, 1_000_000)}.tmp";
+        await ShellCmd($"cp /storage/emulated/0/window_dump.xml /storage/emulated/0/Download/{tmpFileName}");
+        var pathOnLocalSystem = $@"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\Downloads\MEmu Download\{tmpFileName}";
+        var document = await File.ReadAllTextAsync(pathOnLocalSystem);
+        */
+        //File.Delete(pathOnLocalSystem);
+
         if (document != "" && !result.Contains("ERROR"))
             return document;
 
@@ -250,6 +279,28 @@ public class Client
         await Click(x, y);
 
         Log.Write($"[{Index}] -> input tap uiElement");
+    }
+
+    /// <summary>
+    /// Симуляция свайпа по экрану
+    /// </summary>
+    /// <param name="uiElement">название элемента в интерфейсе</param>
+    public async Task Swipe(string uiElement, int xTo = -1, int yTo = -1, int delay = 1, string? dump = null)
+    {
+        if (!await Memu.Exists(Index))
+        {
+            Log.Write($"[{Index}] -> VM not found");
+            return;
+        }
+
+        var (x, y) = await FindElement(uiElement, dump ?? await DumpScreen());
+
+        if (x == -1 && y == -1)
+            throw new Exception($"[{Index}] Can't found element by name \"{uiElement}\"");
+
+        await Swipe(x, y, xTo == -1 ? x : xTo, yTo == -1 ? y : yTo, delay * 1000);
+
+        Log.Write($"[{Index}] -> input swipe uiElement");
     }
 
     /// <summary>
@@ -379,6 +430,21 @@ public class Client
         }
 
         var result = await MemuCmd.ExecMemuc($"-i {Index} execcmd {cmd}");
+
+        Log.Write($"[{Index}] -> shellCmd be called");
+
+        return result;
+    }
+
+    public async Task<string> AdbShellCmd(string cmd)
+    {
+        if (!await Memu.Exists(Index))
+        {
+            Log.Write($"[{Index}] -> VM not found");
+            return string.Empty;
+        }
+
+        var result = await MemuCmd.ExecMemuc($"-i {Index} adb shell {cmd}");
 
         Log.Write($"[{Index}] -> shellCmd be called");
 

@@ -256,6 +256,7 @@ namespace UBot
         public string PathToFilePhones;
         public string PathToFileProxy;
         public string LinkToChangeIP;
+        public string ProxyBlackDay;
         public int? CountOfChatCrit;
         public string TextMessage;
         public bool RemoveAvatar;

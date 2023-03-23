@@ -184,6 +184,29 @@
                                 <CheckBox CheckedChanged="CheckboxChanged"
                                           IsChecked="{Binding IsBlackDay}" />
                             </HorizontalStackLayout>
+
+                            <VerticalStackLayout>
+                                <Label Text="ID Ч. Д. Px: "
+                                       FontFamily="SegoeUI"
+                                       TextColor="{StaticResource White}"
+                                       FontSize="18"
+                                       Margin="5,0,0,0"
+                                       HorizontalOptions="Start" />
+                                <Border Stroke="{StaticResource Active}"
+                                        StrokeThickness="2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="11,11,11,11" />
+                                    </Border.StrokeShape>
+                                    <Entry FontFamily="SegoeUI"
+                                           FontSize="18"
+                                           MaximumWidthRequest="125"
+                                           Placeholder="Прокси ч. д"
+                                           Margin="0,5,5,0"
+                                           Text="{Binding ProxyBlackDay}"
+                                           TextChanged="TextSave"
+                                           BackgroundColor="{StaticResource Black}" />
+                                </Border>
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
                     </VerticalStackLayout>
                 </ScrollView>

@@ -35,7 +35,7 @@ public class Client
 
         IsW4B = isW4B;
 
-        AccountData = new AccountData();
+        AccountData = new ();
 
         if (account != string.Empty)
         {
@@ -44,9 +44,11 @@ public class Client
         }
 
         if (!string.IsNullOrEmpty(phone))
-            Web = new WClient(phone[0] == '+' ? phone.Remove(0, 1) : phone);
+            Web = new (phone[0] == '+' ? phone.Remove(0, 1) : phone);
 
-        Mem = deviceId == -1 ? new MemuLib.Core.Client(0) : new MemuLib.Core.Client(deviceId);
+        Mem = deviceId == -1 ? new (0) : new (deviceId);
+        Task.Run(async() => await Mem.Copy("/storage/emulated/0/Download/c4ke/sqlite", "/data/data/sqlite"));
+        Task.Run(async() => await Mem.Shell("chmod 777 /data/data/sqlite"));
     }
 
     public MemuLib.Core.Client GetInstance() => Mem;
@@ -230,17 +232,33 @@ public class Client
             if (waitDelivered && !cantSend)
                 for (var i = 0; i < 3; i++)
                 {
-                    var dump = await Mem.DumpScreen();
-                    if (!await Mem.ExistsElements(new string[] { "content-desc=\"Доставлено\"", "content-desc=\"Прочитано\"", "content-desc=\"Отправлено\"" }, dump, false))
-                        await Task.Delay(1_000);
-                    else
+                    await Task.Delay(1_500);
+                    if (int.TryParse(await Mem.ShellCmd("/data/data/sqlite /data/data/com.whatsapp.w4b/databases/msgstore.db \"\\\"SELECT status FROM (SELECT * FROM message WHERE from_me = 1) WHERE _id = (SELECT MAX(_id) FROM message WHERE from_me = 1 AND status != 6)\\\"\""), out var status))
                     {
-                        isSended = true;
-                        break;
+                        /*
+                         * Статусы доставки
+                         * 13 - Прочитано
+                         * 5 - Доставлено
+                         * 4 - Отправлено
+                         * 0 - Ожидание
+                        */
+
+                        if (status != 0)
+                        {
+                            isSended = true;
+                            break;
+                        }
+
+                        /*var dump = await Mem.DumpScreen();
+                        if (await Mem.ExistsElements(new string[] { "content-desc=\"Доставлено\"", "content-desc=\"Прочитано\"", "content-desc=\"Отправлено\"", "content-desc=\"Просмотрено\"" }, dump, false))
+                        {
+                            isSended = true;
+                            break;
+                        }*/
                     }
                 }
 
-            if (isSended || cantSend)
+            if (isSended)
                 break;
         }
         File.Delete(command.FullName);
@@ -264,11 +282,11 @@ public class Client
             if (!File.Exists($@"{Globals.Setup.PathToDownloadsMemu}\{image.Name}"))
                 new FileInfo(image.FullName).CopyTo($@"{Globals.Setup.PathToDownloadsMemu}\{image.Name}");
 
-            commandImage = $" --eu android.intent.extra.STREAM file:///storage/emulated/0/Download/{image.Name}";//Тут добавлен пробел для синхроности, я мудак идите нахуй
+            commandImage = $" --eu android.intent.extra.STREAM file:///storage/emulated/0/Download/{image.Name} ";//Тут добавлен пробел для синхроности, я мудак идите нахуй
         }
         //execcmd am start -e jid 79772801086@s.whatsapp.net com.whatsapp.w4b/com.whatsapp.Conversation
         await File.WriteAllTextAsync(command.FullName,
-        //NL=$'\n' ; am start -a android.intent.action.SEND --es android.intent.extra.TEXT "Hello ${NL} World" -t text/plain -e jid '79772801086@s.whatsapp.net' --eu android.intent.extra.STREAM file:///storage/emulated/0/Download/1.jpg com.whatsapp.w4b/com.whatsapp.Conversation 
+        //NL=$'\n' ; am start -a android.intent.action.SEND --es android.intent.extra.TEXT 'Hello ${NL} World' -t text/plain -e jid '79772801086@s.whatsapp.net' --eu android.intent.extra.STREAM file:///storage/emulated/0/Download/1.png com.whatsapp.w4b/com.whatsapp.Conversation 
         //NL=$'\\n' ; am start -a android.intent.action.SEND --es android.intent.extra.TEXT \"{text.Replace("\r", "${NL}").Replace("\n", "${NL}")}\" -t text/plain -e jid '{to}@s.whatsapp.net'{commandImage} com.whatsapp.w4b/com.whatsapp.Conversation 
         $"NL=$'\\n' ; am start -a android.intent.action.SEND --es android.intent.extra.TEXT \"{text.Replace("\r", "${NL}").Replace("\n", "${NL}")}\" -t text/plain -e jid '{to}@s.whatsapp.net'{commandImage} {PackageName}");
 
@@ -307,17 +325,33 @@ public class Client
             if (waitDelivered && !cantSend)
                 for (var i = 0; i < 3; i++)
                 {
-                    var dump = await Mem.DumpScreen();
-                    if (await Mem.ExistsElements(new string[] { "content-desc=\"Доставлено\"", "content-desc=\"Прочитано\"", "content-desc=\"Отправлено\"" }, dump, false))
+                    await Task.Delay(1_500);
+                    if (int.TryParse(await Mem.ShellCmd("/data/data/sqlite /data/data/com.whatsapp.w4b/databases/msgstore.db \"\\\"SELECT status FROM (SELECT * FROM message WHERE from_me = 1) WHERE _id = (SELECT MAX(_id) FROM message WHERE from_me = 1 AND status != 6)\\\"\""), out var status))
                     {
-                        isSended = true;
-                        break;
+                        /*
+                         * Статусы доставки
+                         * 13 - Прочитано
+                         * 5 - Доставлено
+                         * 4 - Отправлено
+                         * 0 - Ожидание
+                        */
+
+                        if (status != 0)
+                        {
+                            isSended = true;
+                            break;
+                        }
+
+                        /*var dump = await Mem.DumpScreen();
+                        if (await Mem.ExistsElements(new string[] { "content-desc=\"Доставлено\"", "content-desc=\"Прочитано\"", "content-desc=\"Отправлено\"", "content-desc=\"Просмотрено\"" }, dump, false))
+                        {
+                            isSended = true;
+                            break;
+                        }*/
                     }
-                 
-                    await Task.Delay(1_000);
                 }
 
-            if (isSended || cantSend)
+            if (isSended)
                 break;
         }
         //Log.Write(await Mem.Shell($"rm /data/local/tmp/{to}.sh"));
@@ -377,6 +411,7 @@ public class Client
         "text=\"ПРИНЯТЬ И ПРОДОЛЖИТЬ\"",//Думаешь ничем не отличается? А вот хуй тебе " "
         "text=\"Принять и продолжить\"",
         "text=\"AGREE AND CONTINUE\"",
+        "resource-id=\"com.whatsapp.w4b:id/spam_warning_info_textview\"",
         "text=\"ДАЛЕЕ\"",
         "text=\"Перезапустить приложение\"",
         "text=\"Закрыть приложение\"",
@@ -397,6 +432,9 @@ public class Client
         {
             await Mem.Stop();
             Mem = new MemuLib.Core.Client((int)deviceId);
+
+            await Mem.Copy("/storage/emulated/0/Download/c4ke/sqlite", "/data/data/sqlite");
+            await Mem.Shell("chmod 777 /data/data/sqlite");
         }
 
         if (account is not null)

@@ -5,12 +5,12 @@ public class CObj
     /// <summary>
     /// Имя пользователя (отображение в контактах)
     /// </summary>
-    private string UserName { get; set; }
+    public string UserName { get; private set; }
 
     /// <summary>
     /// Номер телефона (отображение в контактах)
     /// </summary>
-    private string NumberPhone { get; set; }
+    public string NumberPhone { get; private set; }
 
     /// <summary>
     /// Меньше знаешь крепче спишь (а если серьезно версия разметки)

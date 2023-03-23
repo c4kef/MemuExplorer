@@ -16,6 +16,7 @@ using UBot.Pages.Dialogs;
 using static Microsoft.Maui.ApplicationModel.Permissions;
 using Windows.Media.Protection.PlayReady;
 using Newtonsoft.Json.Linq;
+using Microsoft.Maui.Controls;
 
 namespace UBot.Whatsapp;
 
@@ -466,29 +467,45 @@ public class AccPreparation
                 }
             }*/
 
-            while (true)
+
+            for (var repeatId = 0; repeatId < Globals.Setup.RepeatCounts; repeatId++)
             {
-                var devices = ManagerView.GetInstance().Emulators.Where(device => !busyDevices.Select(device => device.Key.Index).Contains(device.Index) && device.IsEnabled)
-                    .Take(2).ToArray();
+                Log.Write($"[I] - Круг: {repeatId}\n", _logFile.FullName);
+                for (var groupId = 0; groupId < Globals.Setup.CountGroups; groupId++)
+                {
+                    var id = groupId;
+                    await Task.Delay(100);
+                    mainTasks.Add(Task.Run(async () =>
+                    {
+                        lock (_lock)
+                        {
+                            var devices = ManagerView.GetInstance().Emulators.Where(device => !busyDevices.Select(device => device.Key.Index).Contains(device.Index) && device.IsEnabled).Take(Globals.Setup.CountThreads.Value).ToArray();
+                            if (devices.Length != (int)Globals.Setup.CountThreads)
+                            {
+                                Log.Write($"[I] - Больше девайсов не найдено, остаточное кол-во: {devices.Length}\n", _logFile.FullName);
+                                return;
+                            }
 
-                if (devices.Length != 2)
-                    break;
+                            _tetheredDevices[id] = new List<Client>();
+                            _readyPhones[id] = new List<Client>();
 
-                var id = new Random().Next(0, 10_000);
+                            foreach (var device in devices)
+                            {
+                                busyDevices[device] = id;
+                                _tetheredDevices[id].Add(new Client(deviceId: device.Index));
+                            }
+                        }
 
-                _tetheredDevices[id] = new List<Client> { new Client(deviceId: devices[0].Index), new Client(deviceId: devices[1].Index) };
+                        await HandlerArtemiy2(message.Split('\n'), id);
+                    }));
+                }
 
-                var task = HandlerArtemiy(message.Split('\n'), id);
+                Task.WaitAll(mainTasks.ToArray(), -1);
 
-                await Task.Delay(1_000);
-
-                mainTasks.Add(task);
-
-                foreach (var device in devices)
-                    busyDevices[device] = id;
+                busyDevices.Clear();
             }
 
-            Task.WaitAll(mainTasks.ToArray(), -1);
+            _usedPhones.Clear();
         }
 
         if (!_currentProfile.WarmMethodIlya && !_currentProfile.WarmMethodValera)
@@ -522,14 +539,28 @@ public class AccPreparation
                                     busyDevices[device] = id;
                             }
 
+                            _readyPhones[id] = new List<Client>();
+                            var lastCountThreads = 0;
+
                             foreach (var device in devices)
                             {
-                                tasks.Add(Handler(string.IsNullOrEmpty(message) ? Array.Empty<string>() : message.Split('\n'), id, new Client(deviceId: device.Index)));
-                                await Task.Delay(1_500);
+                                var client = new Client(deviceId: device.Index);
+                                _readyPhones[id].Add(client);
+                                tasks.Add(Handler(string.IsNullOrEmpty(message) ? Array.Empty<string>() : message.Split('\n'), id, client));
+                                while (lastCountThreads == _activePhones.Count(phone => phone[0].ToString() == id.ToString()))
+                                {
+                                    if (_accountsNotFound || IsStop)
+                                        break;
+
+                                    await Task.Delay(500);
+                                }
+
+                                lastCountThreads = _activePhones.Count(phone => phone[0].ToString() == id.ToString());
                             }
 
                             Task.WaitAll(tasks.ToArray(), -1);
 
+                            _readyPhones[id].Clear();
                             _activePhones.RemoveAll(obj => obj[0].ToString() == id.ToString());
                             tasks.Clear();
 
@@ -575,6 +606,7 @@ public class AccPreparation
         _activePhones.Clear();
         _tetheredDevices.Clear();
     }
+
     private async Task WarmMethodIlya(string[] messages, int threadId, Client client, bool isFeel)
     {
         try
@@ -830,7 +862,6 @@ public class AccPreparation
             Log.Write($"[CRITICAL] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
         }
     }
-
 
     //Способ Ильи с загрузкой акков, тобишь загружаем каждый раз акк, ждем 5 сек условно говоря и он отправляет велкам текст
     /*private async Task WarmMethodIlya(string[] messages, int threadId, Client client, bool isFeel)
@@ -1293,8 +1324,498 @@ public class AccPreparation
         return true;
     }
 
+    private async Task HandlerArtemiy2(string[] messages, int threadId)
+    {
+    getAccount:
+        if (IsStop)
+            return;
+
+        var (phone, path) = ("", "");
+
+        lock (_lock)
+        {
+            var usedphones = _usedPhones.Select(phone => phone.Key.Remove(0, 1)).ToList();
+
+            foreach(var client in _readyPhones[threadId])
+                usedphones.AddRange(client.AccountData.MessageHistory.Keys);
+
+            var result = Globals.GetAccounts(usedphones.ToArray(), true, _lock, _readyPhones[threadId].Select(_client => _client.Phone.Replace("+", "")).ToArray());
+
+            if (result.Length == 0)
+            {
+                Log.Write($"[I] - аккаунт не был найден\n", _logFile.FullName);
+                _accountsNotFound = true;
+                return;
+            }
+
+            (phone, path) = result[0];
+
+            if (_usedPhones.Select(phone => phone.Key.Remove(0, 1)).ToArray().Contains(phone))
+            {
+                Log.Write($"[I] - дубликат аккаунта\n", _logFile.FullName);
+                goto getAccount;
+            }
+
+            _usedPhones.Add(threadId + phone, false);
+        }
+
+        var _client = GetFreeDevice();
+
+        if (_client != null)
+        {
+            await _client.GetInstance().ShellCmd("settings put global window_animation_scale 0");
+            await _client.GetInstance().ShellCmd("settings put global transition_animation_scale 0");
+            await _client.GetInstance().ShellCmd("settings put global animator_duration_scale 0");
+
+            await _client.GetInstance().RunApk("net.sourceforge.opencamera");
+            await _client.GetInstance().StopApk("net.sourceforge.opencamera");
+
+            await _client.GetInstance().ClearContacts();
+
+            if (!await TryLogin(_client, phone, path))
+            {
+                ++DashboardView.GetInstance().DeniedTasks;
+                ++DashboardView.GetInstance().DeniedTasksStart;
+                Log.Write($"[{phone}] - не смогли войти\n", _logFile.FullName);
+                goto getAccount;
+            }
+            else
+                Log.Write($"[{phone}] - смогли войти\n", _logFile.FullName);
+
+            _readyPhones[threadId].Add(_client);
+
+            if (_readyPhones[threadId].Count < Globals.Setup.CountThreads)
+                goto getAccount;
+        }
+
+        var StopCurrentThread = false;
+
+        var phones = _readyPhones[threadId].Select(device => device.Phone).ToArray();
+
+        var contactPhoness = new List<CObj>();
+        foreach (var phoneForContact in phones)
+            contactPhoness.Add(new(MemuLib.Globals.RandomString(new Random().Next(3, 10), true).ToLower()/*_names[new Random().Next(0, _names.Length)]*/, phoneForContact));
+
+        foreach (var client in _readyPhones[threadId])
+        {
+            await client.GetInstance().StopApk(client.PackageName);
+            var contacts = contactPhoness.Where(contact => contact.NumberPhone != client.Phone).ToList();
+            
+            foreach (var contact in client.AccountData.MessageHistory.Keys.Select(phone => $"+{phone}").ToArray())
+                contacts.Add(new(MemuLib.Globals.RandomString(new Random().Next(3, 10), true).ToLower(), contact));
+
+            await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf", ContactManager.Export(contacts));
+            await client.ImportContacts($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf");
+            await Task.Delay(1_000);
+            await client.GetInstance().RunApk(client.PackageName);
+        }
+
+        File.Delete($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf");
+
+        try
+        {
+            if (_accountsNotFound || IsStop)
+                return;
+
+            if (Directory.Exists(Globals.Setup.PathToFolderWarmFiles))
+            {
+                foreach (var client in _readyPhones[threadId])
+                {
+                againTry:
+                    if (StopCurrentThread)
+                        break;
+
+                    if (!await client.IsValid() || IsStop)
+                    {
+                        if (!IsStop)
+                            StopCurrentThread = true;
+
+                        break;
+                    }
+
+                    if (!await SetStatus(client))
+                        goto againTry;
+                }
+            }
+
+            await Task.Delay((Globals.Setup.DelayFirstMessageAccount ?? 0) * 1000);
+            
+            if (IsStop)
+                return;
+
+            for (var i = 0; i < Globals.Setup.CountMessages; i++)
+            {
+                if (StopCurrentThread)
+                    break;
+
+                var currentThreads = new List<Task>();
+
+                foreach (var clientTemp in _readyPhones[threadId])
+                {
+                    var client = clientTemp;
+                    currentThreads.Add(Task.Run(async () =>
+                    {
+                        if (!await client.IsValid() || IsStop)
+                        {
+                            if (!IsStop)
+                                StopCurrentThread = true;
+
+                            return;
+                        }
+
+                        if (Directory.Exists(Globals.Setup.PathToFolderWarmFiles))
+                        {
+                            //Блять, что за хуйню я написал ниже... Ебана в рот...
+                            foreach (var warmPhone in _readyPhones[threadId].Where(otherClient => otherClient.Phone != client.Phone))
+                            {
+                                int[] arrfuck = new[] { 1, 2, 3, 4, 5 }.OrderBy(x => new Random().Next()).ToArray();
+                                for (var x = 0; x < ((i == 0) ? 5 : new Random().Next(3, 5)); x++)
+                                {
+                                    switch (arrfuck[x])
+                                    {
+                                        case 1:
+                                            await SendTextMessage(client, warmPhone.Phone);
+                                            break;
+                                        case 2:
+                                            await SendMusicMessage(client, warmPhone.Phone);
+                                            break;
+                                        case 3:
+                                            await SendFileMessage(client, warmPhone.Phone);
+                                            break;
+                                        case 4:
+                                            await SendImageMessage(client, warmPhone.Phone);
+                                            break;
+                                        case 5:
+                                            await SendVoiceMessage(client, warmPhone.Phone, new Random().Next(11, 21), new Random().Next(22, 41));
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            foreach (var warmPhone in _readyPhones[threadId].Where(otherClient => otherClient.Phone != client.Phone))
+                            {
+                            again:
+                                if (!await SendTextMessage(client, warmPhone.Phone))
+                                    if (!await client.IsValid())
+                                        break;
+                                    else
+                                        goto again;
+                            }
+                        }
+                    }));
+                }
+
+                Task.WaitAll(currentThreads.ToArray());
+            }
+
+            if (Directory.Exists(Globals.Setup.PathToFolderWarmFiles))
+            {
+                foreach (var client in _readyPhones[threadId])
+                {
+                againTry:
+                    if (StopCurrentThread)
+                        break;
+
+                    if (!await client.IsValid() || IsStop)
+                    {
+                        if (!IsStop)
+                            StopCurrentThread = true;
+
+                        break;
+                    }
+
+                    foreach (var warmPhone in _readyPhones[threadId].Where(user => user.Phone != client.Phone))
+                        if (!await SendCall(client, warmPhone, new Random().Next(60, 120), false, true))
+                            goto againTry;
+                }
+            }
+
+            Log.Write("Try update info", _logFile.FullName);
+
+            foreach (var client in _readyPhones[threadId])
+            {
+                foreach (var phoneClient in _readyPhones[threadId].Where(_client => _client.Phone.Replace("+", "") != client.Phone.Replace("+", "")).Select(_client => _client.Phone.Replace("+", "")).ToArray())
+                    client.AccountData.MessageHistory[phoneClient] = DateTime.Now;
+
+                await client.UpdateData(true);
+            }
+
+            Log.Write("Try unload", _logFile.FullName);
+
+            foreach (var client in _readyPhones[threadId])
+            {
+                if (!await client.IsValid())
+                {
+                    await Globals.TryMove(path, $@"{Globals.BanWorkDirectory.FullName}\{phone}");
+                    ++DashboardView.GetInstance().DeniedTasks;
+                    ++DashboardView.GetInstance().DeniedTasksWork;
+                }
+                else if (!StopCurrentThread)
+                {
+                    ++client.AccountData.TrustLevelAccount;
+                    ++DashboardView.GetInstance().CompletedTasks;
+                }
+
+                await client.UpdateData(true);
+            }
+
+            Log.Write("KK", _logFile.FullName);
+
+            _readyPhones[threadId].Clear();
+            foreach (var _device in _usedPhones.Keys.Where(_phone => _phone[0].ToString() == threadId.ToString()))
+                _usedPhones.Remove(_device);
+
+            Log.Write("KK x2", _logFile.FullName);
+        }
+        catch (Exception ex)
+        {
+            Log.Write($"[Handler] - крит. ошибка: {ex.Message}\n", _logFile.FullName);
+            foreach (var client in _readyPhones[threadId])
+            {
+                if (!await client.IsValid())
+                {
+                    await Globals.TryMove(path, $@"{Globals.WebBanWorkDirectory.FullName}\{phone}");
+                    ++DashboardView.GetInstance().DeniedTasks;
+                    ++DashboardView.GetInstance().DeniedTasksWork;
+                }
+            }
+
+            _readyPhones[threadId].Clear();
+            foreach (var _device in _usedPhones.Keys.Where(_phone => _phone[0].ToString() == threadId.ToString()))
+                _usedPhones.Remove(_device);
+        }
+
+        async Task<bool> SendTextMessage(Client client, string phone)
+        {
+        tryAgain:
+            if ((await client.SendPreMessage(phone[0] != '+' ? $"+{phone}" : phone, MemuLib.Globals.RandomEmoji(new Random().Next(3, 12)) + messages[new Random().Next(0, messages.Length - 1)].Replace("\"", "").Replace("\'", "") + MemuLib.Globals.RandomEmoji(new Random().Next(2, 10)), true)) != Client.StatusDelivered.Delivered)
+                if (!await client.IsValid())
+                    return false;
+                else
+                    goto tryAgain;
+
+            await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
+            return true;
+        }
+
+        /*async Task<bool> SendGifMessage(Client client, string phone)
+        {
+            if ((await client.SendMessage(phone[0] != '+' ? $"+{phone}" : phone, messages[new Random().Next(0, messages.Length - 1)].Replace("\"", "").Replace("\'", ""), await GetRandomFile(new string[] { ".gif" }), true)) != Client.StatusDelivered.Delivered)
+                return false;
+
+            await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
+            return true;
+        }*/
+
+        async Task<bool> SendFileMessage(Client client, string phone)
+        {
+        tryAgain:
+            if ((await client.SendMessage(phone[0] != '+' ? $"+{phone}" : phone, MemuLib.Globals.RandomEmoji(new Random().Next(3, 12)) + messages[new Random().Next(0, messages.Length - 1)].Replace("\"", "").Replace("\'", "") + MemuLib.Globals.RandomEmoji(new Random().Next(2, 10)), await GetRandomFile(new string[] { ".txt", ".doc", ".rar", ".zip", ".7zip" }), true)) != Client.StatusDelivered.Delivered)
+                if (!await client.IsValid())
+                    return false;
+                else
+                    goto tryAgain;
+
+            await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
+            return true;
+        }
+
+        async Task SendMusicMessage(Client client, string phone)
+        {
+            await client.SendMessage(phone[0] != '+' ? $"+{phone}" : phone, MemuLib.Globals.RandomEmoji(new Random().Next(3, 12)) + messages[new Random().Next(0, messages.Length - 1)].Replace("\"", "").Replace("\'", "") + MemuLib.Globals.RandomEmoji(new Random().Next(2, 10)), await GetRandomFile(new string[] { ".mp3", ".wav" }), false);
+            await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
+        }
+
+        async Task<bool> SendImageMessage(Client client, string phone)
+        {
+        tryAgain:
+            if ((await client.SendMessage(phone[0] != '+' ? $"+{phone}" : phone, MemuLib.Globals.RandomEmoji(new Random().Next(3, 12)) + messages[new Random().Next(0, messages.Length - 1)].Replace("\"", "").Replace("\'", "") + MemuLib.Globals.RandomEmoji(new Random().Next(2, 10)), await GetRandomFile(new string[] { ".jpg", ".jpeg", ".png" }), true)) != Client.StatusDelivered.Delivered)
+                if (!await client.IsValid())
+                    return false;
+                else
+                    goto tryAgain;
+
+            await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
+            return true;
+        }
+
+        async Task<bool> SendVoiceMessage(Client client, string phone, int delayFrom, int delayTo)
+        {
+        tryAgain:
+            //Переходим в диалог
+            await client.GetInstance().Shell($"am start -a android.intent.action.SEND -e jid '{phone.Replace("+", "")}@s.whatsapp.net' {client.PackageName}/com.whatsapp.Conversation");
+
+            await Task.Delay(1_000);//Ждем-с
+            var dump = await client.GetInstance().DumpScreen();
+            if (!await client.GetInstance().ExistsElement($"resource-id=\"{client.PackageName}:id/voice_note_btn\"", dump))
+                if (!await client.IsValid())
+                    return false;
+                else
+                    goto tryAgain;
+
+            await client.GetInstance().Swipe($"resource-id=\"{client.PackageName}:id/voice_note_btn\"", delay: new Random().Next(delayFrom, delayTo), dump: dump);
+
+            await Task.Delay(new Random().Next((int)Globals.Setup.DelaySendMessageFrom * 1000, (int)Globals.Setup.DelaySendMessageTo * 1000));
+            return true;
+        }
+
+        async Task<bool> SendCall(Client c1, Client c2, int delay, bool isLineBusy, bool IsAccept)
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                //Переходим в диалог
+                await c1.GetInstance().Shell($"am start -a android.intent.action.SEND -e jid '{c2.Phone.Replace("+", "")}@s.whatsapp.net' {c1.PackageName}/com.whatsapp.Conversation");
+
+                await Task.Delay(1_000);//Ждем-с
+                var dump = await c1.GetInstance().DumpScreen();
+                if (!await c1.GetInstance().ExistsElement("content-desc=\"Звонок\"", dump))
+                    continue;
+
+                await c1.GetInstance().Click("content-desc=\"Звонок\"", dump);
+                await Task.Delay(1_000);//Ждем-с
+
+                dump = await c1.GetInstance().DumpScreen();
+                if (!await c1.GetInstance().ExistsElement("text=\"Аудиозвонок\"", dump))
+                    continue;
+
+                await c1.GetInstance().Click("text=\"Аудиозвонок\"", dump);
+                await Task.Delay(1_000);//Ждем-с
+
+                dump = await c1.GetInstance().DumpScreen();
+                if (!await c1.GetInstance().ExistsElement("text=\"Звонок\"", dump))
+                    continue;
+
+                await c1.GetInstance().Click("text=\"Звонок\"", dump);
+                await Task.Delay(3_000);//Ждем-с
+
+                if (!IsAccept)
+                {
+                    await Task.Delay(delay * 1000);//Ждем-с
+                    if (isLineBusy)
+                        await c1.GetInstance().Click("content-desc=\"Покинуть звонок\"");
+                    else
+                        await c2.GetInstance().ShellCmd("input tap 205 205");
+                }
+                else
+                {
+                    await c2.GetInstance().ShellCmd("input tap 405 205");
+                    await Task.Delay(delay * 1000);//Ждем-с
+                    await c1.GetInstance().Click("content-desc=\"Покинуть звонок\"");
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        async Task<bool> SetStatus(Client client)
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                //Устанавливаем текстовый статус
+                await client.GetInstance().Shell($"am start -a android.intent.action.SEND --es android.intent.extra.TEXT \"{MemuLib.Globals.RandomEmoji(new Random().Next(3, 10)) + MemuLib.Globals.RandomString(new Random().Next(10, 20), true).ToLower() + MemuLib.Globals.RandomEmoji(new Random().Next(3, 10))}\" -t text/plain {client.PackageName}/com.whatsapp.textstatuscomposer.TextStatusComposerActivity");
+
+                await Task.Delay(1_000);//Ждем-с
+
+                var dump = await client.GetInstance().DumpScreen();
+                if (!await client.GetInstance().ExistsElement($"resource-id=\"{client.PackageName}:id/send\"", dump))
+                    if (i == 2)
+                        return false;
+                    else
+                        continue;
+
+                await client.GetInstance().Click($"resource-id=\"{client.PackageName}:id/send\"", dump);
+
+                await Task.Delay(1_000);//Ждем-с
+
+                dump = await client.GetInstance().DumpScreen();
+                if (await client.GetInstance().ExistsElement("resource-id=\"android:id/button1\"", dump))
+                    await client.GetInstance().Click("resource-id=\"android:id/button1\"", dump);
+
+                break;
+            }
+
+            //Переходим к фото статусу
+            /*for (var i = 0; i < 3; i++)
+            {
+                while (Globals.QrCode != null)
+                    await Task.Delay(1_000);
+
+                await client.GetInstance().Shell($"am start -a android.intent.action.SEND {client.PackageName}/com.whatsapp.camera.CameraActivity");
+
+                await Task.Delay(1_000);//Ждем-с
+
+                var dump = await client.GetInstance().DumpScreen();
+                if (!await client.GetInstance().ExistsElement("resource-id=\"{client.PackageName}:id/shutter\"", dump))
+                    if (i == 2)
+                        return false;
+                    else
+                        continue;
+
+                await client.GetInstance().Click("resource-id=\"{client.PackageName}:id/shutter\"", dump);
+
+                await Task.Delay(1_000);//Ждем-с
+
+                dump = await client.GetInstance().DumpScreen();
+                if (!await client.GetInstance().ExistsElement("resource-id=\"{client.PackageName}:id/send\"", dump))
+                    if (i == 2)
+                        return false;
+                    else
+                        continue;
+
+                await client.GetInstance().Click("resource-id=\"{client.PackageName}:id/send\"", dump);
+
+                await Task.Delay(1_000);//Ждем-с
+
+                await client.GetInstance().Click("text=\"Мой статус\"");
+
+                await Task.Delay(1_000);//Ждем-с
+
+                dump = await client.GetInstance().DumpScreen();
+                if (!await client.GetInstance().ExistsElement("resource-id=\"{client.PackageName}:id/send\"", dump))
+                    if (i == 2)
+                        return false;
+                    else
+                        continue;
+
+                await client.GetInstance().Click("resource-id=\"{client.PackageName}:id/send\"", dump);
+
+                break;
+            }*/
+            return true;
+        }
+
+        async Task<FileInfo?> GetRandomFile(string[] ext)
+        {
+            if (!Directory.Exists(Globals.Setup.PathToFolderWarmFiles))
+                return null;
+
+            var randomFiles = Directory.GetFiles(Globals.Setup.PathToFolderWarmFiles).OrderBy(x => new Random().Next()).ToArray();
+            if (ext != null && ext.Length > 0)
+                randomFiles = randomFiles.Where(filePath => ext.Contains(Path.GetExtension(filePath))).ToArray();
+
+            return randomFiles.Length == 0 ? null : new FileInfo(randomFiles[0]);
+        }
+
+        Client? GetFreeDevice()
+        {
+            lock (_lock)
+            {
+                foreach (var client in _tetheredDevices[threadId])
+                    if (!_readyPhones[threadId].Contains(client))
+                        return client;
+
+                return null;
+            }
+        }
+    }
+
     private async Task HandlerArtemiy(string[] messages, int threadId)
     {
+        var countTrys = 0;
+        tryAgain:
         try
         {
             var (c1, c2) = (_tetheredDevices[threadId][0], _tetheredDevices[threadId][1]);
@@ -1305,9 +1826,6 @@ public class AccPreparation
             await c1.GetInstance().StopApk("net.sourceforge.opencamera");
             await c2.GetInstance().StopApk("net.sourceforge.opencamera");
 
-            await c1.GetInstance().ClearContacts();
-            await c2.GetInstance().ClearContacts();
-
             var c1Auth = false;
             var c2Auth = false;
 
@@ -1315,15 +1833,18 @@ public class AccPreparation
 
             while (!IsStop)
             {
+                await c1.GetInstance().ClearContacts();
+                await c2.GetInstance().ClearContacts();
+
                 var (phone, path) = ("", "");
+                var usedphones = _activePhones.Where(phone => phone[0].ToString() == threadId.ToString()).Select(phone => phone.Remove(0, 1)).ToList();
 
                 //lock (_lock)
                 //{
-                var usedPhones = _usedPhones.Select(phone => phone.Key).ToList();
-                /*if (c1Auth && _currentProfile.Warm)
-                    usedPhones.AddRange(c1.AccountData.MessageHistory.Keys);*/
+                if (c1Auth && _currentProfile.WarmMethodValera)
+                    usedphones.AddRange(c1.AccountData.MessageHistory.Keys);
 
-                var result = Globals.GetAccounts(usedPhones.ToArray(), true, _lock);
+                var result = Globals.GetAccounts(_usedPhones.Select(phone => phone.Key).ToArray(), true, _lock, _currentProfile.WarmMethodValera ? usedphones.ToArray() : null);
 
                 DashboardView.GetInstance().AllTasks = result.Length;
 
@@ -1368,6 +1889,8 @@ public class AccPreparation
                     }
                 }
 
+                countTrys = 0;
+
                 if (!await SetStatus(c1))
                 {
                     c1Auth = false;
@@ -1380,22 +1903,30 @@ public class AccPreparation
                     continue;
                 }
 
-                await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf", ContactManager.Export(
-                    new List<CObj>()
+                var contacts1 = new List<CObj>()
                     {
                         new(_names[new Random().Next(0, _names.Length)], c2.Phone),
-                    }
-                ));
+                    };
 
-                var c1ContactsName = $"{new Random().Next(1_000, 1_000_000)}_contacts.vcf";
+                foreach (var contact in c1.AccountData.MessageHistory.Keys)
+                    contacts1.Add(new(_names[new Random().Next(0, _names.Length)], $"+{contact}"));
+
+
+                await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf", ContactManager.Export(contacts1));
+
+                var c1ContactsName = $"{new Random().Next(1_000, 1_000_000)}_contacts.vcf"; 
                 await c1.ImportContacts($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf", c1ContactsName);
 
-                await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf", ContactManager.Export(
-                    new List<CObj>()
+
+                var contacts2 = new List<CObj>()
                     {
                         new(_names[new Random().Next(0, _names.Length)], c1.Phone),
-                    }
-                ));
+                    };
+
+                foreach (var contact in c2.AccountData.MessageHistory.Keys)
+                    contacts2.Add(new(_names[new Random().Next(0, _names.Length)], $"+{contact}"));
+
+                await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf", ContactManager.Export(contacts2));
 
                 var c2ContactsName = $"{new Random().Next(1_000, 1_000_000)}_contacts.vcf";
                 await c2.ImportContacts($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf", c2ContactsName);
@@ -1423,6 +1954,8 @@ public class AccPreparation
                         }
                         continue;
                     }
+
+                    await Task.Delay(new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)));
 
                     if (i == 0 ? await c2.SendPreMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]) != Client.StatusDelivered.Delivered : await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]) != Client.StatusDelivered.Delivered)
                     {
@@ -1548,7 +2081,7 @@ public class AccPreparation
                         }
                     }
                     //Voice messages
-                    
+
                     await SendCall(c1, c2, new Random().Next(15, 20), true);
                     await SendCall(c1, c2, new Random().Next(15, 20), false);
 
@@ -1556,13 +2089,59 @@ public class AccPreparation
                 }
                 while (!isCompleted);
 
+                await c1.GetInstance().ShellCmd("input keyevent KEYCODE_HOME");//Сворачиваемся
+                await c2.GetInstance().ShellCmd("input keyevent KEYCODE_HOME");
+
+                await Task.Delay(new Random().Next(60_000 * 1, 60_000 * 2));//Wait 
+
+                //Текстовый прогрев
+                for (var i = 0; i < 10; i++)
+                {
+                    if (!c1Auth || !c2Auth || IsStop)
+                        break;
+
+                    if (i == 0 ? await c1.SendPreMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]) != Client.StatusDelivered.Delivered : await c1.SendMessage(c2.Phone, messages[rnd.Next(0, messages.Length - 1)]) != Client.StatusDelivered.Delivered)
+                    {
+                        if (!await c1.IsValid())
+                        {
+                            c1Auth = false;
+                            ++DashboardView.GetInstance().DeniedTasks;
+                            ++DashboardView.GetInstance().DeniedTasksWork;
+                            await DeleteAccount(c1);
+                            break;
+                        }
+                        continue;
+                    }
+
+                    await Task.Delay(new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)));
+
+                    if (i == 0 ? await c2.SendPreMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]) != Client.StatusDelivered.Delivered : await c2.SendMessage(c1.Phone, messages[rnd.Next(0, messages.Length - 1)]) != Client.StatusDelivered.Delivered)
+                    {
+                        if (!await c2.IsValid())
+                        {
+                            c2Auth = false;
+                            ++DashboardView.GetInstance().DeniedTasks;
+                            ++DashboardView.GetInstance().DeniedTasksWork;
+                            await DeleteAccount(c2);
+                            break;
+                        }
+                        continue;
+                    }
+
+                    await Task.Delay(new Random().Next((int)Math.Floor((float)Globals.Setup.DelaySendMessageFrom * 1000f), (int)Math.Floor((float)Globals.Setup.DelaySendMessageTo * 1000f)));
+                }
+
                 Log.Write($"[INFO] - Закончили прогрев\n", _logFile.FullName);
                 c1.AccountData.FirstMsg = true;
                 c2.AccountData.FirstMsg = false;
                 ++c1.AccountData.TrustLevelAccount;
                 ++c2.AccountData.TrustLevelAccount;
 
+                Log.Write("[INFO] - Попытка обновить информацию", _logFile.FullName);
+
+                c1.AccountData.MessageHistory[c2.Phone.Replace("+", "")] = DateTime.Now;
                 await c1.UpdateData(true);
+                c2.AccountData.MessageHistory[c1.Phone.Replace("+", "")] = DateTime.Now;
                 await c2.UpdateData(true);
 
                 await c1.GetInstance().StopApk(c1.PackageName);
@@ -1639,7 +2218,9 @@ public class AccPreparation
         }
         catch (Exception ex)
         {
-            Log.Write($"[CRITICAL] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
+            Log.Write($"[CRITICAL] [{countTrys}] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
+            if (countTrys++ < 3)
+                goto tryAgain;
         }
 
         async Task<FileInfo?> GetRandomFile(string[] ext)
@@ -1657,13 +2238,14 @@ public class AccPreparation
         async Task<bool> SendVoiceMessage(Client client, string phone)
         {
             //Переходим в диалог
-            await client.GetInstance().Shell($"am start -a android.intent.action.SEND -e jid '{phone.Replace("+", "")}@s.whatsapp.net' com.whatsapp.w4b/com.whatsapp.Conversation");
+            await client.GetInstance().Shell($"am start -a android.intent.action.SEND -e jid '{phone.Replace("+", "")}@s.whatsapp.net' {client.PackageName}/com.whatsapp.Conversation");
 
             await Task.Delay(1_000);//Ждем-с
-            if (!await client.GetInstance().ExistsElement("resource-id=\"com.whatsapp.w4b:id/voice_note_btn\""))
+            var dump = await client.GetInstance().DumpScreen();
+            if (!await client.GetInstance().ExistsElement($"resource-id=\"{client.PackageName}:id/voice_note_btn\"", dump))
                 return false;
 
-            await client.GetInstance().Swipe("resource-id=\"com.whatsapp.w4b:id/voice_note_btn\"", delay: new Random().Next(31, 50));
+            await client.GetInstance().Swipe($"resource-id=\"{client.PackageName}:id/voice_note_btn\"", delay: new Random().Next(31, 50), dump: dump);
 
             return true;
         }
@@ -1673,25 +2255,28 @@ public class AccPreparation
             for (var i = 0; i < 3; i++)
             {
                 //Переходим в диалог
-                await c1.GetInstance().Shell($"am start -a android.intent.action.SEND -e jid '{c2.Phone.Replace("+", "")}@s.whatsapp.net' com.whatsapp.w4b/com.whatsapp.Conversation");
+                await c1.GetInstance().Shell($"am start -a android.intent.action.SEND -e jid '{c2.Phone.Replace("+", "")}@s.whatsapp.net' {c1.PackageName}/com.whatsapp.Conversation");
 
                 await Task.Delay(1_000);//Ждем-с
-                if (!await c1.GetInstance().ExistsElement("content-desc=\"Звонок\""))
+                var dump = await c1.GetInstance().DumpScreen();
+                if (!await c1.GetInstance().ExistsElement("content-desc=\"Звонок\"", dump))
                     continue;
 
-                await c1.GetInstance().Click("content-desc=\"Звонок\"");
+                await c1.GetInstance().Click("content-desc=\"Звонок\"", dump);
                 await Task.Delay(1_000);//Ждем-с
 
-                if (!await c1.GetInstance().ExistsElement("text=\"Аудиозвонок\""))
+                dump = await c1.GetInstance().DumpScreen();
+                if (!await c1.GetInstance().ExistsElement("text=\"Аудиозвонок\"", dump))
                     continue;
 
-                await c1.GetInstance().Click("text=\"Аудиозвонок\"");
+                await c1.GetInstance().Click("text=\"Аудиозвонок\"", dump);
                 await Task.Delay(1_000);//Ждем-с
 
-                if (!await c1.GetInstance().ExistsElement("text=\"Звонок\""))
+                dump = await c1.GetInstance().DumpScreen();
+                if (!await c1.GetInstance().ExistsElement("text=\"Звонок\"", dump))
                     continue;
 
-                await c1.GetInstance().Click("text=\"Звонок\"");
+                await c1.GetInstance().Click("text=\"Звонок\"", dump);
                 await Task.Delay(delay * 1000);//Ждем-с
 
                 if (isLineBusy)
@@ -1710,50 +2295,57 @@ public class AccPreparation
             for (var i = 0; i < 3; i++)
             {
                 //Устанавливаем текстовый статус
-                await client.GetInstance().Shell($"am start -a android.intent.action.SEND --es android.intent.extra.TEXT \"{MemuLib.Globals.RandomString(new Random().Next(10, 20), true).ToLower()}\" -t text/plain com.whatsapp.w4b/com.whatsapp.textstatuscomposer.TextStatusComposerActivity");
+                await client.GetInstance().Shell($"am start -a android.intent.action.SEND --es android.intent.extra.TEXT \"{MemuLib.Globals.RandomString(new Random().Next(10, 20), true).ToLower()}\" -t text/plain {client.PackageName}/com.whatsapp.textstatuscomposer.TextStatusComposerActivity");
 
                 await Task.Delay(1_000);//Ждем-с
 
-                if (!await client.GetInstance().ExistsElement("resource-id=\"com.whatsapp.w4b:id/send\""))
+                var dump = await client.GetInstance().DumpScreen();
+                if (!await client.GetInstance().ExistsElement($"resource-id=\"{client.PackageName}:id/send\"", dump))
                     if (i == 2)
                         return false;
                     else
                         continue;
 
-                await client.GetInstance().Click("resource-id=\"com.whatsapp.w4b:id/send\"");
+                await client.GetInstance().Click($"resource-id=\"{client.PackageName}:id/send\"", dump);
 
                 await Task.Delay(1_000);//Ждем-с
 
-                if (await client.GetInstance().ExistsElement("resource-id=\"android:id/button1\""))
-                    await client.GetInstance().Click("resource-id=\"android:id/button1\"");
+                dump = await client.GetInstance().DumpScreen();
+                if (await client.GetInstance().ExistsElement("resource-id=\"android:id/button1\"", dump))
+                    await client.GetInstance().Click("resource-id=\"android:id/button1\"", dump);
 
                 break;
             }
-            //Переходим к фото статусу
 
+            //Переходим к фото статусу
             for (var i = 0; i < 3; i++)
             {
-                await client.GetInstance().Shell($"am start -a android.intent.action.SEND com.whatsapp.w4b/com.whatsapp.camera.CameraActivity");
+                while (Globals.QrCode != null)
+                    await Task.Delay(1_000);
+
+                await client.GetInstance().Shell($"am start -a android.intent.action.SEND {client.PackageName}/com.whatsapp.camera.CameraActivity");
 
                 await Task.Delay(1_000);//Ждем-с
 
-                if (!await client.GetInstance().ExistsElement("resource-id=\"com.whatsapp.w4b:id/shutter\""))
+                var dump = await client.GetInstance().DumpScreen();
+                if (!await client.GetInstance().ExistsElement($"resource-id=\"{client.PackageName}:id/shutter\"", dump))
                     if (i == 2)
                         return false;
                     else
                         continue;
 
-                await client.GetInstance().Click("resource-id=\"com.whatsapp.w4b:id/shutter\"");
+                await client.GetInstance().Click($"resource-id=\"{client.PackageName}:id/shutter\"", dump);
 
                 await Task.Delay(1_000);//Ждем-с
 
-                if (!await client.GetInstance().ExistsElement("resource-id=\"com.whatsapp.w4b:id/send\""))
+                dump = await client.GetInstance().DumpScreen();
+                if (!await client.GetInstance().ExistsElement($"resource-id=\"{client.PackageName}:id/send\"", dump))
                     if (i == 2)
                         return false;
                     else
                         continue;
 
-                await client.GetInstance().Click("resource-id=\"com.whatsapp.w4b:id/send\"");
+                await client.GetInstance().Click($"resource-id=\"{client.PackageName}:id/send\"", dump);
 
                 await Task.Delay(1_000);//Ждем-с
 
@@ -1761,13 +2353,14 @@ public class AccPreparation
 
                 await Task.Delay(1_000);//Ждем-с
 
-                if (!await client.GetInstance().ExistsElement("resource-id=\"com.whatsapp.w4b:id/send\""))
+                dump = await client.GetInstance().DumpScreen();
+                if (!await client.GetInstance().ExistsElement($"resource-id=\"{client.PackageName}:id/send\"", dump))
                     if (i == 2)
                         return false;
                     else
                         continue;
 
-                await client.GetInstance().Click("resource-id=\"com.whatsapp.w4b:id/send\"");
+                await client.GetInstance().Click($"resource-id=\"{client.PackageName}:id/send\"", dump);
 
                 break;
             }
@@ -1777,14 +2370,16 @@ public class AccPreparation
 
     private async Task Handler(string[] messages, int threadId, Client client)
     {
+        var countTrys = 0;
         var countBans = 0;
+        tryAgain:
         try
         {
             var lastCountThreads = Globals.Setup.CountThreads;
 
-            await client.GetInstance().ShellCmd("settings put global window_animation_scale 0");
+            /*await client.GetInstance().ShellCmd("settings put global window_animation_scale 0");
             await client.GetInstance().ShellCmd("settings put global transition_animation_scale 0");
-            await client.GetInstance().ShellCmd("settings put global animator_duration_scale 0");
+            await client.GetInstance().ShellCmd("settings put global animator_duration_scale 0");*/
 
             await client.GetInstance().RunApk("net.sourceforge.opencamera");
             await client.GetInstance().StopApk("net.sourceforge.opencamera");
@@ -1794,7 +2389,12 @@ public class AccPreparation
             if (IsStop)
                 return;
 
-            var result = Globals.GetAccounts(_usedPhones.Select(phone => phone.Key.Remove(0, 1)).ToArray(), true, _lock, _currentProfile.Warm ? _activePhones.Where(phone => phone[0].ToString() == threadId.ToString()).Select(phone => phone.Remove(0, 1)).ToArray() : null);
+            var history = _usedPhones.Select(phone => phone.Key.Remove(0, 1)).ToList();
+            foreach (var lUsedPhones in _readyPhones[threadId].Where(_client => _client.GetInstance().Index != client.GetInstance().Index))
+                if (lUsedPhones.AccountData.MessageHistory != null)
+                    history.AddRange(lUsedPhones.AccountData.MessageHistory.Keys);
+
+            var result = Globals.GetAccounts(history.ToArray(), true, _lock, _currentProfile.Warm ? _activePhones.Where(phone => phone[0].ToString() == threadId.ToString()).Select(phone => phone.Remove(0, 1)).ToArray() : null);
 
             DashboardView.GetInstance().AllTasks = Directory.GetDirectories(Globals.Setup.PathToFolderAccounts).Where(dir => File.Exists($@"{dir}\Data.json") && !_usedPhones.ContainsKey(dir)).ToArray().Length;
 
@@ -1881,6 +2481,9 @@ public class AccPreparation
                     foreach (var phoneForContact in phones)
                         contactPhoness.Add(new(_names[new Random().Next(0, _names.Length)], "+" + phoneForContact));
 
+                    foreach (var phoneForContact in client.AccountData.MessageHistory.Keys)
+                        contactPhoness.Add(new(_names[new Random().Next(0, _names.Length)], "+" + phoneForContact));
+
                     await File.WriteAllTextAsync($@"{Globals.TempDirectory.FullName}\{phone}_contacts.vcf", ContactManager.Export(contactPhoness));
 
                     await client.ImportContacts($@"{Globals.TempDirectory.FullName}\{phone}_contacts.vcf");
@@ -1892,6 +2495,16 @@ public class AccPreparation
 
                     for (var i = 0; i < Globals.Setup.CountMessages; i++)//Первый этап - переписки между собой
                     {
+
+                        while (lastCountThreads != _activePhones.Count(phone => phone[0].ToString() == threadId.ToString()))
+                        {
+                            if (_accountsNotFound || IsStop)
+                                return;
+
+                            await Task.Delay(500);
+                            i = 0;//reset count message
+                        }
+
                         if (IsStop)
                             return;
 
@@ -1899,8 +2512,10 @@ public class AccPreparation
                         {
                             ++DashboardView.GetInstance().DeniedTasks;
                             ++DashboardView.GetInstance().DeniedTasksWork;
+                            _activePhones.Remove($"{threadId}{phone}");
                             await DeleteAccount(client);
-                            return;
+                            goto getAccount;
+                            //return;
                         }
 
                         foreach (var warmPhone in phones.Where(_phone => _phone != phone))
@@ -1911,7 +2526,9 @@ public class AccPreparation
                     }
 
                     client.AccountData.FirstMsg = phones[0] == phone;
-                    ++client.AccountData.TrustLevelAccount;
+                    client.AccountData.TrustLevelAccount += phones.Count(_phone => _phone != phone);
+                    foreach (var phoneClient in _activePhones.Where(phone => phone[0].ToString() == threadId.ToString()).Where(_client => _client.Remove(0, 1) != client.Phone.Replace("+", "")).Select(_client => _client.Remove(0, 1)).ToArray())
+                        client.AccountData.MessageHistory[phoneClient] = DateTime.Now;
 
                     await client.UpdateData(true);
 
@@ -1981,6 +2598,8 @@ public class AccPreparation
         catch (Exception ex)
         {
             Log.Write($"[CRITICAL] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
+            if (countTrys++ < 3)
+                goto tryAgain;
         }
     }
 
@@ -2355,7 +2974,7 @@ public class AccPreparation
 
                 var req = await WebReq.HttpPost("https://wasend.pro/api/user/qr", new Dictionary<string, string>()
                 {
-                    { "proxy", "random" },
+                    { "proxy", string.IsNullOrEmpty(Globals.Setup.ProxyBlackDay) ? "random" :  Globals.Setup.ProxyBlackDay },
                     { "min", Globals.Setup.DelaySendMessageFrom.ToString() },
                     { "max", Globals.Setup.DelaySendMessageTo.ToString() },
                     { "topic", "0" },
@@ -2402,6 +3021,10 @@ public class AccPreparation
                 {
                     Log.Write($"[{phone}] - Произошла ошибка: {ex.Message}\n", _logFile.FullName);
                 }
+
+
+                if (!initWithErrors)
+                    await Task.Delay(60_000 * 2);
 
                 await client.Web!.Free();
             }
@@ -2453,11 +3076,12 @@ public class AccPreparation
             }
 
             //await Task.Delay(1_000);
-            //resource-id="com.whatsapp.w4b:id/device_name_edit_text"
+            //resource-id="{client.PackageName}:id/device_name_edit_text"
             //dump = await client.GetInstance().DumpScreen();
             if (await client.GetInstance().ExistsElement($"resource-id=\"{client.PackageName}:id/device_name_edit_text\"", dump, false))
             {
                 await client.GetInstance().Input($"resource-id=\"{client.PackageName}:id/device_name_edit_text\"", _names[new Random().Next(0, _names.Length)].Replace(' ', 'I'), dump);
+                await Task.Delay(1_000);
                 await client.GetInstance().Click("text=\"СОХРАНИТЬ\"", dump);
             }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection.Metadata;
 using System.Xml;
 
 namespace MemuLib.Core;
@@ -230,14 +231,19 @@ public class Client
     public async Task<string> DumpScreen()
     {
         var result = await ShellCmd("uiautomator dump");
-        var document = await ShellCmd("cat /storage/emulated/0/window_dump.xml");
+        //var document = await ShellCmd("cat /storage/emulated/0/window_dump.xml");
         //var document = await AdbShellCmd("cat /storage/emulated/0/window_dump.xml");
-        /*var tmpFileName = $"screen_data_{new Random().Next(10_000, 1_000_000)}.tmp";
+        var tmpFileName = $"screen_data_{new Random().Next(10_000, 1_000_000)}.tmp";
         await ShellCmd($"cp /storage/emulated/0/window_dump.xml /storage/emulated/0/Download/{tmpFileName}");
         var pathOnLocalSystem = $@"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\Downloads\MEmu Download\{tmpFileName}";
         var document = await File.ReadAllTextAsync(pathOnLocalSystem);
-        */
-        //File.Delete(pathOnLocalSystem);
+
+        try
+        {
+            File.Delete(pathOnLocalSystem);
+        }
+        catch { }
+        Log.Write(document.ToString());
 
         if (document != "" && !result.Contains("ERROR"))
             return document;

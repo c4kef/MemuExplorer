@@ -420,21 +420,13 @@ namespace UBot.Whatsapp
 
                     _usedPhones.Add(phone);
 
-                    var resultAuth = await TryLogin(client, phone, path);
-                    Log.Write($"[{phone}] - {(resultAuth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
-
-                    if (!resultAuth)
-                    {
-                        ++DashboardView.GetInstance().DeniedTasksStart;
-                        ++DashboardView.GetInstance().DeniedTasks;
-                        continue;
-                    }
-
                     var importContactsObject = new List<CObj>();
                     var currentContacts = _contacts.ToArray().OrderBy(x => new Random().Next()).Take(500).ToList();
-                    
+
                     if (Globals.Setup.AddContactUsersWarm)
                     {
+                        currentContacts.AddRange(client.AccountData.MessageHistory.Keys.Select(phone => $"+{phone}"));
+
                         foreach (var phoneForContact in currentContacts)
                             importContactsObject.Add(new(_names[new Random().Next(0, _names.Length)], "+" + phoneForContact));
 
@@ -443,6 +435,16 @@ namespace UBot.Whatsapp
                         await client.ImportContacts($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf");
 
                         File.Delete($@"{Globals.TempDirectory.FullName}\{threadId}_contacts.vcf");
+                    }
+
+                    var resultAuth = await TryLogin(client, phone, path);
+                    Log.Write($"[{phone}] - {(resultAuth ? "смогли войти" : "не смогли войти")}\n", _logFile.FullName);
+
+                    if (!resultAuth)
+                    {
+                        ++DashboardView.GetInstance().DeniedTasksStart;
+                        ++DashboardView.GetInstance().DeniedTasks;
+                        continue;
                     }
 
                     var clientCountSendedMessages = 0;
@@ -468,7 +470,7 @@ namespace UBot.Whatsapp
                                 }
 
                                 _usedPhones.Remove(client.Phone.Remove(0, 1));
-                                throw new Exception("Clients banned");
+                                throw new Exception("Client banned");
                             }
 
                             if (!string.IsNullOrEmpty(peopleReal))
@@ -513,8 +515,11 @@ namespace UBot.Whatsapp
                                 if (status_init != Client.StatusDelivered.Delivered)
                                 {
                                     if (status_init == Client.StatusDelivered.ContactNotFound)
+                                    {
                                         _usedPhonesUsers.Remove(peopleReal);
-                                    currentContacts.Remove(peopleReal);
+                                        currentContacts.Remove(peopleReal);
+                                    }
+
                                     continue;
                                 }
                             }
@@ -524,8 +529,10 @@ namespace UBot.Whatsapp
                             if (status_send != Client.StatusDelivered.Delivered)
                             {
                                 if (status_send == Client.StatusDelivered.ContactNotFound)
+                                {
                                     _usedPhonesUsers.Remove(peopleReal);
-                                currentContacts.Remove(peopleReal);
+                                    currentContacts.Remove(peopleReal);
+                                }
                                 continue;
                             }
                         

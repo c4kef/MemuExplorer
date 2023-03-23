@@ -130,6 +130,12 @@ namespace UBot.Views.User
             set => SetProperty(ref Globals.Setup.IsBlackDay, value);
         }
 
+        public string ProxyBlackDay
+        {
+            get => Globals.Setup.ProxyBlackDay;
+            set => SetProperty(ref Globals.Setup.ProxyBlackDay, value);
+        }
+
         public int? CountPhonesFromStack
         {
             get => Globals.Setup.CountPhonesFromStack;
